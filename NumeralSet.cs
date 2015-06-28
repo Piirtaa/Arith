@@ -1,0 +1,324 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Diagnostics;
+
+namespace Arith
+{
+    /// <summary>
+    /// contains an set of numerals.  Eg. a decimal numeral set would have 0-9.
+    /// a binary numeral set would have 0 to 1.
+    /// </summary>
+    public class NumeralSet
+    {
+        #region Declarations
+        private CircularLinkedList<string> _symbols = new CircularLinkedList<string>();
+        private string _negativeSymbol = null;
+        private string _decimalSymbol = null;
+        #endregion
+
+        #region Ctor
+        public NumeralSet(string decimalSymbol, string negativeSymbol, params string[] symbols)
+        {
+            if (string.IsNullOrEmpty(negativeSymbol))
+                throw new ArgumentNullException("negativeSymbol");
+            _negativeSymbol = negativeSymbol;
+
+            if (string.IsNullOrEmpty(decimalSymbol))
+                throw new ArgumentNullException("decimalSymbol");
+            _decimalSymbol = decimalSymbol;
+
+            if (symbols != null)
+                foreach (string each in symbols)
+                    this.AddSymbolToSet(each);
+        }
+        #endregion
+
+        #region Properties
+        public CircularLinkedList<string> SymbolSet { get { return this._symbols; } }
+        public Digit this[string val]
+        {
+            get
+            {
+                var node = this.SymbolSet.Filter((i) => { return i.Value.Equals(val); }) as CircularLinkedListNode<string>;
+                return new Digit(node);
+            }
+        }
+
+        //public string[] Symbols
+        //{
+        //    get
+        //    {
+        //        if (this._firstSymbol == null)
+        //            return null;
+
+        //        return this._firstSymbol.ListValues;
+        //    }
+        //}
+        //public int LengthAsInt
+        //{
+        //    get
+        //    {
+        //        if (this._firstSymbol == null)
+        //            return 0;
+
+        //        return this.Symbols.Length;
+        //    }
+        //}
+        //public string LengthAsSymbol
+        //{
+        //    get
+        //    {
+        //        if (this._firstSymbol == null)
+        //            return null;
+
+        //        return this._firstSymbol.LastNode.Value;
+        //    }
+        //}
+        public string NegativeSymbol { get { return this._negativeSymbol; } }
+        public string DecimalSymbol { get { return this._decimalSymbol; } }
+        public string ZeroSymbol
+        {
+            get
+            {
+                if (this.SymbolSet.FirstNode == null)
+                    return null;
+
+                return this.SymbolSet.FirstNode.Value;
+            }
+        }
+        public string OneSymbol
+        {
+            get
+            {
+                if (this.SymbolSet.FirstNode == null || this.SymbolSet.FirstNode.NextNode == null)
+                    return null;
+
+                return this.SymbolSet.FirstNode.NextNode.Value;
+            }
+        }
+        #endregion
+
+        #region Methods
+        public CircularLinkedListNode<string> GetComplement(CircularLinkedListNode<string> symbol)
+        {
+            return symbol.GetListComplement();
+        }
+        protected void ValidateNewSymbol(string symbol)
+        {
+            if (string.IsNullOrEmpty(symbol))
+                throw new ArgumentOutOfRangeException("symbol");
+
+            //validate negative and decimal reservations
+            if (symbol.Contains(this._negativeSymbol) ||
+            this._negativeSymbol.Contains(symbol))
+            {
+                throw new InvalidOperationException("symbol taken");
+            }
+
+            if (symbol.Contains(this._decimalSymbol) ||
+                this._decimalSymbol.Contains(symbol))
+            {
+                throw new InvalidOperationException("symbol taken");
+            }
+            //validate other reservations
+            if (null != this._symbols.Filter((x) =>
+            {
+                if (symbol.Contains(x.Value) ||
+                x.Value.Contains(symbol))
+                {
+                    return true;
+                }
+
+                return false;
+            }))
+            {
+                throw new InvalidOperationException("symbol taken");
+            }
+        }
+        public NumeralSet AddSymbolToSet(string symbol)
+        {
+            this.ValidateNewSymbol(symbol);
+            this._symbols.AddLast(symbol);
+
+            //fluent return
+            return this;
+        }
+        //public bool Contains(string symbol)
+        //{
+        //    if (this._firstSymbol == null)
+        //        return false;
+
+        //    return this._firstSymbol.Contains(symbol);
+        //}
+        #endregion
+
+        #region Parsing
+        private bool ParseNextSymbol(string text, out string newText, out string symbol, bool seekLeftToRight = false)
+        {
+            string newTextOUT = text;
+            string symbolOUT = null;
+            bool isSuccess = false;
+
+            var values = this.SymbolSet.Values.ToList();
+            values.Add(this.DecimalSymbol);
+            values.Add(this.NegativeSymbol);
+
+            foreach (var each in values)
+            {
+                if (seekLeftToRight)
+                {
+                    if (text.StartsWith(each))
+                    {
+                        symbolOUT = each;
+                        newTextOUT = text.Substring(symbolOUT.Length);
+                        isSuccess = true;
+                        break;
+                    }
+                }
+                else
+                {
+                    if (text.EndsWith(each))
+                    {
+                        symbolOUT = each;
+                        newTextOUT = text.Substring(0, text.Length - symbolOUT.Length);
+                        isSuccess = true;
+                        break;
+                    }
+                }
+            }
+
+            //if we can't find a symbol we truncate by 1 character
+            if (!isSuccess)
+            {
+                if (seekLeftToRight)
+                {
+                    newTextOUT = text.Substring(1);
+                    symbolOUT = text.Substring(0, 1);
+                }
+                else
+                {
+                    newTextOUT = text.Substring(0, text.Length - 1);
+                    symbolOUT = text.Substring(text.Length - 1, 1);
+                }
+            }
+            newText = newTextOUT;
+            symbol = symbolOUT;
+            return isSuccess;
+        }
+        /// <summary>
+        /// given some text, identifies each unique symbol in that text and returns as an array.
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
+        public string[] ParseSymbols(string text, bool parseLeftToRight = false, bool skipNonSymbols = true)
+        {
+            string remaining = text;
+
+            List<string> rv = new List<string>();
+
+            while (!string.IsNullOrEmpty(remaining))
+            {
+                string symbol = null;
+                var success = this.ParseNextSymbol(remaining, out remaining, out symbol, parseLeftToRight);
+                if (!success && skipNonSymbols)
+                    continue;
+                rv.Add(symbol);
+            }
+
+            return rv.ToArray();
+        }
+        #endregion
+    }
+
+
+    internal class NumeralSetTests
+    {
+        internal static void Test()
+        {
+            //init the set
+            NumeralSet set = new NumeralSet(".", "-");
+            for (int i = 0; i <10; i++)
+            {
+                set.AddSymbolToSet(i.ToString());
+            }
+
+            Debug.Assert(set.DecimalSymbol == ".");
+            Debug.Assert(set.NegativeSymbol == "-");
+            Debug.Assert(set.ZeroSymbol == "0");
+            Debug.Assert(set.OneSymbol == "1");
+
+            var parse1 = set.ParseSymbols("1234567890", true, true);
+            Debug.Assert(parse1.Length == 10);
+            Debug.Assert(parse1[0] == "1");
+            Debug.Assert(parse1[1] == "2");
+            Debug.Assert(parse1[2] == "3");
+            Debug.Assert(parse1[3] == "4");
+            Debug.Assert(parse1[4] == "5");
+            Debug.Assert(parse1[5] == "6");
+            Debug.Assert(parse1[6] == "7");
+            Debug.Assert(parse1[7] == "8");
+            Debug.Assert(parse1[8] == "9");
+            Debug.Assert(parse1[9] == "0");
+
+            var parse2 = set.ParseSymbols("-1234567890.123", true, true);
+            Debug.Assert(parse2[0] == "-");
+            Debug.Assert(parse2[1] == "1");
+            Debug.Assert(parse2[2] == "2");
+            Debug.Assert(parse2[3] == "3");
+            Debug.Assert(parse2[4] == "4");
+            Debug.Assert(parse2[5] == "5");
+            Debug.Assert(parse2[6] == "6");
+            Debug.Assert(parse2[7] == "7");
+            Debug.Assert(parse2[8] == "8");
+            Debug.Assert(parse2[9] == "9");
+            Debug.Assert(parse2[10] == "0");
+            Debug.Assert(parse2[11] == ".");
+            Debug.Assert(parse2[12] == "1");
+            Debug.Assert(parse2[13] == "2");
+            Debug.Assert(parse2[14] == "3");
+
+
+            var parse3 = set.ParseSymbols("-1234567890.123", false, true);
+            Debug.Assert(parse3[14] == "-");
+            Debug.Assert(parse3[13] == "1");
+            Debug.Assert(parse3[12] == "2");
+            Debug.Assert(parse3[11] == "3");
+            Debug.Assert(parse3[10] == "4");
+            Debug.Assert(parse3[9] == "5");
+            Debug.Assert(parse3[8] == "6");
+            Debug.Assert(parse3[7] == "7");
+            Debug.Assert(parse3[6] == "8");
+            Debug.Assert(parse3[5] == "9");
+            Debug.Assert(parse3[4] == "0");
+            Debug.Assert(parse3[3] == ".");
+            Debug.Assert(parse3[2] == "1");
+            Debug.Assert(parse3[1] == "2");
+            Debug.Assert(parse3[0] == "3");
+
+            try
+            {
+                var parse4 = set.ParseSymbols("x-1234567890.123", false, false);
+            }
+            catch { }
+
+            var digit = set["0"];
+            Debug.Assert(digit.IsZero);
+            var s = digit.MoveForward();
+            Debug.Assert(!s);
+            Debug.Assert(digit.Symbol == "1");
+            digit.MoveForward();
+            Debug.Assert(digit.Symbol == "2");
+            s = digit.MoveForwardBy("9");
+            Debug.Assert(digit.Symbol == "1");
+            Debug.Assert(s);
+            digit.MoveBackBy("1");
+            Debug.Assert(digit.Symbol == "0");
+            s = digit.MoveBackBy("1");
+            Debug.Assert(digit.Symbol == "9");
+            Debug.Assert(s);
+            
+        }
+    }
+}
