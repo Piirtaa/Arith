@@ -10,11 +10,11 @@ namespace Arith
     {
         static void Main(string[] args)
         {
-            LinkedListTests.Test();
-            CircularLinkedListTests.Test();
-            CircularLinkedListTests.SequenceTest();
-            NumeralSetTests.Test();
-            SymbolicDigitTests.Test();
+            //LinkedListTests.Test();
+            //CircularLinkedListTests.Test();
+            //CircularLinkedListTests.SequenceTest();
+            //NumeralSetTests.Test();
+            //SymbolicDigitTests.Test();
             NumberTests.Test();
 
         }

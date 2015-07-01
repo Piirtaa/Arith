@@ -72,6 +72,8 @@ namespace Arith
     /// a circular linked list node
     /// </summary>
     /// <typeparam name="T"></typeparam>
+    /// 
+    [DebuggerDisplay("{Value}")]
     public class CircularLinkedListNode<T> : LinkedListNode<T>
     {
         #region Ctor

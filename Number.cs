@@ -429,7 +429,7 @@ namespace Arith
 
             //parse symbols
             var symbols = this.NumberSystem.ParseSymbols(number, true);
-            if (symbols == null)
+            if (symbols == null || symbols.Length == 0)
                 return;
 
             //set sign

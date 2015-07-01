@@ -31,6 +31,7 @@ namespace Arith
             var keys = this._numeralSet.SymbolSet.Values;
             this._addMap = new SquareLookup<Tuple<string, bool>>(keys);
             this._subtractMap = new SquareLookup<Tuple<string, bool>>(keys);
+            this._compareMap = new SquareLookup<bool?>(keys);
 
             foreach (var key1 in keys)
             {

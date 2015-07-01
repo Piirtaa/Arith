@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Diagnostics;
 
 namespace Arith
 {
@@ -9,6 +10,8 @@ namespace Arith
     /// digit node payload type.  has IDigit.  has wire to parent number (linkedlist) 
     /// , and thus to sibling Digits.
     /// </summary>
+    /// 
+    [DebuggerDisplay("{Symbol}")]
     public class NumberDigit
     {
         #region Declarations
@@ -159,6 +162,7 @@ namespace Arith
         #endregion
 
         #region Calculated Properties
+        public string Symbol { get { return this.Digit.Symbol; } }
         public bool IsZero { get { return this._digit.Symbol == this._numberSystem.ZeroSymbol; } }
         public bool IsOne { get { return this._digit.Symbol == this._numberSystem.OneSymbol; } }
         #endregion

@@ -26,9 +26,9 @@ namespace Arith
                 if (this._stringToIntMap.ContainsKey(each))
                     throw new ArgumentOutOfRangeException("key taken");
 
-                    this._stringToIntMap.Add(each, this._stringToIntMap.Count + 1);
+                    this._stringToIntMap.Add(each, this._stringToIntMap.Count);
             }
-
+            
             this._values = new T[this._stringToIntMap.Count, this._stringToIntMap.Count];
         }
         #endregion

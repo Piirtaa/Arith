@@ -47,11 +47,9 @@
     <Compile Include="Number.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="NumberDecorationBase.cs" />
     <Compile Include="NumberDigit.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="PrecisionNumberDecoration.cs" />
     <Compile Include="SquareLookup.cs" />
     <Compile Include="MatrixDigit.cs" />
     <Compile Include="SymbolicDigit.cs" />

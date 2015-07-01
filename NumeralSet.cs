@@ -10,6 +10,8 @@ namespace Arith
     /// contains an set of numerals.  Eg. a decimal numeral set would have 0-9.
     /// a binary numeral set would have 0 to 1.
     /// </summary>
+    /// 
+    [DebuggerDisplay("{Text}")]
     public class NumeralSet
     {
         #region Declarations
@@ -45,6 +47,13 @@ namespace Arith
         #endregion
 
         #region Calculated Properties
+        public string Text
+        {
+            get
+            {
+                return string.Join(",", this.SymbolSet.Values);
+            }
+        }
         public string ZeroSymbol
         {
             get

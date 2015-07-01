@@ -6,6 +6,7 @@ using System.Diagnostics;
 
 namespace Arith
 {
+    [DebuggerDisplay("")]
     public class LinkedList<T>
     {
         #region Declarations
@@ -330,6 +331,8 @@ namespace Arith
     /// a linked list node
     /// </summary>
     /// <typeparam name="T"></typeparam>
+    /// 
+    [DebuggerDisplay("{Value}")]
     public class LinkedListNode<T>
     {
         #region Declarations
