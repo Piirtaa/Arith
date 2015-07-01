@@ -16,53 +16,21 @@ namespace Arith
         public CircularLinkedList(params T[] items)
             : base(items)
         {
-        }
-        #endregion
-
-        #region Overrides
-        /// <summary>
-        /// this is the only way to set the firstnode, other than removing the firstnode, or first item add
-        /// </summary>
-        /// <param name="val"></param>
-        /// <returns></returns>
-        public override LinkedListNode<T> AddFirst(T val)
-        {
-            var node = new CircularLinkedListNode<T>(val, this);
-            this.InsertNode(node, null, this.FirstNode);
-            
-            return node;
-        }
-        public override LinkedListNode<T> AddLast(T val)
-        {
-            var node = new CircularLinkedListNode<T>(val, this);
-            this.InsertNode(node, this.LastNode, null);
-            return node;
-        }
-        /// <summary>
-        /// override the default list append so that any null positional markers (ie. before, after
-        /// which normally are interpreted as insertfirst, insertlast behaviour respectively) are
-        /// scrubbed to First and Last to maintain circularity.
-        /// </summary>
-        /// <param name="node"></param>
-        /// <param name="before"></param>
-        /// <param name="after"></param>
-        /// <returns></returns>
-        protected override LinkedListNode<T> InsertNode(LinkedListNode<T> node, LinkedListNode<T> before, LinkedListNode<T> after)
-        {
-            LinkedListNode<T> rv = null;
-            lock (this._stateLock)
+            //define the default node building strategy
+            this.NodeBuildingStrategy = (x) =>
             {
+                return new CircularLinkedListNode<T>(x, this);
+            };
 
-                rv = base.InsertNode(node, before, after);
-
+            this.PostNodeInsertionStrategy = (x) =>
+            {
                 //if we have circularity issues (ie. we're on the first or last node) then we work that out
                 if (this._firstNode != null)
                 {
                     this.FirstNode.PreviousNode = this.LastNode;
                     this.LastNode.NextNode = this.FirstNode;
                 }
-            }
-            return rv;
+            };
         }
         #endregion
     }
@@ -77,7 +45,7 @@ namespace Arith
     public class CircularLinkedListNode<T> : LinkedListNode<T>
     {
         #region Ctor
-        protected internal CircularLinkedListNode(T value, CircularLinkedList<T> parentList)
+        public CircularLinkedListNode(T value, CircularLinkedList<T> parentList)
             : base(value, parentList)
         {
 

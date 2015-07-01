@@ -6,8 +6,18 @@ using System.Diagnostics;
 
 namespace Arith
 {
-    [DebuggerDisplay("{Text}")]
-    public class Number : LinkedList<NumberDigit>
+    /// <summary>
+    /// a number represented as a linked list of digits
+    /// </summary>
+    /// <remarks>
+    /// the number 123.45 is represented as this sequence of nodes:
+    /// 4,5,3,2,1 with the middle node 3 being set as the ZerothNode 
+    /// 
+    /// this is done so that the more significant digits are on the end of the list
+    /// and the least significant at the start.  In this way we keep a correlation from
+    /// ZerothNode moving to the end, as a marker of symbol position
+    /// </remarks>
+    public class Number : LinkedList<IDigit>
     {
         #region Declarations
         /// <summary>
@@ -27,20 +37,36 @@ namespace Arith
         /// </summary>
         private static bool _isDisabled = false;
 
-        private LinkedListNode<NumberDigit> _zerothDigit = null;
+        private DigitNode _zerothDigit = null;
         private NumeralSet _numberSystem = null;
         protected internal bool _isPositive = true;
-
         #endregion
 
         #region Ctor
-        public Number(string digits, NumeralSet numberSystem)
+        public Number(string digits, NumeralSet numberSystem) 
         {
             if (numberSystem == null)
                 throw new ArgumentNullException("numberSystem");
 
             this._numberSystem = numberSystem;
 
+            //define the default node building strategy
+            this.NodeBuildingStrategy = (x) =>
+            {
+                return new DigitNode(x, this);
+            };
+
+            //this.PostNodeInsertionStrategy = (x) =>
+            //{
+            //    //if we have circularity issues (ie. we're on the first or last node) then we work that out
+            //    if (this._firstNode != null)
+            //    {
+            //        this.FirstNode.PreviousNode = this.LastNode;
+            //        this.LastNode.NextNode = this.FirstNode;
+            //    }
+            //};
+
+            this.InitToZero();
             this.SetValue(digits);
         }
         #endregion
@@ -48,10 +74,13 @@ namespace Arith
         #region Properties
         public NumeralSet NumberSystem { get { return this._numberSystem; } }
         public bool IsPositive { get { return this._isPositive; } }
-        public LinkedListNode<NumberDigit> ZerothDigit { get { return this._zerothDigit; } }
+        public DigitNode ZerothDigit { get { return this._zerothDigit; } }
+
         #endregion
 
         #region Calculated Properties
+        public DigitNode LastDigit { get { return this.FirstNode as DigitNode; } }
+        public DigitNode FirstDigit { get { return this.LastNode as DigitNode; } }
         public List<Tuple<string, bool>> NodeValues
         {
             get
@@ -59,7 +88,8 @@ namespace Arith
                 List<Tuple<string, bool>> rv = new List<Tuple<string, bool>>();
                 foreach (var each in this.Nodes)
                 {
-                    rv.Add(new Tuple<string, bool>(each.Value.Digit.Symbol, each.Value.IsZerothDigit));
+                    DigitNode node = each as DigitNode;
+                    rv.Add(new Tuple<string, bool>(node.Value.Symbol, node.IsZerothDigit));
                 }
 
                 return rv;
@@ -68,30 +98,29 @@ namespace Arith
         /// <summary>
         /// by default this represents the leading zero, trailing zero trimmed value 
         /// </summary>
-        public virtual string Text
+        public virtual string SymbolsText
         {
             get
             {
-                var vals = this.Values;
+                var clone = Clone(this);
+                clone.ScrubLeadingAndTrailingZeroes();
+
                 StringBuilder sb = new StringBuilder();
 
-                this.ScrubLeadingAndTrailingZeroes();
+                if (!clone._isPositive)
+                    sb.Append(clone.NumberSystem.NegativeSymbol);
 
-                if (!this._isPositive)
-                    sb.Append(this.NumberSystem.NegativeSymbol);
-
-                var mostSigNodesDesc = this.Nodes.Reverse();
-                foreach (var each in mostSigNodesDesc)
+                var node = clone.LastDigit;
+                while (node != null)
                 {
-                    sb.Append(each.Value.Digit.Symbol);
-                    if (object.ReferenceEquals(this._zerothDigit, each))
-                    {
-                        sb.Append(this.NumberSystem.DecimalSymbol);
-                    }
+                    sb.Append(node.Symbol);
+
+                    if (node.IsZerothDigit && node.PreviousNode != null)
+                        sb.Append(clone.NumberSystem.DecimalSymbol);
+
+                    node = node.PreviousNode as DigitNode;
                 }
                 var rv = sb.ToString();
-                if (rv.EndsWith(this.NumberSystem.DecimalSymbol))
-                    rv = rv.Substring(0, rv.Length - 1);
 
                 return rv;
             }
@@ -110,12 +139,13 @@ namespace Arith
             if (number == null)
                 throw new ArgumentNullException("number");
 
+            //remove unnecessary nodes
             this.ScrubLeadingAndTrailingZeroes();
             number.ScrubLeadingAndTrailingZeroes();
 
             //iterate to the longest node
-            var d1 = this.ZerothDigit;
-            var d2 = number.ZerothDigit;
+            LinkedListNode<IDigit> d1 = this.ZerothDigit;
+            LinkedListNode<IDigit> d2 = number.ZerothDigit;
 
             while (true)
             {
@@ -136,6 +166,7 @@ namespace Arith
             }
 
             //now walk back from the most significant nodes, d1, d2 respectively
+            //and see who is bigger using a digit by digit compare
             while (true)
             {
                 if (d1 == null && d2 != null)
@@ -147,7 +178,7 @@ namespace Arith
                 if (d2 == null && d1 == null)
                     return null;
 
-                var comp = d1.Value.Digit.Compare(d2.Value.Digit.Symbol);
+                var comp = d1.Value.Compare(d2.Value.Symbol);
                 if (comp != null)
                     return comp;
 
@@ -198,70 +229,85 @@ namespace Arith
         }
         private void ScrubLeadingAndTrailingZeroes()
         {
-            while (this.LastNode.Value.IsZerothDigit == false &&
-                this.LastNode.Value.IsZero)
+            while (this.LastDigit.IsZerothDigit == false &&
+                this.LastDigit.IsZero)
                 this.Remove(this.LastNode);
 
-            while (this.FirstNode.Value.IsZerothDigit == false &&
-                this.FirstNode.Value.IsZero)
+            while (this.FirstDigit.IsZerothDigit == false &&
+                this.FirstDigit.IsZero)
                 this.Remove(this.FirstNode);
         }
         /// <summary>
         /// adds a Zero-value placeholder digit 
         /// </summary>
         /// <returns></returns>
-        internal LinkedListNode<NumberDigit> AddEmptyDigit()
+        internal DigitNode AddEmptyDigit()
         {
-            var digit = new NumberDigit(this.NumberSystem.ZeroSymbol, this.NumberSystem);
-            var rv = this.AddLast(digit);
-            digit.DigitNode = rv;
+            var digit = this.NumberSystem.GetMatrixDigit(this.NumberSystem.ZeroSymbol);
+            var rv = this.AddLast(digit) as DigitNode;
             return rv;
         }
         /// <summary>
         /// adds a Zero-value placeholder digit before the decimal 
         /// </summary>
         /// <returns></returns>
-        internal LinkedListNode<NumberDigit> AddEmptyDecimalDigit()
+        internal DigitNode AddEmptyDecimalDigit()
         {
-            var digit = new NumberDigit(this.NumberSystem.ZeroSymbol, this.NumberSystem);
-            var rv = this.AddFirst(digit);
-            digit.DigitNode = rv;
+            var digit = this.NumberSystem.GetMatrixDigit(this.NumberSystem.ZeroSymbol);
+            var rv = this.AddFirst(digit) as DigitNode;
             return rv;
         }
 
+        /// <summary>
+        /// resets the current instance 
+        /// </summary>
+        private void InitToZero()
+        {
+            this._firstNode = null;
+            this._lastNode = null;
+            this._zerothDigit = null;
+            this.AddEmptyDigit();
+            this._zerothDigit = this.FirstDigit;
+        }
         #endregion
 
         #region adding logic
-        public static void HydrateFrom(Number numberToHydrate, Number number)
-        {
-            numberToHydrate._isPositive = number._isPositive;
-
-            numberToHydrate._firstNode = null;
-            numberToHydrate.AddEmptyDigit();
-            numberToHydrate._zerothDigit = numberToHydrate.FirstNode;
-
-            var currentDigit = numberToHydrate.FirstNode.Value;
-            var node = number.ZerothDigit;
-            while (node != null)
-            {
-                currentDigit.Digit.SetValue(node.Value.Digit.Symbol);
-                currentDigit = currentDigit.NextDigit;
-                node = node.NextNode;
-            }
-
-            currentDigit = numberToHydrate.FirstNode.Value;
-            node = number.ZerothDigit.PreviousNode;
-            while (node != null)
-            {
-                currentDigit = currentDigit.PreviousDigit;
-                currentDigit.Digit.SetValue(node.Value.Digit.Symbol);
-                node = node.PreviousNode;
-            }
-        }
         public static Number Clone(Number number)
         {
-            var rv = new Number(null, number.NumberSystem);
-            HydrateFrom(rv, number);
+            if (number == null)
+                return null;
+
+            Number rv = new Number(null, number.NumberSystem);
+            rv._isPositive = number._isPositive;
+
+            var node = number.ZerothDigit;
+            var rvNode = rv.ZerothDigit;
+            while (node != null)
+            {
+                rvNode.Value.SetValue(node.Symbol);
+                node = node.NextNode as DigitNode;
+                
+                if (node == null)
+                    break;
+                
+                rvNode = rvNode.NextDigit;
+            }
+
+            node = number.ZerothDigit.PreviousNode as DigitNode;
+            if(node != null)
+                rvNode = rv.ZerothDigit.PreviousDigit;
+            
+            while (node != null)
+            {
+                rvNode.Value.SetValue(node.Symbol);
+                node = node.PreviousNode as DigitNode;
+
+                if (node == null)
+                    break;
+                
+                rvNode = rvNode.PreviousDigit;
+            }
+
             return rv;
         }
         private static Number Add(Number number1, Number number2)
@@ -346,20 +392,20 @@ namespace Arith
             //add after the decimal
             while (addNode2 != null)
             {
-                addNode1.Value.Add(addNode2.Value.Digit.Symbol);
-                addNode1 = addNode1.Value.NextDigit.DigitNode;
-                addNode2 = addNode2.NextNode;
+                addNode1.Add(addNode2.Symbol);
+                addNode1 = addNode1.NextDigit;
+                addNode2 = addNode2.NextNode as DigitNode;
             }
 
             //add before the decimal
-            addNode1 = rv.ZerothDigit.Value.PreviousDigit.DigitNode;
-            addNode2 = number2.ZerothDigit.PreviousNode;
+            addNode1 = rv.ZerothDigit.PreviousDigit;
+            addNode2 = number2.ZerothDigit.PreviousNode as DigitNode;
 
             while (addNode2 != null)
             {
-                addNode1.Value.Add(addNode2.Value.Digit.Symbol);
-                addNode1 = addNode1.Value.PreviousDigit.DigitNode;
-                addNode2 = addNode2.PreviousNode;
+                addNode1.Value.Add(addNode2.Symbol);
+                addNode1 = addNode1.PreviousDigit;
+                addNode2 = addNode2.PreviousNode as DigitNode;
             }
             return rv;
         }
@@ -383,37 +429,48 @@ namespace Arith
             var addNode1 = rv.ZerothDigit;
             var addNode2 = number2.ZerothDigit;
 
-            //subtract after the decimal
+            //add after the decimal
             while (addNode2 != null)
             {
-                addNode1.Value.Subtract(addNode2.Value.Digit.Symbol);
-                addNode1 = addNode1.Value.NextDigit.DigitNode;
-                addNode2 = addNode2.NextNode;
+                addNode1.Subtract(addNode2.Symbol);
+                addNode1 = addNode1.NextDigit;
+                addNode2 = addNode2.NextNode as DigitNode;
             }
 
-            //subtract before the decimal
-            addNode1 = rv.ZerothDigit.PreviousNode;
-            addNode2 = number2.ZerothDigit.PreviousNode;
+            //add before the decimal
+            addNode1 = rv.ZerothDigit.PreviousDigit;
+            addNode2 = number2.ZerothDigit.PreviousNode as DigitNode;
 
             while (addNode2 != null)
             {
-                addNode1.Value.Subtract(addNode2.Value.Digit.Symbol);
-                addNode1 = addNode1.Value.PreviousDigit.DigitNode;
-                addNode2 = addNode2.PreviousNode;
+                addNode1.Value.Subtract(addNode2.Symbol);
+                addNode1 = addNode1.PreviousDigit;
+                addNode2 = addNode2.PreviousNode as DigitNode;
             }
             return rv;
         }
         #endregion
 
         #region Methods
+        public override LinkedList<IDigit> Remove(LinkedListNode<IDigit> item)
+        {
+            if (item == null)
+                throw new ArgumentNullException("item");
+
+            DigitNode node = item as DigitNode;
+            if (node.IsZerothDigit)
+                throw new InvalidOperationException("cannot remove zeroth digit");
+
+            return base.Remove(item);
+        }
         /// <summary>
         /// returns the most significant digit.  walks to the last node, then walks back stopping
         /// at the first non-zero until it gets to Zeroth Node and returns that.
         /// </summary>
-        public LinkedListNode<NumberDigit> GetMostSignificantDigit()
+        public DigitNode GetMostSignificantDigit()
         {
             this.ScrubLeadingAndTrailingZeroes();
-            return this.LastNode;
+            return this.LastNode as DigitNode;
         }
         public void SetValue(string number)
         {
@@ -423,10 +480,6 @@ namespace Arith
             if (_isDisabled)
                 throw new InvalidOperationException("dang");
 
-            this._firstNode = null;
-            this.AddEmptyDigit();
-            this._zerothDigit = this.FirstNode;
-
             //parse symbols
             var symbols = this.NumberSystem.ParseSymbols(number, true);
             if (symbols == null || symbols.Length == 0)
@@ -435,6 +488,7 @@ namespace Arith
             //set sign
             if (symbols[0].Equals(this.NumberSystem.NegativeSymbol))
                 this._isPositive = false;
+
 
             //parse the symbols into postdecimal and predecimal lists
             var postDecimalSymbols = new List<string>();
@@ -470,8 +524,8 @@ namespace Arith
                 if (each.Equals(this.NumberSystem.NegativeSymbol))
                     continue;
 
-                thisNode.Value.Digit.SetValue(each);
-                thisNode = thisNode.Value.NextDigit.DigitNode;
+                thisNode.SetValue(each);
+                thisNode = thisNode.NextDigit;
             }
             thisNode = null;
             foreach (var each in preDecimalSymbols)
@@ -479,8 +533,8 @@ namespace Arith
                 if (each.Equals(this.NumberSystem.NegativeSymbol))
                     continue;
 
-                thisNode.Value.PreviousDigit.Digit.SetValue(each);
-                thisNode = thisNode.Value.PreviousDigit.DigitNode;
+                thisNode.PreviousDigit.SetValue(each);
+                thisNode = thisNode.PreviousDigit;
             }
         }
 
@@ -493,7 +547,7 @@ namespace Arith
                 return;
 
             var val = Add(this, number);
-            HydrateFrom(this, val);
+            this.SetValue(val.SymbolsText);
         }
         public void Subtract(Number number)
         {
@@ -506,7 +560,7 @@ namespace Arith
             negNumber.SwitchSign();
 
             var val = Add(this, negNumber);
-            HydrateFrom(this, val);
+            this.SetValue(val.SymbolsText);
         }
         public void AddOne()
         {
@@ -515,6 +569,233 @@ namespace Arith
         public void SubtractOne()
         {
             this.Subtract(new Number(this.NumberSystem.OneSymbol, this.NumberSystem));
+        }
+        #endregion
+    }
+
+        /// <summary>
+    /// digit node payload type.  has IDigit.  has wire to parent number (linkedlist) 
+    /// , and thus to sibling Digits.
+    /// </summary>
+    /// 
+    [DebuggerDisplay("{Symbol}")]
+    public class DigitNode : LinkedListNode<IDigit>
+    {
+        #region Ctor
+        public DigitNode(IDigit value, Number parentList)
+            : base(value, parentList)
+        {
+
+        }
+        #endregion
+
+        #region Parent Number-related Calculated Properties
+        private Number ParentNumber { get { return this.ParentList as Number; } }
+        private NumeralSet NumberSystem { get { return this.ParentNumber.NumberSystem; } }
+        /// <summary>
+        /// reference compares Parent's Zeroth Digit to this instance 
+        /// </summary>
+        public bool IsZerothDigit
+        {
+            get
+            {
+                return object.ReferenceEquals(this, this.ParentNumber.ZerothDigit);
+            }
+        }
+        /// <summary>
+        /// reference compares Parent's MSD Digit to this instance 
+        /// </summary>
+        public bool IsMostSignificantDigit
+        {
+            get
+            {
+                return object.ReferenceEquals(this, this.ParentNumber.GetMostSignificantDigit());
+            }
+        }
+        /// <summary>
+        /// reference compares Parent's LSD Digit to this instance 
+        /// </summary>
+        public bool IsLeastSignificantDigit
+        {
+            get
+            {
+                return object.ReferenceEquals(this, this.ParentNumber.FirstNode);
+            }
+        }
+        /// <summary>
+        /// whether the next digit exists yet 
+        /// (ie. has a registry entry been created for it in the next node of the linked list number)
+        /// </summary>
+        internal bool HasNextDigit
+        {
+            get
+            {
+                return this.NextNode != null;
+            }
+        }
+        /// <summary>
+        /// when queried will perform a lazy load of the next digit (ie. expand the registers)
+        /// </summary>
+        internal DigitNode NextDigit
+        {
+            get
+            {
+                if (this.NextNode == null)
+                {
+                    return this.ParentNumber.AddEmptyDigit() as DigitNode;
+                }
+                return this.NextNode as DigitNode;
+            }
+        }
+        /// <summary>
+        /// whether the next digit exists yet 
+        /// (ie. has a registry entry been created for it in the next node of the linked list number)
+        /// </summary>
+        internal bool HasPreviousDigit
+        {
+            get
+            {
+                return this.PreviousNode != null;
+            }
+        }
+        /// <summary>
+        /// when queried will perform a lazy load of the previous digit (ie. expand the registers)
+        /// </summary>
+        internal DigitNode PreviousDigit
+        {
+            get
+            {
+                if (this.PreviousNode == null)
+                {
+                    return this.ParentNumber.AddEmptyDecimalDigit() as DigitNode;
+                }
+                return this.PreviousNode as DigitNode;
+            }
+        }
+        #endregion
+
+        #region Calculated Properties
+        public string Symbol { get { return this.Value.Symbol; } }
+        public bool IsZero { get { return this.Value.Symbol == this.NumberSystem.ZeroSymbol; } }
+        public bool IsOne { get { return this.Value.Symbol == this.NumberSystem.OneSymbol; } }
+        #endregion
+
+        #region Methods
+        /* Notes on adding and subtracting and how this relates to sign changes.
+         * 
+         *addition progress symbolically, per register, in the following sequence:
+        * 0,1,2,3,4,5,6,7,8,9,0,1,2 etc.  looping in one direction
+        * 
+        * Subtraction has this symbol sequence, per register:
+        * 0,9,8,7,6,5,4,3,2,1,0,9,8 etc. looping in one direction
+        * 
+        * A circular linked list MoveForward, MoveBack correspond to both these sequences. 
+        * 
+         * When crossing from positive number space to negative number space the symbol sequences
+         * switch for addition and subtraction.  That is, subtraction in negative space
+         * is symbolically forward moving.  And addition in negative space is symbolically 
+         * backwards moving.  
+         * 
+         * A cross from one sign space to the other happens when the current digit (ie. "this") 
+         * is the MostSignificant and a rollover happens on MoveBack or MoveForward. 
+         * 
+         * To handle this edge condition in both Add and Subtract Methods
+         * we set the value of the current digit to the complement and change sign.
+         *
+         * for every step into the new space, that an Add or Subtract makes,
+         * the step has to be made in the opposite direction, on the other sequence.
+         * move forward sequence from   0 -> 1,2,3,4,5,6,7,8,9 
+         * move backward sequence from  0 -> 9,8,7,6,5,4,3,2,1
+         *
+         * this relationship is the complement, and we can determine the symbol equating to the 
+         * same number of steps from Zero backwards and forwards, and switch between them, 
+         * as the symbolic representation requires.
+         * * 
+         * We're not doing this sign check here, although we could.  the problem is 
+         * performance and the need to do a most significant digit scan every time there
+         * is a rollover.  Rather we address the sign switch in the Number class methods 
+         * which ensures that everything stays on the positive number line. The Number 
+         * class length compare methods iterate lengths once and this is sufficient
+         * to do a sign change check once only.
+         * 
+         * IGNORE ALL THIS^^^^WE'RE BAKING IN LENGTH CHECKS PRIOR TO ANY OPERATION
+        */
+
+        internal void SetValue(string symbol)
+        {
+            this.Value.SetValue(symbol);
+        }
+        /// <summary>
+        /// this will add the symbol to the digits position, and handles rollover by 
+        /// lazily loading the NextDigit and incrementing it, recursively
+        /// </summary>
+        /// <param name="symbol"></param>
+        /// <returns></returns>
+        internal bool Add(string symbol)
+        {
+            var rv = this.Value.Add(symbol);
+            if (rv)
+            {
+                this.NextDigit.AddOne();
+            }
+            return rv;
+        }
+        /// <summary>
+        /// this will subtract the symbol to the digits position, and handles rollover by
+        /// getting the NextDigit and subtracting it, recursively
+        /// </summary>
+        /// <param name="symbol"></param>
+        /// <returns></returns>
+        internal bool Subtract(string symbol)
+        {
+            var rv = this.Value.Subtract(symbol);
+            if (rv)
+            {
+                //if we are in a position where NextDigit does not exist, then we throw 
+                //an exception.  the design of the number system is such that we should
+                //never exhaust a registry
+                if (!this.HasNextDigit)
+                    throw new InvalidOperationException("unexpected sign change");
+
+                this.NextDigit.SubtractOne();
+            }
+            return rv;
+        }
+        /// <summary>
+        /// this will the one symbol to the digits position, and handles rollover by 
+        /// lazily loading the NextDigit and incrementing it, recursively
+        /// </summary>
+        /// <param name="symbol"></param>
+        /// <returns></returns>
+        internal bool AddOne()
+        {
+            var rv = this.Value.AddOne();
+            if (rv)
+            {
+                this.NextDigit.AddOne();
+            }
+            return rv;
+        }
+        /// <summary>
+        /// this will subtract the symbol to the digits position, and handles rollover by
+        /// getting the NextDigit and subtracting it, recursively
+        /// </summary>
+        /// <param name="symbol"></param>
+        /// <returns></returns>
+        internal bool SubtractOne()
+        {
+            var rv = this.Value.SubtractOne();
+            if (rv)
+            {
+                //if we are in a position where NextDigit does not exist, then we throw 
+                //an exception.  the design of the number system is such that we should
+                //never exhaust a registry
+                if (!this.HasNextDigit)
+                    throw new InvalidOperationException("unexpected sign change");
+
+                this.NextDigit.SubtractOne();
+            }
+            return rv;
         }
         #endregion
     }
@@ -530,23 +811,27 @@ namespace Arith
                 set.AddSymbolToSet(i.ToString());
             }
 
+
+            //var num = new Number(null, set);
+            //var b = num.SymbolsText;
+
             var num1 = new Number("1234567898", set);
-            Debug.Assert(num1.Text == "1234567898");
+            Debug.Assert(num1.SymbolsText == "1234567898");
 
             num1.AddOne();
-            Debug.Assert(num1.Text == "1234567899");
+            Debug.Assert(num1.SymbolsText == "1234567899");
             var counter = 1234567899;
             for (int i = 1; i < 100; i++)
             {
                 num1.AddOne();
                 counter++;
-                Debug.Assert(num1.Text == counter.ToString());
+                Debug.Assert(num1.SymbolsText == counter.ToString());
             }
             for (int i = 1; i < 100; i++)
             {
                 num1.SubtractOne();
                 counter--;
-                Debug.Assert(num1.Text == counter.ToString());
+                Debug.Assert(num1.SymbolsText == counter.ToString());
             }
             var num2 = new Number("0", set);
             counter = 0;
@@ -554,7 +839,7 @@ namespace Arith
             {
                 num2.SubtractOne();
                 counter--;
-                Debug.Assert(num2.Text == counter.ToString());
+                Debug.Assert(num2.SymbolsText == counter.ToString());
             }
         }
 
@@ -569,20 +854,20 @@ namespace Arith
 
             int number = 0;
             var num1 = new Number(number.ToString(), set);
-            Debug.Assert(num1.Text == number.ToString());
+            Debug.Assert(num1.SymbolsText == number.ToString());
 
             for (int i = 0; i < 1000; i++)
             {
                 num1.AddOne();
                 number++;
-                Debug.Assert(num1.Text == number.ToString());
+                Debug.Assert(num1.SymbolsText == number.ToString());
             }
 
             for (int i = 0; i < 1000; i++)
             {
                 num1.SubtractOne();
                 number--;
-                Debug.Assert(num1.Text == number.ToString());
+                Debug.Assert(num1.SymbolsText == number.ToString());
             }
 
         }

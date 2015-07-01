@@ -6,7 +6,7 @@ using System.Diagnostics;
 
 namespace Arith
 {
-    [DebuggerDisplay("")]
+    [DebuggerDisplay("{DebuggerText}")]
     public class LinkedList<T>
     {
         #region Declarations
@@ -25,9 +25,26 @@ namespace Arith
             if (items == null)
                 return;
 
+            //define the default node building strategy
+            this.NodeBuildingStrategy = (x) =>
+            {
+                return new LinkedListNode<T>(x, this);
+            };
+
             foreach (var each in items)
                 this.AddLast(each);
         }
+        #endregion
+
+        #region Properties
+        /// <summary>
+        /// override/replace this strategy if we want anything other than a new LinkedListNode 
+        /// </summary>
+        protected Func<T, LinkedListNode<T>> NodeBuildingStrategy { get; set; }
+        /// <summary>
+        /// set if we have any post insert action/scrubs to perform
+        /// </summary>
+        protected Action<LinkedListNode<T>> PostNodeInsertionStrategy { get; set; }
         #endregion
 
         #region Calculated Properties
@@ -64,6 +81,7 @@ namespace Arith
                 while (node != null)
                 {
                     list.Add(node);
+
                     if (node.IsLast)
                         break;
 
@@ -73,9 +91,20 @@ namespace Arith
                 return list.ToArray();
             }
         }
+        /// <summary>
+        /// used by DebuggerDisplay attribute
+        /// </summary>
+        private string DebuggerText { get { return string.Join(",", this.Values); } }
         #endregion
 
         #region Methods
+
+        /// <summary>
+        /// iterates from first to last and returns item from a positive filter.
+        /// demonstrates good practice for iterating the list
+        /// </summary>
+        /// <param name="filter"></param>
+        /// <returns></returns>
         public LinkedListNode<T> Filter(Func<LinkedListNode<T>, bool> filter)
         {
             if (this._firstNode == null || filter == null)
@@ -99,45 +128,99 @@ namespace Arith
         /// <returns></returns>
         public bool Contains(T val)
         {
-            if (this._firstNode == null)
-                return false;
-
-            LinkedListNode<T> node = this._firstNode;
-            while (!node.Value.Equals(val))
+            var match = this.Filter((x) =>
             {
-                node = node.NextNode;
-                if (node == null)
-                    return false;
-            }
+                return x.Value.Equals(val);
+            });
 
-            return true;
+            return match != null;
         }
-        public bool Contains(LinkedListNode<T> item)
+        protected virtual bool Contains(LinkedListNode<T> item)
         {
-            if (this._firstNode == null)
-                return false;
-
-            LinkedListNode<T> node = this._firstNode;
-            while (!object.ReferenceEquals(node, item))
+            var match = this.Filter((x) =>
             {
-                node = node.NextNode;
-                if (node == null)
-                    return false;
-            }
+                return object.ReferenceEquals(x, item);
+            });
 
-            return true;
+            return match != null;
         }
         public virtual LinkedListNode<T> AddFirst(T val)
         {
-            return this.InsertNode(new LinkedListNode<T>(val, this), null, this._firstNode);
+            return this.Insert(val, null, this._firstNode);
         }
         public virtual LinkedListNode<T> AddLast(T val)
         {
-            return this.InsertNode(new LinkedListNode<T>(val, this), this.LastNode, null);
+            return this.Insert(val, this.LastNode, null);
         }
-        public LinkedListNode<T> Insert(T val, LinkedListNode<T> before, LinkedListNode<T> after)
+        public virtual LinkedListNode<T> Insert(T val, LinkedListNode<T> before, LinkedListNode<T> after)
         {
-            return this.InsertNode(new LinkedListNode<T>(val, this), before, after);
+            LinkedListNode<T> node = null;
+            if (this.NodeBuildingStrategy != null)
+            {
+                node = this.NodeBuildingStrategy(val);
+            }
+            else
+            {
+                node = new LinkedListNode<T>(val, this);
+            }
+            return this.InsertNode(node, before, after);
+        }
+        /// <summary>
+        /// this is the "gateway" method to appending the list.  To insert first, before should be null,
+        /// to insert last, after should be null.  
+        /// </summary>
+        /// <param name="node"></param>
+        /// <param name="before"></param>
+        /// <param name="after"></param>
+        /// <returns></returns>
+        public virtual LinkedListNode<T> InsertNode(LinkedListNode<T> node, LinkedListNode<T> before, LinkedListNode<T> after)
+        {
+            if (node == null)
+                return null;
+
+            lock (this._stateLock)
+            {
+                var slotType = this.ValidateInsertSlot(before, after);
+
+                switch (slotType)
+                {
+                    case InsertSlotEnum.First:
+                        node.NextNode = this._firstNode;
+                        this._firstNode = node;
+                        node.NextNode.PreviousNode = node;
+                        break;
+                    case InsertSlotEnum.FirstAndLast:
+                        node.NextNode = null;
+                        node.PreviousNode = null;
+                        this._firstNode = node;
+                        this._lastNode = node;
+                        break;
+                    case InsertSlotEnum.Last:
+                        node.PreviousNode = this._lastNode;
+                        this._lastNode = node;
+                        node.PreviousNode.NextNode = node;
+                        break;
+                    case InsertSlotEnum.Middle:
+                        node.PreviousNode = before;
+                        if (before != null)
+                        {
+                            before.NextNode = node;
+                        }
+                        node.NextNode = after;
+                        if (after != null)
+                        {
+                            after.PreviousNode = node;
+                        }
+                        break;
+                }
+            }
+
+            //perform post insert hook
+            if (this.PostNodeInsertionStrategy != null)
+            {
+                this.PostNodeInsertionStrategy(node);
+            }
+            return node;
         }
 
         public virtual LinkedList<T> Remove(LinkedListNode<T> item)
@@ -171,6 +254,8 @@ namespace Arith
                 else if (item.IsFirst)
                 {
                     this._firstNode = after;
+
+
                 }
                 else if (item.IsLast)
                 {
@@ -272,58 +357,7 @@ namespace Arith
             return rv;
         }
 
-        /// <summary>
-        /// this is the "gateway" method to appending the list.  To insert first, before should be null,
-        /// to insert last, after should be null.  
-        /// </summary>
-        /// <param name="node"></param>
-        /// <param name="before"></param>
-        /// <param name="after"></param>
-        /// <returns></returns>
-        protected virtual LinkedListNode<T> InsertNode(LinkedListNode<T> node, LinkedListNode<T> before, LinkedListNode<T> after)
-        {
-            if (node == null)
-                return null;
-
-            lock (this._stateLock)
-            {
-                var slotType = this.ValidateInsertSlot(before, after);
-
-                switch (slotType)
-                {
-                    case InsertSlotEnum.First:
-                        node.NextNode = this._firstNode;
-                        this._firstNode = node;
-                        node.NextNode.PreviousNode = node;
-                        break;
-                    case InsertSlotEnum.FirstAndLast:
-                        node.NextNode = null;
-                        node.PreviousNode = null;
-                        this._firstNode = node;
-                        this._lastNode = node;
-                        break;
-                    case InsertSlotEnum.Last:
-                        node.PreviousNode = this._lastNode;
-                        this._lastNode = node;
-                        node.PreviousNode.NextNode = node;
-                        break;
-                    case InsertSlotEnum.Middle:
-                        node.PreviousNode = before;
-                        if (before != null)
-                        {
-                            before.NextNode = node;
-                        }
-                        node.NextNode = after;
-                        if (after != null)
-                        {
-                            after.PreviousNode = node;
-                        }
-                        break;
-                }
-            }
-            return node;
-        }
-        #endregion
+         #endregion
     }
 
 
@@ -340,7 +374,7 @@ namespace Arith
         #endregion
 
         #region Ctor
-        protected internal LinkedListNode(T value, LinkedList<T> parentList)
+        public LinkedListNode(T value, LinkedList<T> parentList)
         {
             if (value == null)
                 throw new ArgumentNullException("value");
@@ -379,7 +413,7 @@ namespace Arith
             {
                 return object.ReferenceEquals(this.ParentList.LastNode, this);
             }
-        }
+        }           
         #endregion
     }
 
