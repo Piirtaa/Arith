@@ -32,52 +32,19 @@ namespace Arith
             if (symbols != null)
                 foreach (string each in symbols)
                     this.AddSymbolToSet(each);
+
+            this.Matrix = new ArithmeticMatrix(this);
         }
         #endregion
 
         #region Properties
         public CircularLinkedList<string> SymbolSet { get { return this._symbols; } }
-        public Digit this[string val]
-        {
-            get
-            {
-                var node = this.SymbolSet.Filter((i) => { return i.Value.Equals(val); }) as CircularLinkedListNode<string>;
-                return new Digit(node);
-            }
-        }
-
-        //public string[] Symbols
-        //{
-        //    get
-        //    {
-        //        if (this._firstSymbol == null)
-        //            return null;
-
-        //        return this._firstSymbol.ListValues;
-        //    }
-        //}
-        //public int LengthAsInt
-        //{
-        //    get
-        //    {
-        //        if (this._firstSymbol == null)
-        //            return 0;
-
-        //        return this.Symbols.Length;
-        //    }
-        //}
-        //public string LengthAsSymbol
-        //{
-        //    get
-        //    {
-        //        if (this._firstSymbol == null)
-        //            return null;
-
-        //        return this._firstSymbol.LastNode.Value;
-        //    }
-        //}
         public string NegativeSymbol { get { return this._negativeSymbol; } }
         public string DecimalSymbol { get { return this._decimalSymbol; } }
+        public ArithmeticMatrix Matrix { get; private set; }
+        #endregion
+
+        #region Calculated Properties
         public string ZeroSymbol
         {
             get
@@ -101,9 +68,29 @@ namespace Arith
         #endregion
 
         #region Methods
+        public SymbolicDigit GetSymbolicDigit(string symbol)
+        {
+            var node = this.SymbolSet.Filter((i) => { return i.Value.Equals(symbol); }) as CircularLinkedListNode<string>;
+            return new SymbolicDigit(node);
+        }
+        public MatrixDigit GetMatrixDigit(string symbol)
+        {
+            return new MatrixDigit(symbol, this);
+        }
         public CircularLinkedListNode<string> GetComplement(CircularLinkedListNode<string> symbol)
         {
             return symbol.GetListComplement();
+        }
+        public NumeralSet AddSymbolToSet(string symbol)
+        {
+            this.ValidateNewSymbol(symbol);
+            this._symbols.AddLast(symbol);
+
+            //rebuild the matrix
+            this.Matrix = new ArithmeticMatrix(this);
+
+            //fluent return
+            return this;
         }
         protected void ValidateNewSymbol(string symbol)
         {
@@ -137,24 +124,31 @@ namespace Arith
                 throw new InvalidOperationException("symbol taken");
             }
         }
-        public NumeralSet AddSymbolToSet(string symbol)
-        {
-            this.ValidateNewSymbol(symbol);
-            this._symbols.AddLast(symbol);
-
-            //fluent return
-            return this;
-        }
-        //public bool Contains(string symbol)
-        //{
-        //    if (this._firstSymbol == null)
-        //        return false;
-
-        //    return this._firstSymbol.Contains(symbol);
-        //}
         #endregion
 
         #region Parsing
+        /// <summary>
+        /// given some text, identifies each unique symbol in that text and returns as an array.
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
+        public string[] ParseSymbols(string text, bool parseLeftToRight = false, bool skipNonSymbols = true)
+        {
+            string remaining = text;
+
+            List<string> rv = new List<string>();
+
+            while (!string.IsNullOrEmpty(remaining))
+            {
+                string symbol = null;
+                var success = this.ParseNextSymbol(remaining, out remaining, out symbol, parseLeftToRight);
+                if (!success && skipNonSymbols)
+                    continue;
+                rv.Add(symbol);
+            }
+
+            return rv.ToArray();
+        }
         private bool ParseNextSymbol(string text, out string newText, out string symbol, bool seekLeftToRight = false)
         {
             string newTextOUT = text;
@@ -207,28 +201,6 @@ namespace Arith
             symbol = symbolOUT;
             return isSuccess;
         }
-        /// <summary>
-        /// given some text, identifies each unique symbol in that text and returns as an array.
-        /// </summary>
-        /// <param name="text"></param>
-        /// <returns></returns>
-        public string[] ParseSymbols(string text, bool parseLeftToRight = false, bool skipNonSymbols = true)
-        {
-            string remaining = text;
-
-            List<string> rv = new List<string>();
-
-            while (!string.IsNullOrEmpty(remaining))
-            {
-                string symbol = null;
-                var success = this.ParseNextSymbol(remaining, out remaining, out symbol, parseLeftToRight);
-                if (!success && skipNonSymbols)
-                    continue;
-                rv.Add(symbol);
-            }
-
-            return rv.ToArray();
-        }
         #endregion
     }
 
@@ -239,7 +211,7 @@ namespace Arith
         {
             //init the set
             NumeralSet set = new NumeralSet(".", "-");
-            for (int i = 0; i <10; i++)
+            for (int i = 0; i < 10; i++)
             {
                 set.AddSymbolToSet(i.ToString());
             }
@@ -303,22 +275,22 @@ namespace Arith
             }
             catch { }
 
-            var digit = set["0"];
-            Debug.Assert(digit.IsZero);
-            var s = digit.MoveForward();
+            var digit = set.GetSymbolicDigit("0");
+            Debug.Assert(digit.Symbol.Equals(set.ZeroSymbol));
+            var s = digit.AddOne();
             Debug.Assert(!s);
             Debug.Assert(digit.Symbol == "1");
-            digit.MoveForward();
+            digit.AddOne();
             Debug.Assert(digit.Symbol == "2");
-            s = digit.MoveForwardBy("9");
+            s = digit.Add("9");
             Debug.Assert(digit.Symbol == "1");
             Debug.Assert(s);
-            digit.MoveBackBy("1");
+            digit.Subtract("1");
             Debug.Assert(digit.Symbol == "0");
-            s = digit.MoveBackBy("1");
+            s = digit.Subtract("1");
             Debug.Assert(digit.Symbol == "9");
             Debug.Assert(s);
-            
+
         }
     }
 }

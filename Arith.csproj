@@ -43,10 +43,21 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Digit.cs" />
+    <Compile Include="ArithmeticMatrix.cs" />
+    <Compile Include="Number.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="NumberDecorationBase.cs" />
+    <Compile Include="NumberDigit.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="PrecisionNumberDecoration.cs" />
+    <Compile Include="SquareLookup.cs" />
+    <Compile Include="MatrixDigit.cs" />
+    <Compile Include="SymbolicDigit.cs" />
+    <Compile Include="Interfaces.cs" />
     <Compile Include="LinkedList.cs" />
     <Compile Include="CircularLinkedList.cs" />
-    <Compile Include="Number.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="NumeralSet.cs" />

@@ -9,8 +9,13 @@ namespace Arith
     public class LinkedList<T>
     {
         #region Declarations
-        private readonly object _stateLock = new object();
+        protected enum InsertSlotEnum { First, Middle, Last, FirstAndLast }
+
+        protected readonly object _stateLock = new object();
         protected LinkedListNode<T> _firstNode = null;
+
+        //we keep a reference to last digit because it's very expensive to walk the list every time
+        protected LinkedListNode<T> _lastNode = null;
         #endregion
 
         #region Ctor
@@ -27,23 +32,7 @@ namespace Arith
         #region Calculated Properties
         public bool IsEmpty { get { return this._firstNode == null; } }
         public LinkedListNode<T> FirstNode { get { return _firstNode; } }
-        public virtual LinkedListNode<T> LastNode
-        {
-            get
-            {
-                LinkedListNode<T> node = this._firstNode;
-
-                while (node != null)
-                {
-                    if (this.IsLast(node))
-                        return node;
-
-                    node = node.NextNode;
-                }
-
-                return node;
-            }
-        }
+        public LinkedListNode<T> LastNode { get { return _lastNode; } }
         public virtual T[] Values
         {
             get
@@ -55,7 +44,7 @@ namespace Arith
                 {
                     list.Add(node.Value);
 
-                    if (this.IsLast(node))
+                    if (node.IsLast)
                         break;
 
                     node = node.NextNode;
@@ -70,11 +59,11 @@ namespace Arith
             {
                 List<LinkedListNode<T>> list = new List<LinkedListNode<T>>();
                 LinkedListNode<T> node = this._firstNode;
-                
+
                 while (node != null)
                 {
                     list.Add(node);
-                    if (this.IsLast(node))
+                    if (node.IsLast)
                         break;
 
                     node = node.NextNode;
@@ -86,13 +75,6 @@ namespace Arith
         #endregion
 
         #region Methods
-        protected virtual bool IsLast(LinkedListNode<T> node)
-        {
-            if (node == null)
-                throw new ArgumentNullException("node");
-
-            return node.NextNode == null;
-        }
         public LinkedListNode<T> Filter(Func<LinkedListNode<T>, bool> filter)
         {
             if (this._firstNode == null || filter == null)
@@ -151,23 +133,68 @@ namespace Arith
         public virtual LinkedListNode<T> AddLast(T val)
         {
             return this.InsertNode(new LinkedListNode<T>(val, this), this.LastNode, null);
-        }      
+        }
         public LinkedListNode<T> Insert(T val, LinkedListNode<T> before, LinkedListNode<T> after)
         {
-            //build the node
-            var node = new LinkedListNode<T>(val, this);
+            return this.InsertNode(new LinkedListNode<T>(val, this), before, after);
+        }
 
-            InsertNode(node, before, after);
+        public virtual LinkedList<T> Remove(LinkedListNode<T> item)
+        {
+            lock(this._stateLock)
+            {
+                //validate it's contained
+                if (item != null && !this.Contains(item))
+                    throw new ArgumentOutOfRangeException("item");
 
-            return node;
+                //grab the window nodes
+                var before = item.PreviousNode;
+                var after = item.NextNode;
+
+                //wire them to each other
+                if (before != null)
+                {
+                    before.NextNode = after;
+                }
+                if (after != null)
+                {
+                    after.PreviousNode = before;
+                }
+
+                //reset first and last pointers
+                if (item.IsFirst && item.IsLast)
+                {
+                    this._firstNode = null;
+                    this._lastNode = null; 
+                }
+                else if (item.IsFirst)
+                {
+                    this._firstNode = after;
+                }
+                else if (item.IsLast)
+                {
+                    this._lastNode = before;
+                }
+            }
+            return this;
         }
         public virtual bool AreAdjacent(LinkedListNode<T> before, LinkedListNode<T> after)
         {
-            if (before == null)
+            if (before == null && after == null)
+            {
                 return false;
+            }
+
+            //if the before node is null, 
+            if (before == null)
+            {
+                return after.PreviousNode == null;
+            }
 
             if (after == null)
-                return false;
+            {
+                return before.NextNode == null;
+            }
 
             if (!object.ReferenceEquals(before.NextNode, after))
                 return false;
@@ -177,7 +204,27 @@ namespace Arith
 
             return true;
         }
-        protected virtual void ValidateInsertSlot(LinkedListNode<T> before, LinkedListNode<T> after)
+        #endregion
+
+        #region Helpers
+        protected LinkedListNode<T> GetLastByWalkingList()
+        {
+            LinkedListNode<T> node = this._firstNode;
+
+            while (node != null)
+            {
+                node = node.NextNode;
+            }
+
+            return node;
+        }
+        /// <summary>
+        /// validates the nodes are adjacent and returns the position we're inserting at as InsertSlot enum
+        /// </summary>
+        /// <param name="before"></param>
+        /// <param name="after"></param>
+        /// <returns></returns>
+        protected InsertSlotEnum ValidateInsertSlot(LinkedListNode<T> before, LinkedListNode<T> after)
         {
             //validate before node
             if (before != null && !this.Contains(before))
@@ -187,15 +234,46 @@ namespace Arith
             if (after != null && !this.Contains(after))
                 throw new ArgumentOutOfRangeException("after");
 
-            //validate the before and after nodes are adjacent
-            if (before != null && after != null)
+            InsertSlotEnum rv = InsertSlotEnum.Middle;
+
+            if (before == null)
+            {
+                rv = InsertSlotEnum.First;
+
+                //it's a first item insert
+                if (after == null)
+                {
+                    rv = InsertSlotEnum.FirstAndLast;
+                    return rv;
+                }
+
+                //validate the after is the current first
+                if (!after.IsFirst)
+                    throw new ArgumentOutOfRangeException("invalid slot");
+
+                return rv;
+            }
+            else if (after == null)
+            {
+                rv = InsertSlotEnum.Last;
+
+                //validate the after is the current first
+                if (!before.IsLast)
+                    throw new ArgumentOutOfRangeException("invalid slot");
+
+                return rv;
+            }
+            else
             {
                 if (!this.AreAdjacent(before, after))
                     throw new ArgumentOutOfRangeException("invalid slot");
             }
+            return rv;
         }
+
         /// <summary>
-        /// this is the "gateway" method to appending the list
+        /// this is the "gateway" method to appending the list.  To insert first, before should be null,
+        /// to insert last, after should be null.  
         /// </summary>
         /// <param name="node"></param>
         /// <param name="before"></param>
@@ -208,92 +286,41 @@ namespace Arith
 
             lock (this._stateLock)
             {
-                this.ValidateInsertSlot(before, after);
+                var slotType = this.ValidateInsertSlot(before, after);
 
-                node.PreviousNode = before;
-                if (before != null)
+                switch (slotType)
                 {
-                    before.NextNode = node;
+                    case InsertSlotEnum.First:
+                        node.NextNode = this._firstNode;
+                        this._firstNode = node;
+                        node.NextNode.PreviousNode = node;
+                        break;
+                    case InsertSlotEnum.FirstAndLast:
+                        node.NextNode = null;
+                        node.PreviousNode = null;
+                        this._firstNode = node;
+                        this._lastNode = node;
+                        break;
+                    case InsertSlotEnum.Last:
+                        node.PreviousNode = this._lastNode;
+                        this._lastNode = node;
+                        node.PreviousNode.NextNode = node;
+                        break;
+                    case InsertSlotEnum.Middle:
+                        node.PreviousNode = before;
+                        if (before != null)
+                        {
+                            before.NextNode = node;
+                        }
+                        node.NextNode = after;
+                        if (after != null)
+                        {
+                            after.PreviousNode = node;
+                        }
+                        break;
                 }
-
-                node.NextNode = after;
-                if (after != null)
-                {
-                    after.PreviousNode = node;
-                }
-
-                this.OnInsert_SetFirstNode(node);
             }
             return node;
-        }
-        /// <summary>
-        /// this is called at the end of InsertNode and will set the _firstNode
-        /// value based on indications from the inserted node.  There are 3 conditions
-        /// where the _firstNode is set: empty list, insertnode.prev = null, insertnode.next = _firstNode
-        /// </summary>
-        /// <param name="insertNode"></param>
-        protected virtual void OnInsert_SetFirstNode(LinkedListNode<T> insertNode)
-        {
-            if (this._firstNode != null && object.ReferenceEquals(insertNode, this._firstNode))
-            {
-                throw new ArgumentOutOfRangeException("insertNode");
-            }
-
-            if (insertNode.PreviousNode == null)
-            {
-                //if before is null we assume this is an AddFirst
-                this._firstNode = insertNode;
-            }
-            else if (this._firstNode == null)
-            {
-                this._firstNode = insertNode;
-            }
-
-        }
-
-        public virtual LinkedList<T> Remove(LinkedListNode<T> item)
-        {
-            //validate it's contained
-            if (item != null && !this.Contains(item))
-                throw new ArgumentOutOfRangeException("item");
-
-            var before = item.PreviousNode;
-            var after = item.NextNode;
-
-            //link before and after
-            if (before != null)
-            {
-                before.NextNode = after;
-            }
-            if (after != null)
-            {
-                after.PreviousNode = before;
-            }
-
-            if (item.IsFirst && item.IsLast)
-            {
-                this._firstNode = null;
-            }
-            else
-            {
-                //reset first node if we are removing it
-                if (object.ReferenceEquals(item, this._firstNode))
-                {
-                    if (before != null)
-                    {
-                        this._firstNode = before;
-                    }
-                    else if (after != null)
-                    {
-                        this._firstNode = after;
-                    }
-                    else if (after == null && before == null)
-                    {
-                        this._firstNode = null;
-                    }
-                }
-            }
-            return this;
         }
         #endregion
     }
@@ -365,7 +392,7 @@ namespace Arith
                 Debug.Assert(listOfInt.LastNode.Value == i);
                 Debug.Assert(listOfInt.FirstNode.Value == 0);
                 var vals = listOfInt.Values;
-                if(vals != null && vals.Length > 1) 
+                if (vals != null && vals.Length > 1)
                 {
                     Debug.Assert(listOfInt.LastNode.PreviousNode.Value == i - 1);
                     Debug.Assert(listOfInt.AreAdjacent(listOfInt.LastNode.PreviousNode, listOfInt.LastNode));
@@ -393,7 +420,7 @@ namespace Arith
                 }
             }
 
-            
+
         }
     }
 }

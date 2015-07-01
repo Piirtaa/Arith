@@ -6,7 +6,8 @@ using System.Diagnostics;
 
 namespace Arith
 {
-    public class Number : LinkedList<Digit>
+    [DebuggerDisplay("{Text}")]
+    public class Number : LinkedList<NumberDigit>
     {
         #region Declarations
         /// <summary>
@@ -26,9 +27,10 @@ namespace Arith
         /// </summary>
         private static bool _isDisabled = false;
 
-        private LinkedListNode<Digit> _zerothDigit = null;
+        private LinkedListNode<NumberDigit> _zerothDigit = null;
         private NumeralSet _numberSystem = null;
         protected internal bool _isPositive = true;
+
         #endregion
 
         #region Ctor
@@ -46,7 +48,7 @@ namespace Arith
         #region Properties
         public NumeralSet NumberSystem { get { return this._numberSystem; } }
         public bool IsPositive { get { return this._isPositive; } }
-        public LinkedListNode<Digit> ZerothDigit { get { return this._zerothDigit; } }
+        public LinkedListNode<NumberDigit> ZerothDigit { get { return this._zerothDigit; } }
         #endregion
 
         #region Calculated Properties
@@ -57,36 +59,31 @@ namespace Arith
                 List<Tuple<string, bool>> rv = new List<Tuple<string, bool>>();
                 foreach (var each in this.Nodes)
                 {
-                    rv.Add(new Tuple<string, bool>(each.Value.Symbol, each.Value.IsZerothDigit));
+                    rv.Add(new Tuple<string, bool>(each.Value.Digit.Symbol, each.Value.IsZerothDigit));
                 }
 
                 return rv;
             }
         }
-        public string Text
+        /// <summary>
+        /// by default this represents the leading zero, trailing zero trimmed value 
+        /// </summary>
+        public virtual string Text
         {
             get
             {
                 var vals = this.Values;
                 StringBuilder sb = new StringBuilder();
 
+                this.ScrubLeadingAndTrailingZeroes();
+
                 if (!this._isPositive)
                     sb.Append(this.NumberSystem.NegativeSymbol);
 
                 var mostSigNodesDesc = this.Nodes.Reverse();
-                bool isLeadingZero = true;
                 foreach (var each in mostSigNodesDesc)
                 {
-                    if (isLeadingZero && each.Value.IsZero && each.Value.IsZerothDigit == false)
-                    {
-                        continue;
-                    }
-                    else
-                    {
-                        isLeadingZero = false;
-                    }
-
-                    sb.Append(each.Value.Symbol);
+                    sb.Append(each.Value.Digit.Symbol);
                     if (object.ReferenceEquals(this._zerothDigit, each))
                     {
                         sb.Append(this.NumberSystem.DecimalSymbol);
@@ -113,8 +110,8 @@ namespace Arith
             if (number == null)
                 throw new ArgumentNullException("number");
 
-            this.ScrubTrailingLeadingZeroes();
-            number.ScrubTrailingLeadingZeroes();
+            this.ScrubLeadingAndTrailingZeroes();
+            number.ScrubLeadingAndTrailingZeroes();
 
             //iterate to the longest node
             var d1 = this.ZerothDigit;
@@ -150,7 +147,7 @@ namespace Arith
                 if (d2 == null && d1 == null)
                     return null;
 
-                var comp = d1.Value.Compare(d2.Value);
+                var comp = d1.Value.Digit.Compare(d2.Value.Digit.Symbol);
                 if (comp != null)
                     return comp;
 
@@ -194,32 +191,12 @@ namespace Arith
         }
         #endregion
 
-        #region Methods
-        /// <summary>
-        /// returns the most significant digit.  walks to the last node, then walks back stopping
-        /// at the first non-zero until it gets to Zeroth Node and returns that.
-        /// </summary>
-        public LinkedListNode<Digit> GetMostSignificantDigit()
+        #region Helpers
+        private void SwitchSign()
         {
-            LinkedListNode<Digit> node = this.LastNode;
-
-            while (node != null)
-            {
-                if (node.Value.IsZerothDigit)
-                    break;
-
-                if (node.PreviousNode == null)
-                    break;
-
-                if (!node.Value.IsZero)
-                    break;
-
-                node = node.PreviousNode;
-            }
-
-            return node;
+            this._isPositive = !this._isPositive;
         }
-        private void ScrubTrailingLeadingZeroes()
+        private void ScrubLeadingAndTrailingZeroes()
         {
             while (this.LastNode.Value.IsZerothDigit == false &&
                 this.LastNode.Value.IsZero)
@@ -233,25 +210,211 @@ namespace Arith
         /// adds a Zero-value placeholder digit 
         /// </summary>
         /// <returns></returns>
-        internal LinkedListNode<Digit> AddEmptyDigit()
+        internal LinkedListNode<NumberDigit> AddEmptyDigit()
         {
-            var digit = this.NumberSystem[this.NumberSystem.ZeroSymbol];
+            var digit = new NumberDigit(this.NumberSystem.ZeroSymbol, this.NumberSystem);
             var rv = this.AddLast(digit);
-            digit.ParentNode = rv;
+            digit.DigitNode = rv;
             return rv;
         }
         /// <summary>
         /// adds a Zero-value placeholder digit before the decimal 
         /// </summary>
         /// <returns></returns>
-        internal LinkedListNode<Digit> AddEmptyDecimalDigit()
+        internal LinkedListNode<NumberDigit> AddEmptyDecimalDigit()
         {
-            var digit = this.NumberSystem[this.NumberSystem.ZeroSymbol];
+            var digit = new NumberDigit(this.NumberSystem.ZeroSymbol, this.NumberSystem);
             var rv = this.AddFirst(digit);
-            digit.ParentNode = rv;
+            digit.DigitNode = rv;
             return rv;
         }
 
+        #endregion
+
+        #region adding logic
+        public static void HydrateFrom(Number numberToHydrate, Number number)
+        {
+            numberToHydrate._isPositive = number._isPositive;
+
+            numberToHydrate._firstNode = null;
+            numberToHydrate.AddEmptyDigit();
+            numberToHydrate._zerothDigit = numberToHydrate.FirstNode;
+
+            var currentDigit = numberToHydrate.FirstNode.Value;
+            var node = number.ZerothDigit;
+            while (node != null)
+            {
+                currentDigit.Digit.SetValue(node.Value.Digit.Symbol);
+                currentDigit = currentDigit.NextDigit;
+                node = node.NextNode;
+            }
+
+            currentDigit = numberToHydrate.FirstNode.Value;
+            node = number.ZerothDigit.PreviousNode;
+            while (node != null)
+            {
+                currentDigit = currentDigit.PreviousDigit;
+                currentDigit.Digit.SetValue(node.Value.Digit.Symbol);
+                node = node.PreviousNode;
+            }
+        }
+        public static Number Clone(Number number)
+        {
+            var rv = new Number(null, number.NumberSystem);
+            HydrateFrom(rv, number);
+            return rv;
+        }
+        private static Number Add(Number number1, Number number2)
+        {
+            if (_isDisabled)
+                throw new InvalidOperationException("dang");
+
+            if (number1 == null)
+                return number2;
+
+            if (number2 == null)
+                return number1;
+
+            Number rv = null;
+
+            //determine the longer number
+            bool? num1IsLonger = number1.Compare(number2);
+
+            if (number1.IsPositive && number2.IsPositive)
+            {
+                rv = Increment(number1, number2);
+            }
+            else if (number1.IsPositive && number2.IsPositive == false)
+            {
+                switch (num1IsLonger)
+                {
+                    case null:
+                        rv = Decrement(number1, number2);
+                        break;
+                    case true:
+                        rv = Decrement(number1, number2);
+                        break;
+                    case false:
+                        rv = Decrement(number2, number1);
+                        rv._isPositive = false;
+                        break;
+                }
+            }
+            else if (number1.IsPositive == false && number2.IsPositive)
+            {
+                switch (num1IsLonger)
+                {
+                    case null:
+                        rv = Decrement(number1, number2);
+                        break;
+                    case true:
+                        rv = Decrement(number1, number2);
+                        break;
+                    case false:
+                        rv = Decrement(number2, number1);
+                        rv._isPositive = true;
+                        break;
+                }
+            }
+            else if (number1.IsPositive == false && number2.IsPositive == false)
+            {
+                rv = Increment(number1, number2);
+                rv._isPositive = false;
+            }
+
+            return rv;
+        }
+        /// <summary>
+        /// treats numbers as signless, and increase the value of the host number by the amount
+        /// </summary>
+        /// <param name="number"></param>
+        /// <param name="number2"></param>
+        private static Number Increment(Number number1, Number number2)
+        {
+            if (number1 == null)
+                throw new ArgumentNullException("number1");
+
+            if (number2 == null)
+                throw new ArgumentNullException("number2");
+
+            Number rv = Clone(number1);
+
+            //the add process
+            var addNode1 = rv.ZerothDigit;
+            var addNode2 = number2.ZerothDigit;
+
+            //add after the decimal
+            while (addNode2 != null)
+            {
+                addNode1.Value.Add(addNode2.Value.Digit.Symbol);
+                addNode1 = addNode1.Value.NextDigit.DigitNode;
+                addNode2 = addNode2.NextNode;
+            }
+
+            //add before the decimal
+            addNode1 = rv.ZerothDigit.Value.PreviousDigit.DigitNode;
+            addNode2 = number2.ZerothDigit.PreviousNode;
+
+            while (addNode2 != null)
+            {
+                addNode1.Value.Add(addNode2.Value.Digit.Symbol);
+                addNode1 = addNode1.Value.PreviousDigit.DigitNode;
+                addNode2 = addNode2.PreviousNode;
+            }
+            return rv;
+        }
+        /// <summary>
+        /// treats numbers as signless.  assumes number1 is longer than number 2
+        /// </summary>
+        /// <param name="number"></param>
+        /// <param name="decnumber"></param>
+        /// <returns></returns>
+        private static Number Decrement(Number number1, Number number2)
+        {
+            if (number1 == null)
+                throw new ArgumentNullException("number1");
+
+            if (number2 == null)
+                throw new ArgumentNullException("number2");
+
+            Number rv = Clone(number1);
+
+            //the add process
+            var addNode1 = rv.ZerothDigit;
+            var addNode2 = number2.ZerothDigit;
+
+            //subtract after the decimal
+            while (addNode2 != null)
+            {
+                addNode1.Value.Subtract(addNode2.Value.Digit.Symbol);
+                addNode1 = addNode1.Value.NextDigit.DigitNode;
+                addNode2 = addNode2.NextNode;
+            }
+
+            //subtract before the decimal
+            addNode1 = rv.ZerothDigit.PreviousNode;
+            addNode2 = number2.ZerothDigit.PreviousNode;
+
+            while (addNode2 != null)
+            {
+                addNode1.Value.Subtract(addNode2.Value.Digit.Symbol);
+                addNode1 = addNode1.Value.PreviousDigit.DigitNode;
+                addNode2 = addNode2.PreviousNode;
+            }
+            return rv;
+        }
+        #endregion
+
+        #region Methods
+        /// <summary>
+        /// returns the most significant digit.  walks to the last node, then walks back stopping
+        /// at the first non-zero until it gets to Zeroth Node and returns that.
+        /// </summary>
+        public LinkedListNode<NumberDigit> GetMostSignificantDigit()
+        {
+            this.ScrubLeadingAndTrailingZeroes();
+            return this.LastNode;
+        }
         public void SetValue(string number)
         {
             if (number == _numberSystem.NegativeSymbol + _numberSystem.NegativeSymbol)
@@ -263,7 +426,6 @@ namespace Arith
             this._firstNode = null;
             this.AddEmptyDigit();
             this._zerothDigit = this.FirstNode;
-            this._zerothDigit.Value.PositionNumber = this._zerothDigit.Value.Symbol;
 
             //parse symbols
             var symbols = this.NumberSystem.ParseSymbols(number, true);
@@ -299,15 +461,17 @@ namespace Arith
                 }
             }
 
+            //iterate thru those lists and set the values
             var thisNode = this.ZerothDigit;
+            //reverse so we're adding digits from the decimal outwards, and then from the decimal inwards
             postDecimalSymbols.Reverse();
             foreach (var each in postDecimalSymbols)
             {
                 if (each.Equals(this.NumberSystem.NegativeSymbol))
                     continue;
 
-                thisNode.Value.SetValue(each);
-                thisNode = thisNode.Value.NextDigit.ParentNode;
+                thisNode.Value.Digit.SetValue(each);
+                thisNode = thisNode.Value.NextDigit.DigitNode;
             }
             thisNode = null;
             foreach (var each in preDecimalSymbols)
@@ -315,81 +479,8 @@ namespace Arith
                 if (each.Equals(this.NumberSystem.NegativeSymbol))
                     continue;
 
-                thisNode.Value.PreviousDigit.SetValue(each);
-                thisNode = thisNode.Value.PreviousDigit.ParentNode;
-            }
-
-        }
-
-        public void IncrementByOne()
-        {
-            this.Increment(new Number(this.NumberSystem.OneSymbol, this.NumberSystem));
-
-        }
-        public void DecrementByOne()
-        {
-            this.Decrement(new Number(this.NumberSystem.OneSymbol, this.NumberSystem));
-        }
-
-        /// <summary>
-        /// treats numbers as signless
-        /// </summary>
-        /// <param name="number"></param>
-        /// <param name="incnumber"></param>
-        private void Increment(Number incnumber)
-        {
-            //the add process
-            var addNode1 = this.ZerothDigit;
-            var addNode2 = incnumber.ZerothDigit;
-
-            //add after the decimal
-            while (addNode2 != null)
-            {
-                addNode1.Value.MoveForwardBy(addNode2.Value.Symbol);
-                addNode1 = addNode1.Value.NextDigit.ParentNode;
-                addNode2 = addNode2.NextNode;
-            }
-
-            //add before the decimal
-            addNode1 = this.ZerothDigit.PreviousNode;
-            addNode2 = incnumber.ZerothDigit.PreviousNode;
-
-            while (addNode2 != null)
-            {
-                addNode1.Value.MoveForwardBy(addNode2.Value.Symbol);
-                addNode1 = addNode1.Value.PreviousDigit.ParentNode;
-                addNode2 = addNode2.PreviousNode;
-            }
-        }
-        /// <summary>
-        /// treats numbers as signless
-        /// </summary>
-        /// <param name="number"></param>
-        /// <param name="decnumber"></param>
-        /// <returns></returns>
-        private void Decrement(Number decnumber)
-        {
-            //the add process
-            var addNode1 = this.ZerothDigit;
-            var addNode2 = decnumber.ZerothDigit;
-
-            //add after the decimal
-            while (addNode2 != null)
-            {
-                addNode1.Value.MoveBackBy(addNode2.Value.Symbol);
-                addNode1 = addNode1.Value.NextDigit.ParentNode;
-                addNode2 = addNode2.NextNode;
-            }
-
-            //add before the decimal
-            addNode1 = this.ZerothDigit.PreviousNode;
-            addNode2 = decnumber.ZerothDigit.PreviousNode;
-
-            while (addNode2 != null)
-            {
-                addNode1.Value.MoveBackBy(addNode2.Value.Symbol);
-                addNode1 = addNode1.Value.PreviousDigit.ParentNode;
-                addNode2 = addNode2.PreviousNode;
+                thisNode.Value.PreviousDigit.Digit.SetValue(each);
+                thisNode = thisNode.Value.PreviousDigit.DigitNode;
             }
         }
 
@@ -401,58 +492,8 @@ namespace Arith
             if (number == null)
                 return;
 
-            if (this.IsPositive)
-            {
-                if (number.IsPositive)
-                {
-                    this.Increment(number);
-                    return;
-                }
-                else
-                {
-                    //if the number is negative and less than, it's a plain decrement
-                    if (number.Compare(this) == false)
-                    {
-                        this.Decrement(number);
-                        return;
-                    }
-                    else
-                    {
-                        //number is bigger so decrement from it and swap the value
-                        number.Decrement(this);
-                        this.SetValue(number.Text);
-                        this._isPositive = false;
-                        return;
-                    }
-                }
-            }
-            else
-            {
-                if (number.IsPositive)
-                {
-                    //number is shorter than this
-                    if (number.Compare(this) == false)
-                    {
-                        this.Decrement(number);
-                        return;
-                    }
-                    else
-                    {
-                        //number is bigger so decrement from it and swap the value
-                        number.Decrement(this);
-                        this.SetValue(number.Text);
-                        this._isPositive = true;
-                        return;
-                    }
-                }
-                else
-                {
-                    //it's a negative number adding a negative number 
-                    this.Increment(number);
-                    return;
-                }
-            }
-
+            var val = Add(this, number);
+            HydrateFrom(this, val);
         }
         public void Subtract(Number number)
         {
@@ -461,62 +502,19 @@ namespace Arith
 
             if (number == null)
                 return;
+            var negNumber = Clone(number);
+            negNumber.SwitchSign();
 
-            if (!this.IsPositive)
-            {
-                if (number.IsPositive)
-                {
-                    //subtraction of a positive number along a negative line lengthens
-                    this.Increment(number);
-                    return;
-                }
-                else
-                {
-                    //subtraction of a negative number along a negative line shortens
-
-                    //number is shorter than this, it's a plain decrement
-                    if (number.Compare(this) == false)
-                    {
-                        this.Decrement(number);
-                        return;
-                    }
-                    else
-                    {
-                        //number is bigger so decrement from it and swap the value
-                        number.Decrement(this);
-                        this.SetValue(number.Text);
-                        this._isPositive = true;
-                        return;
-                    }
-                }
-            }
-            else
-            {
-                if (number.IsPositive)
-                {
-                    //subtraction of a positive number along a positive line 
-                    if (number.Compare(this) == false)
-                    {
-                        this.Decrement(number);
-                        return;
-                    }
-                    else
-                    {
-                        //number is bigger so decrement from it and swap the value
-                        number.Decrement(this);
-                        this.SetValue(number.Text);
-                        this._isPositive = false;
-                        return;
-                    }
-                }
-                else
-                {
-                    //subtraction of a negative number along a positive line lengthens
-                    this.Increment(number);
-                    return;
-                }
-            }
-
+            var val = Add(this, negNumber);
+            HydrateFrom(this, val);
+        }
+        public void AddOne()
+        {
+            this.Add(new Number(this.NumberSystem.OneSymbol, this.NumberSystem));
+        }
+        public void SubtractOne()
+        {
+            this.Subtract(new Number(this.NumberSystem.OneSymbol, this.NumberSystem));
         }
         #endregion
     }
@@ -535,18 +533,18 @@ namespace Arith
             var num1 = new Number("1234567898", set);
             Debug.Assert(num1.Text == "1234567898");
 
-            num1.IncrementByOne();
+            num1.AddOne();
             Debug.Assert(num1.Text == "1234567899");
             var counter = 1234567899;
             for (int i = 1; i < 100; i++)
             {
-                num1.IncrementByOne();
+                num1.AddOne();
                 counter++;
                 Debug.Assert(num1.Text == counter.ToString());
             }
             for (int i = 1; i < 100; i++)
             {
-                num1.DecrementByOne();
+                num1.SubtractOne();
                 counter--;
                 Debug.Assert(num1.Text == counter.ToString());
             }
@@ -554,7 +552,7 @@ namespace Arith
             counter = 0;
             for (int i = 0; i < 200; i++)
             {
-                num2.DecrementByOne();
+                num2.SubtractOne();
                 counter--;
                 Debug.Assert(num2.Text == counter.ToString());
             }
@@ -575,14 +573,14 @@ namespace Arith
 
             for (int i = 0; i < 1000; i++)
             {
-                num1.IncrementByOne();
+                num1.AddOne();
                 number++;
                 Debug.Assert(num1.Text == number.ToString());
             }
 
             for (int i = 0; i < 1000; i++)
             {
-                num1.DecrementByOne();
+                num1.SubtractOne();
                 number--;
                 Debug.Assert(num1.Text == number.ToString());
             }

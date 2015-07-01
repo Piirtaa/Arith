@@ -14,6 +14,7 @@ namespace Arith
             CircularLinkedListTests.Test();
             CircularLinkedListTests.SequenceTest();
             NumeralSetTests.Test();
+            SymbolicDigitTests.Test();
             NumberTests.Test();
 
         }

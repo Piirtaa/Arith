@@ -20,10 +20,6 @@ namespace Arith
         #endregion
 
         #region Overrides
-        protected override bool IsLast(LinkedListNode<T> node)
-        {
-            return object.ReferenceEquals(node.NextNode, this._firstNode);
-        }
         /// <summary>
         /// this is the only way to set the firstnode, other than removing the firstnode, or first item add
         /// </summary>
@@ -32,14 +28,14 @@ namespace Arith
         public override LinkedListNode<T> AddFirst(T val)
         {
             var node = new CircularLinkedListNode<T>(val, this);
-            this.InsertNode(node, this.LastNode, this.FirstNode);
-            this._firstNode = node;
+            this.InsertNode(node, null, this.FirstNode);
+            
             return node;
         }
         public override LinkedListNode<T> AddLast(T val)
         {
             var node = new CircularLinkedListNode<T>(val, this);
-            this.InsertNode(node, this.LastNode, this.FirstNode);
+            this.InsertNode(node, this.LastNode, null);
             return node;
         }
         /// <summary>
@@ -53,50 +49,20 @@ namespace Arith
         /// <returns></returns>
         protected override LinkedListNode<T> InsertNode(LinkedListNode<T> node, LinkedListNode<T> before, LinkedListNode<T> after)
         {
-            LinkedListNode<T> before2 = before;
-            LinkedListNode<T> after2 = after;
-
-            //scrub to ensure circularity
-            if (before2 == null)
-                before2 = this.LastNode;
-
-            if (after2 == null)
-                after2 = this.FirstNode;
-
-            CircularLinkedListNode<T> cNode = node as CircularLinkedListNode<T>;
-            if (cNode == null)
-                throw new ArgumentNullException("node");
-
-            return base.InsertNode(node, before2, after2);
-        }
-        protected override void OnInsert_SetFirstNode(LinkedListNode<T> insertNode)
-        {
-            if (this._firstNode != null && object.ReferenceEquals(insertNode, this._firstNode))
+            LinkedListNode<T> rv = null;
+            lock (this._stateLock)
             {
-                throw new ArgumentOutOfRangeException("insertNode");
+
+                rv = base.InsertNode(node, before, after);
+
+                //if we have circularity issues (ie. we're on the first or last node) then we work that out
+                if (this._firstNode != null)
+                {
+                    this.FirstNode.PreviousNode = this.LastNode;
+                    this.LastNode.NextNode = this.FirstNode;
+                }
             }
-
-            if (this._firstNode == null)
-            {
-                this._firstNode = insertNode;
-                //ensure circularity 
-                insertNode.NextNode = this.FirstNode;
-                insertNode.PreviousNode = this.FirstNode;
-            }
-            else if (insertNode.PreviousNode == null)
-            {
-                var oldFirst = this._firstNode;
-
-                //if before is null we assume this is an AddFirst
-                this._firstNode = insertNode;
-
-                //ensure circularity 
-                insertNode.PreviousNode = this.LastNode;
-                this.LastNode.NextNode = insertNode;
-                insertNode.NextNode = oldFirst;
-                oldFirst.PreviousNode = insertNode;
-            }
-
+            return rv;
         }
         #endregion
     }
