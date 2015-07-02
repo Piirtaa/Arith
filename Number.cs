@@ -17,6 +17,8 @@ namespace Arith
     /// and the least significant at the start.  In this way we keep a correlation from
     /// ZerothNode moving to the end, as a marker of symbol position
     /// </remarks>
+    /// 
+    [DebuggerDisplay("{SymbolsText}")]
     public class Number : LinkedList<IDigit>
     {
         #region Declarations
@@ -43,7 +45,7 @@ namespace Arith
         #endregion
 
         #region Ctor
-        public Number(string digits, NumeralSet numberSystem) 
+        public Number(string digits, NumeralSet numberSystem)
         {
             if (numberSystem == null)
                 throw new ArgumentNullException("numberSystem");
@@ -59,17 +61,17 @@ namespace Arith
             this.PostNodeInsertionStrategy = (x) =>
             {
                 DigitNode node = x as DigitNode;
-                
+
                 //set zeroth digit if it hasn't been
                 if (node.ParentNumber.ZerothDigit == null)
                     node.ParentNumber._zerothDigit = node;
 
-                Debug.WriteLine(string.Format("First {0} Last {1} Zeroth {2} Inserted {3}",
-                    node.ParentNumber.FirstDigit.Symbol,
-                    node.ParentNumber.LastDigit.Symbol,
-                    node.ParentNumber.ZerothDigit.Symbol,
-                    node.Symbol
-                ));
+                //Debug.WriteLine(string.Format("First {0} Last {1} Zeroth {2} Inserted {3}",
+                //    node.ParentNumber.FirstDigit.Symbol,
+                //    node.ParentNumber.LastDigit.Symbol,
+                //    node.ParentNumber.ZerothDigit.Symbol,
+                //    node.Symbol
+                Debug.WriteLine(node.ParentNumber.SymbolsText);
             };
 
             this.InitToZero();
@@ -292,17 +294,17 @@ namespace Arith
             {
                 rvNode.Value.SetValue(node.Symbol);
                 node = node.NextNode as DigitNode;
-                
+
                 if (node == null)
                     break;
-                
+
                 rvNode = rvNode.NextDigit;
             }
 
             node = number.ZerothDigit.PreviousNode as DigitNode;
-            if(node != null)
+            if (node != null)
                 rvNode = rv.ZerothDigit.PreviousDigit;
-            
+
             while (node != null)
             {
                 rvNode.Value.SetValue(node.Symbol);
@@ -310,7 +312,7 @@ namespace Arith
 
                 if (node == null)
                     break;
-                
+
                 rvNode = rvNode.PreviousDigit;
             }
 
@@ -542,6 +544,8 @@ namespace Arith
                 thisNode.PreviousDigit.SetValue(each);
                 thisNode = thisNode.PreviousDigit;
             }
+
+            this.ScrubLeadingAndTrailingZeroes();
         }
 
         public void Add(Number number)
@@ -579,7 +583,7 @@ namespace Arith
         #endregion
     }
 
-        /// <summary>
+    /// <summary>
     /// digit node payload type.  has IDigit.  has wire to parent number (linkedlist) 
     /// , and thus to sibling Digits.
     /// </summary>
@@ -829,7 +833,7 @@ namespace Arith
 
             num1.AddOne();
             Debug.Assert(num1.SymbolsText == "123456790");
-            var counter = 1234567899;
+            var counter = 123456790;
             for (int i = 1; i < 100; i++)
             {
                 num1.AddOne();
