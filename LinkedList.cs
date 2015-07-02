@@ -213,19 +213,20 @@ namespace Arith
                         }
                         break;
                 }
+                //perform post insert hook
+                if (this.PostNodeInsertionStrategy != null)
+                {
+                    this.PostNodeInsertionStrategy(node);
+                }
             }
 
-            //perform post insert hook
-            if (this.PostNodeInsertionStrategy != null)
-            {
-                this.PostNodeInsertionStrategy(node);
-            }
+
             return node;
         }
 
         public virtual LinkedList<T> Remove(LinkedListNode<T> item)
         {
-            lock(this._stateLock)
+            lock (this._stateLock)
             {
                 //validate it's contained
                 if (item != null && !this.Contains(item))
@@ -249,7 +250,7 @@ namespace Arith
                 if (item.IsFirst && item.IsLast)
                 {
                     this._firstNode = null;
-                    this._lastNode = null; 
+                    this._lastNode = null;
                 }
                 else if (item.IsFirst)
                 {
@@ -357,7 +358,7 @@ namespace Arith
             return rv;
         }
 
-         #endregion
+        #endregion
     }
 
 
@@ -413,7 +414,7 @@ namespace Arith
             {
                 return object.ReferenceEquals(this.ParentList.LastNode, this);
             }
-        }           
+        }
         #endregion
     }
 

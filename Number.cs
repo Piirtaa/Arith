@@ -60,18 +60,20 @@ namespace Arith
 
             this.PostNodeInsertionStrategy = (x) =>
             {
+                //Debug.WriteLine("post insert on " + x.Value.Symbol);
+
                 DigitNode node = x as DigitNode;
 
                 //set zeroth digit if it hasn't been
-                if (node.ParentNumber.ZerothDigit == null)
-                    node.ParentNumber._zerothDigit = node;
+                if (this.ZerothDigit == null)
+                    this._zerothDigit = node;
 
                 //Debug.WriteLine(string.Format("First {0} Last {1} Zeroth {2} Inserted {3}",
                 //    node.ParentNumber.FirstDigit.Symbol,
                 //    node.ParentNumber.LastDigit.Symbol,
                 //    node.ParentNumber.ZerothDigit.Symbol,
                 //    node.Symbol
-                Debug.WriteLine(node.ParentNumber.SymbolsText);
+                Debug.WriteLine(this.SymbolsText);
             };
 
             this.InitToZero();
@@ -110,25 +112,37 @@ namespace Arith
         {
             get
             {
-                var clone = Clone(this);
-                clone.ScrubLeadingAndTrailingZeroes();
-
                 StringBuilder sb = new StringBuilder();
+                if (!this._isPositive)
+                    sb.Append(this.NumberSystem.NegativeSymbol);
 
-                if (!clone._isPositive)
-                    sb.Append(clone.NumberSystem.NegativeSymbol);
+                bool isLeadingZero = true;
+                var mostSigNodesDesc = this.Nodes.Reverse();
 
-                var node = clone.LastDigit;
-                while (node != null)
+                foreach (var each in mostSigNodesDesc)
                 {
+                    DigitNode node = each as DigitNode;
+
+                   if (isLeadingZero && node.IsZero && node.IsZerothDigit == false)
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        isLeadingZero = false;
+                    }
+                    
                     sb.Append(node.Symbol);
-
-                    if (node.IsZerothDigit && node.PreviousNode != null)
-                        sb.Append(clone.NumberSystem.DecimalSymbol);
-
-                    node = node.PreviousNode as DigitNode;
+                    if (node.IsZerothDigit)
+                    {
+                        sb.Append(this.NumberSystem.DecimalSymbol);
+                    }
                 }
+               
                 var rv = sb.ToString();
+
+                if (rv.EndsWith(this.NumberSystem.DecimalSymbol))
+                    rv = rv.Substring(0, rv.Length - 1);
 
                 return rv;
             }
@@ -265,7 +279,18 @@ namespace Arith
             var rv = this.AddFirst(digit) as DigitNode;
             return rv;
         }
-
+        internal DigitNode AddDigit(string symbol)
+        {
+            var digit = this.NumberSystem.GetMatrixDigit(symbol);
+            var rv = this.AddLast(digit) as DigitNode;
+            return rv;
+        }
+        internal DigitNode AddDecimalDigit(string symbol)
+        {
+            var digit = this.NumberSystem.GetMatrixDigit(symbol);
+            var rv = this.AddFirst(digit) as DigitNode;
+            return rv;
+        }
         /// <summary>
         /// resets the current instance 
         /// </summary>
@@ -523,26 +548,25 @@ namespace Arith
                 }
             }
 
+            this._firstNode = null;
+            this._lastNode = null;
+            this._zerothDigit = null;
+
             //iterate thru those lists and set the values
-            var thisNode = this.ZerothDigit;
             //reverse so we're adding digits from the decimal outwards, and then from the decimal inwards
             postDecimalSymbols.Reverse();
             foreach (var each in postDecimalSymbols)
             {
                 if (each.Equals(this.NumberSystem.NegativeSymbol))
                     continue;
-
-                thisNode.SetValue(each);
-                thisNode = thisNode.NextDigit;
+                this.AddDigit(each);
             }
-            thisNode = this.ZerothDigit;
             foreach (var each in preDecimalSymbols)
             {
                 if (each.Equals(this.NumberSystem.NegativeSymbol))
                     continue;
 
-                thisNode.PreviousDigit.SetValue(each);
-                thisNode = thisNode.PreviousDigit;
+                this.AddDecimalDigit(each);
             }
 
             this.ScrubLeadingAndTrailingZeroes();
@@ -657,6 +681,7 @@ namespace Arith
                 return this.NextNode as DigitNode;
             }
         }
+
         /// <summary>
         /// whether the next digit exists yet 
         /// (ie. has a registry entry been created for it in the next node of the linked list number)
