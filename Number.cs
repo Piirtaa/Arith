@@ -56,15 +56,21 @@ namespace Arith
                 return new DigitNode(x, this);
             };
 
-            //this.PostNodeInsertionStrategy = (x) =>
-            //{
-            //    //if we have circularity issues (ie. we're on the first or last node) then we work that out
-            //    if (this._firstNode != null)
-            //    {
-            //        this.FirstNode.PreviousNode = this.LastNode;
-            //        this.LastNode.NextNode = this.FirstNode;
-            //    }
-            //};
+            this.PostNodeInsertionStrategy = (x) =>
+            {
+                DigitNode node = x as DigitNode;
+                
+                //set zeroth digit if it hasn't been
+                if (node.ParentNumber.ZerothDigit == null)
+                    node.ParentNumber._zerothDigit = node;
+
+                Debug.WriteLine(string.Format("First {0} Last {1} Zeroth {2} Inserted {3}",
+                    node.ParentNumber.FirstDigit.Symbol,
+                    node.ParentNumber.LastDigit.Symbol,
+                    node.ParentNumber.ZerothDigit.Symbol,
+                    node.Symbol
+                ));
+            };
 
             this.InitToZero();
             this.SetValue(digits);
@@ -79,8 +85,8 @@ namespace Arith
         #endregion
 
         #region Calculated Properties
-        public DigitNode LastDigit { get { return this.FirstNode as DigitNode; } }
-        public DigitNode FirstDigit { get { return this.LastNode as DigitNode; } }
+        public DigitNode LastDigit { get { return this.LastNode as DigitNode; } }
+        public DigitNode FirstDigit { get { return this.FirstNode as DigitNode; } }
         public List<Tuple<string, bool>> NodeValues
         {
             get
@@ -527,7 +533,7 @@ namespace Arith
                 thisNode.SetValue(each);
                 thisNode = thisNode.NextDigit;
             }
-            thisNode = null;
+            thisNode = this.ZerothDigit;
             foreach (var each in preDecimalSymbols)
             {
                 if (each.Equals(this.NumberSystem.NegativeSymbol))
@@ -590,7 +596,7 @@ namespace Arith
         #endregion
 
         #region Parent Number-related Calculated Properties
-        private Number ParentNumber { get { return this.ParentList as Number; } }
+        public Number ParentNumber { get { return this.ParentList as Number; } }
         private NumeralSet NumberSystem { get { return this.ParentNumber.NumberSystem; } }
         /// <summary>
         /// reference compares Parent's Zeroth Digit to this instance 
@@ -815,11 +821,14 @@ namespace Arith
             //var num = new Number(null, set);
             //var b = num.SymbolsText;
 
-            var num1 = new Number("1234567898", set);
-            Debug.Assert(num1.SymbolsText == "1234567898");
+            var num1 = new Number("123456789", set);
+            var f = num1.FirstDigit;
+            var l = num1.LastDigit;
+
+            Debug.Assert(num1.SymbolsText == "123456789");
 
             num1.AddOne();
-            Debug.Assert(num1.SymbolsText == "1234567899");
+            Debug.Assert(num1.SymbolsText == "123456790");
             var counter = 1234567899;
             for (int i = 1; i < 100; i++)
             {
