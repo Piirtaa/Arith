@@ -60,20 +60,13 @@ namespace Arith
 
             this.PostNodeInsertionStrategy = (x) =>
             {
-                //Debug.WriteLine("post insert on " + x.Value.Symbol);
+                Debug.WriteLine("post insert on " + x.Value.Symbol + " producing " + this.SymbolsText);
 
                 DigitNode node = x as DigitNode;
 
                 //set zeroth digit if it hasn't been
                 if (this.ZerothDigit == null)
                     this._zerothDigit = node;
-
-                //Debug.WriteLine(string.Format("First {0} Last {1} Zeroth {2} Inserted {3}",
-                //    node.ParentNumber.FirstDigit.Symbol,
-                //    node.ParentNumber.LastDigit.Symbol,
-                //    node.ParentNumber.ZerothDigit.Symbol,
-                //    node.Symbol
-                Debug.WriteLine(this.SymbolsText);
             };
 
             this.InitToZero();
@@ -118,12 +111,11 @@ namespace Arith
 
                 bool isLeadingZero = true;
                 var mostSigNodesDesc = this.Nodes.Reverse();
-
                 foreach (var each in mostSigNodesDesc)
                 {
                     DigitNode node = each as DigitNode;
-
-                   if (isLeadingZero && node.IsZero && node.IsZerothDigit == false)
+                    //ignore leading zeroes
+                    if (isLeadingZero && node.IsZero && node.IsZerothDigit == false)
                     {
                         continue;
                     }
@@ -131,14 +123,14 @@ namespace Arith
                     {
                         isLeadingZero = false;
                     }
-                    
+
                     sb.Append(node.Symbol);
                     if (node.IsZerothDigit)
                     {
                         sb.Append(this.NumberSystem.DecimalSymbol);
                     }
                 }
-               
+
                 var rv = sb.ToString();
 
                 if (rv.EndsWith(this.NumberSystem.DecimalSymbol))
@@ -426,8 +418,10 @@ namespace Arith
             while (addNode2 != null)
             {
                 addNode1.Add(addNode2.Symbol);
-                addNode1 = addNode1.NextDigit;
+
                 addNode2 = addNode2.NextNode as DigitNode;
+                if(addNode2 != null)
+                    addNode1 = addNode1.NextDigit;
             }
 
             //add before the decimal
@@ -437,8 +431,10 @@ namespace Arith
             while (addNode2 != null)
             {
                 addNode1.Value.Add(addNode2.Symbol);
-                addNode1 = addNode1.PreviousDigit;
+                
                 addNode2 = addNode2.PreviousNode as DigitNode;
+                if (addNode2 != null)
+                    addNode1 = addNode1.PreviousDigit;
             }
             return rv;
         }
@@ -466,8 +462,10 @@ namespace Arith
             while (addNode2 != null)
             {
                 addNode1.Subtract(addNode2.Symbol);
-                addNode1 = addNode1.NextDigit;
+
                 addNode2 = addNode2.NextNode as DigitNode;
+                if (addNode2 != null)
+                    addNode1 = addNode1.NextDigit;
             }
 
             //add before the decimal
@@ -477,8 +475,10 @@ namespace Arith
             while (addNode2 != null)
             {
                 addNode1.Value.Subtract(addNode2.Symbol);
-                addNode1 = addNode1.PreviousDigit;
+
                 addNode2 = addNode2.PreviousNode as DigitNode;
+                if (addNode2 != null)
+                    addNode1 = addNode1.PreviousDigit;
             }
             return rv;
         }

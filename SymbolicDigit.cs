@@ -61,14 +61,14 @@ namespace Arith
 
             var numeral = this.ZeroNumeral;
 
-            //find which digit comes first thru simple iteration
+            //find which digit comes first thru simple iteration.  this is the smaller digit
             while (numeral != null)
             {
                 if (numeral.Value.Equals(this.Symbol))
-                    return true;
+                    return false;
 
                 if (numeral.Value.Equals(symbol))
-                    return false;
+                    return true;
 
                 if (numeral.IsLast)
                     throw new InvalidOperationException("bad digit compare");
@@ -145,6 +145,17 @@ namespace Arith
             Debug.Assert(digit.Symbol == "9");
             Debug.Assert(s);
 
+            for (int i = 0; i < 9; i++)
+            {
+                var i2 = i + 1;
+                var digit1 = set.GetSymbolicDigit(i.ToString());
+                var comp = digit1.Compare(i2.ToString());
+                Debug.Assert(comp.Value == false);
+
+                var digit2 = set.GetSymbolicDigit(i2.ToString());
+                digit1.AddOne();
+                Debug.Assert(digit1.Symbol == i2.ToString());
+            }
         }
     }
 }
