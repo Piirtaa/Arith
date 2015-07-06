@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Diagnostics;
 
-namespace Arith
+namespace Arith.DataStructures
 {
     /// <summary>
     /// a linked list that links the last and first items in a loop

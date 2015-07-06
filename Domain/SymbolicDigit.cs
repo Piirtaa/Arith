@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Diagnostics;
+using Arith.DataStructures;
 
-namespace Arith
+namespace Arith.Domain
 {
 
     /// <summary>
@@ -14,6 +15,7 @@ namespace Arith
     public class SymbolicDigit : IDigit
     {
         #region Declarations
+        private readonly object _stateLock = new object();
 
         private CircularLinkedListNode<string> _numeral = null;
 
@@ -38,7 +40,7 @@ namespace Arith
         /// <summary>
         /// for the numeral set this digit belongs to, returns the zeroth(first) numeral 
         /// </summary>
-        protected CircularLinkedListNode<string> ZeroNumeral { get { return this._numeral.ParentList.FirstNode as CircularLinkedListNode<string>; } }
+        public CircularLinkedListNode<string> ZeroNumeral { get { return this._numeral.ParentList.FirstNode as CircularLinkedListNode<string>; } }
         #endregion
 
         #region IDigit
@@ -80,33 +82,21 @@ namespace Arith
         public bool Add(string symbol)
         {
             var rv = this._numeral.MoveForwardBy(symbol, out _numeral);
-            //if (rv && this.NextDigit != null)
-            //    this.NextDigit.MoveForward();
             return rv;
         }
         public bool Subtract(string symbol)
         {
             var rv = this._numeral.MoveBackBy(symbol, out _numeral);
-            //if (rv && this.NextDigit != null)
-            //    this.NextDigit.MoveBack();
             return rv;
         }
         public bool AddOne()
         {
             var rv = this._numeral.MoveForward(out _numeral);
-            //if (rv && this.NextDigit != null)
-            //{
-            //    this.NextDigit.MoveForward();
-            //}
             return rv;
         }
         public bool SubtractOne()
         {
             var rv = this._numeral.MoveBack(out _numeral);
-            //if (rv && this.NextDigit != null)
-            //{
-            //    this.NextDigit.MoveBack();
-            //}
             return rv;
         }
         public void SetValue(string numeral)

@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Diagnostics;
+using Arith.DataStructures;
 
-namespace Arith
+namespace Arith.Domain
 {
     /// <summary>
     /// contains an set of numerals.  Eg. a decimal numeral set would have 0-9.
     /// a binary numeral set would have 0 to 1.
     /// </summary>
-    /// 
     [DebuggerDisplay("{Text}")]
     public class NumeralSet
     {

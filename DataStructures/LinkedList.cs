@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Diagnostics;
 
-namespace Arith
+namespace Arith.DataStructures
 {
     [DebuggerDisplay("{DebuggerText}")]
     public class LinkedList<T>
@@ -98,7 +98,45 @@ namespace Arith
         #endregion
 
         #region Methods
+        /// <summary>
+        /// a method to iterate thru the list either forwards or backwards
+        /// </summary>
+        /// <param name="action"></param>
+        /// <param name="fromFirstToLast"></param>
+        public void Iterate(Action<LinkedListNode<T>> action, bool fromFirstToLast)
+        {
+            if (action == null)
+                throw new ArgumentNullException("action");
 
+            if (fromFirstToLast)
+            {
+                LinkedListNode<T> node = this._firstNode;
+
+                while (node != null)
+                {
+                    action(node);
+
+                    if (node.IsLast)
+                        break;
+
+                    node = node.NextNode;
+                }
+            }
+            else
+            {
+                LinkedListNode<T> node = this._lastNode;
+
+                while (node != null)
+                {
+                    action(node);
+
+                    if (node.IsFirst)
+                        break;
+
+                    node = node.PreviousNode;
+                }
+            }
+        }
         /// <summary>
         /// iterates from first to last and returns item from a positive filter.
         /// demonstrates good practice for iterating the list
@@ -398,7 +436,6 @@ namespace Arith
         public LinkedListNode<T> PreviousNode { get; protected internal set; }
         public LinkedList<T> ParentList { get; protected set; }
         #endregion
-
 
         #region Calculated Properties
         public bool IsFirst

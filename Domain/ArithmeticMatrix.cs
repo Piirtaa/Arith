@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Arith
+namespace Arith.Domain
 {
     /// <summary>
     /// for a given number set generates the addition, subtraction and compare tables
@@ -12,13 +12,11 @@ namespace Arith
     public class ArithmeticMatrix
     {
         #region Declarations
-
         private NumeralSet _numeralSet = null;
 
         private SquareLookup<Tuple<string, bool>> _addMap = null;
         private SquareLookup<Tuple<string, bool>> _subtractMap = null;
         private SquareLookup<bool?> _compareMap = null;
-
         #endregion
 
         #region Ctor
@@ -53,7 +51,6 @@ namespace Arith
 
         }
         #endregion
-
 
         #region Methods
         /// <summary>

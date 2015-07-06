@@ -2,40 +2,42 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Arith.Domain;
 
 namespace Arith
 {
-    /// <summary>
-    /// describes the core digit info
-    /// </summary>
-    public interface IDigit
+ 
+    public interface INumber
     {
-        string Symbol { get; }
+        /// <summary>
+        /// the number in symbolic form
+        /// </summary>
+        string SymbolsText { get; }
+        void SetValue(string number);
+        void Add(string number);
+        void Subtract(string number);
+        bool IsPositive { get; }
+        NumeralSet NumberSystem { get; }
 
         /// <summary>
         /// false = this is less, true= this is greater, null = equal
         /// </summary>
-        bool? Compare(string symbol);
-        bool Add(string symbol);
-        bool Subtract(string symbol);
-        bool AddOne();
-        bool SubtractOne();
-        void SetValue(string symbol);
+        bool? Compare(string number);
     }
 
-    public static class IDigitExtensions
+    public static class NumberExtensions
     {
-        public static bool IsEqualTo(this IDigit thisDigit, string symbol)
+        public static bool IsEqualTo(this Number thisNumber, string number)
         {
-            return thisDigit.Compare(symbol).Equals(null);
+            return thisNumber.Compare(number).Equals(null);
         }
-        public static bool IsGreaterThan(this IDigit thisDigit, string symbol)
+        public static bool IsGreaterThan(this Number thisNumber, string number)
         {
-            return thisDigit.Compare(symbol).Equals(true);
+            return thisNumber.Compare(number).Equals(true);
         }
-        public static bool IsLessThan(this IDigit thisDigit, string symbol)
+        public static bool IsLessThan(this Number thisNumber, string number)
         {
-            return thisDigit.Compare(symbol).Equals(false);
+            return thisNumber.Compare(number).Equals(false);
         }
     }
 }

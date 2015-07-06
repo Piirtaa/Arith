@@ -4,10 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Collections;
 
-namespace Arith
+namespace Arith.DataStructures
 {
     /// <summary>
-    /// since we don't have a fast lookup using 2 strings from the same set as a key, we create one       
+    /// lookup using 2 strings from the same set as a keys       
     /// </summary>
     /// <typeparam name="T"></typeparam>
     public class SquareLookup<T>

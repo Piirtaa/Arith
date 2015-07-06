@@ -5,7 +5,7 @@ using System.Text;
 using System.Diagnostics;
 using System.Collections;
 
-namespace Arith
+namespace Arith.Domain
 {
     /// <summary>
     /// Implements IDigit using an arithmetic matrix generated from SymbolicDigits.
