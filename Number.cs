@@ -31,7 +31,7 @@ namespace Arith
         #endregion
 
         #region Properties
-        protected SymbolicNumber SymbolicNumber { get; set; }
+        public SymbolicNumber SymbolicNumber { get; private set; }
         #endregion
 
         #region INumber
@@ -54,7 +54,15 @@ namespace Arith
         {
             this.SymbolicNumber.Subtract(new SymbolicNumber(number, this.NumberSystem));
         }
+        public void AddOne()
+        {
+            this.SymbolicNumber.AddOne();
+        }
 
+        public void SubtractOne()
+        {
+            this.SymbolicNumber.SubtractOne();
+        }
         public bool IsPositive
         {
             get { return this.SymbolicNumber.IsPositive; }
@@ -67,15 +75,15 @@ namespace Arith
 
         public bool? Compare(string number)
         {
-            return this.SymbolicNumber.Compare(number);
+            return this.SymbolicNumber.Compare(new SymbolicNumber(number, this.NumberSystem));
         }
         #endregion
     }
 
 
-    internal class NumberTests
+    public class NumberTests
     {
-        internal static void Test()
+        public static void Test()
         {
             //init the set
             NumeralSet set = new NumeralSet(".", "-");
@@ -89,8 +97,8 @@ namespace Arith
             //var b = num.SymbolsText;
 
             var num1 = new Number("123456789", set);
-            var f = num1.FirstDigit;
-            var l = num1.LastDigit;
+            var f = num1.SymbolicNumber.FirstDigit;
+            var l = num1.SymbolicNumber.LastDigit;
 
             Debug.Assert(num1.SymbolsText == "123456789");
 

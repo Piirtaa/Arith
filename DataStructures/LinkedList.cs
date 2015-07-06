@@ -455,9 +455,9 @@ namespace Arith.DataStructures
         #endregion
     }
 
-    internal class LinkedListTests
+    public class LinkedListTests
     {
-        internal static void Test()
+        public static void Test()
         {
             LinkedList<int> listOfInt = new LinkedList<int>();
             for (int i = 0; i < 100; i++)

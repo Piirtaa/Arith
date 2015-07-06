@@ -159,9 +159,9 @@ namespace Arith.DataStructures
         #endregion
     }
 
-    internal class CircularLinkedListTests
+    public class CircularLinkedListTests
     {
-        internal static void Test()
+        public static void Test()
         {
             CircularLinkedList<int> listOfInt = new CircularLinkedList<int>();
             for (int i = 0; i < 100; i++)
@@ -227,7 +227,7 @@ namespace Arith.DataStructures
 
         }
 
-        internal static void SequenceTest()
+        public static void SequenceTest()
         {
             CircularLinkedList<int> listOfInt = new CircularLinkedList<int>();
             for (int i = 0; i < 10; i++)

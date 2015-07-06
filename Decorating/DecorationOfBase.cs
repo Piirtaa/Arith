@@ -1,19 +1,12 @@
-﻿using CuttingEdge.Conditions;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.Serialization;
-using System.Web.Script.Serialization;
 using Arith.Extensions;
-using Decoratid.Core.Identifying;
 using Arith.DataStructures;
 
 namespace Arith.Decorating
 {
-
-
-
- 
 
     /// <summary>
     /// abstract class that provides templated implementation of a Decorator/Wrapper
@@ -153,7 +146,7 @@ namespace Arith.Decorating
             if (decorated is IDecorationOf<T>)
             {
                 IDecorationOf<T> dec = decorated as IDecorationOf<T>;
-                this._Inner = dec.Core;
+                this._Inner = dec.Inner;
             }
             else
             {

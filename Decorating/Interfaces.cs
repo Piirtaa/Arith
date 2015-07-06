@@ -62,7 +62,7 @@ namespace Arith.Decorating
         /// <summary>
         /// in a chain of decorations, it's the core value being decorated
         /// </summary>
-        new T Core { get; }
+        new T Inner { get; }
         /// <summary>
         /// the immediate thing we are decorating
         /// </summary>

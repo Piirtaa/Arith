@@ -214,9 +214,9 @@ namespace Arith.Domain
     }
 
 
-    internal class NumeralSetTests
+    public class NumeralSetTests
     {
-        internal static void Test()
+        public static void Test()
         {
             //init the set
             NumeralSet set = new NumeralSet(".", "-");

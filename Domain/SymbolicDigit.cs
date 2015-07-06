@@ -107,9 +107,9 @@ namespace Arith.Domain
     }
 
 
-    internal class SymbolicDigitTests
+    public class SymbolicDigitTests
     {
-        internal static void Test()
+        public static void Test()
         {
             //init the set
             NumeralSet set = new NumeralSet(".", "-");
