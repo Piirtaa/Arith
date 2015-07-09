@@ -240,8 +240,8 @@ namespace Arith.Domain
             }
         }
         /// <summary>
-        /// moves the decimal/Zeroth node to the right.
-        /// if the rightmost(LSD) position doesn't exist, it is added
+        /// moves the decimal to the right (towards LSD) - an order of magnitude increase.
+        /// if the LSD rightmost position doesn't exist, it is added.
         /// </summary>
         public void ShiftRight()
         {
@@ -258,7 +258,7 @@ namespace Arith.Domain
             }
         }
         /// <summary>
-        /// moves the decimal/Zeroth node to the left.
+        /// moves the decimal to the left (toward MSD) - an order of magnitude decrease.
         /// if the leftmost(MSD) position doesn't exist, it is added.
         /// </summary>
         public void ShiftLeft()

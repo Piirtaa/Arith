@@ -47,6 +47,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Domain\Decorations\DividingNumberDecoration.cs" />
     <Compile Include="Domain\Decorations\PrecisionNumberDecoration.cs" />
     <Compile Include="Domain\Decorations\MultiplyingNumberDecoration.cs">
       <SubType>Code</SubType>
