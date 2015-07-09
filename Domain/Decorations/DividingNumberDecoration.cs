@@ -5,6 +5,7 @@ using System.Text;
 using Arith.Decorating;
 using System.Runtime.Serialization;
 using Arith.DataStructures;
+using System.Diagnostics;
 
 namespace Arith.Domain.Decorations
 {
@@ -26,6 +27,12 @@ namespace Arith.Domain.Decorations
         }
         #endregion
 
+        #region Static
+        public static DividingNumberDecoration New(INumber decorated)
+        {
+            return new DividingNumberDecoration(decorated);
+        }
+        #endregion
 
         #region ISerializable
         protected DividingNumberDecoration(SerializationInfo info, StreamingContext context)
@@ -80,9 +87,21 @@ namespace Arith.Domain.Decorations
             var product = new SymbolicNumber(dividend.NumberSystem.ZeroSymbol, dividend.NumberSystem);
             product._isPositive = dividend.IsPositive;
 
+            //shift dividend and divisor to zero, to eliminate clarity with decimal shift handling
+            //we'll shift back at the end.  this way we're only dividing whole numbers.
+            //also makes the code cleaner
+
+            var dividendShifts = dividend.ShiftToZero();
+            var divisorShifts = divisor.ShiftToZero();
+
             //we use a cloned value of the dividend because it will be subtracted from at each step
             //and we don't want to change the passed in reference object - treat it as if it were a value type
-            return divide(SymbolicNumber.Clone(dividend), divisor, product, toNumberOfDecimalPlaces);
+            var rv = divide(SymbolicNumber.Clone(dividend), divisor, product, toNumberOfDecimalPlaces);
+
+            //shift back
+            rv.ShiftLeft(dividendShifts).ShiftLeft(divisorShifts);
+
+            return rv;
         }
         /*
         * The division process follows the "Long-hand Arithmetic" approach.  We maintain
@@ -108,6 +127,10 @@ namespace Arith.Domain.Decorations
             SymbolicNumber product, SymbolicNumber toNumberOfDecimalPlaces)
         {
             SymbolicNumber zero = new SymbolicNumber(product.NumberSystem.ZeroSymbol, product.NumberSystem);
+
+            //divide by zero check
+            if (divisor.IsEqualTo(zero))
+                throw new InvalidOperationException("divide by zero");
 
             //decimal place check
             if (toNumberOfDecimalPlaces != null)
@@ -166,5 +189,43 @@ namespace Arith.Domain.Decorations
         }
     }
 
+    public static class DividingNumberDecorationExtensions
+    {
+        public static DividingNumberDecoration HasDivision(this INumber number)
+        {
+            return DividingNumberDecoration.New(number);
+        }
+    }
 
+
+
+    public class DividingNumberTests
+    {
+        public static void Test()
+        {
+            //init the set
+            NumeralSet set = new NumeralSet(".", "-");
+            for (int i = 0; i < 10; i++)
+            {
+                set.AddSymbolToSet(i.ToString());
+            }
+
+            int topLimit = 10000000;
+            for (int x = 0; x < topLimit; x++)
+            {
+                for (int y = 0; y < topLimit; y++)
+                {
+                    var num1 = Number.New(x.ToString(), set).HasMultiplication();
+
+                    int res = x * y;
+                    num1.Multiply(y.ToString());
+
+                    Debug.Assert(num1.SymbolsText == res.ToString());
+                }
+            }
+
+
+        }
+
+    }
 }

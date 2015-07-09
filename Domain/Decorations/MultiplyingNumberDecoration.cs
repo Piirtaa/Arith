@@ -5,13 +5,14 @@ using System.Text;
 using Arith.Decorating;
 using System.Runtime.Serialization;
 using Arith.DataStructures;
+using System.Diagnostics;
 
 namespace Arith.Domain.Decorations
 {
     public interface IHasMultiplication : INumberDecoration
-	{
-		void Multiply(string number); 
-	}
+    {
+        void Multiply(string number);
+    }
 
     public class MultiplyingNumberDecoration : NumberDecorationBase, IHasMultiplication
     {
@@ -28,6 +29,12 @@ namespace Arith.Domain.Decorations
         }
         #endregion
 
+        #region Static
+        public static MultiplyingNumberDecoration New(INumber decorated)
+        {
+            return new MultiplyingNumberDecoration(decorated);
+        }
+        #endregion
 
         #region ISerializable
         protected MultiplyingNumberDecoration(SerializationInfo info, StreamingContext context)
@@ -86,7 +93,7 @@ namespace Arith.Domain.Decorations
         /// <param name="digit1Pos"></param>
         /// <param name="digit2Pos"></param>
         /// <returns></returns>
-        private SymbolicNumber MultiplyDigits(string digit1, string digit2, 
+        private SymbolicNumber MultiplyDigits(string digit1, string digit2,
             SymbolicNumber digit1Pos, SymbolicNumber digit2Pos)
         {
             var val = this._multMap.Get(digit1, digit2);
@@ -152,7 +159,7 @@ namespace Arith.Domain.Decorations
                 });
 
                 //shift back
-                sum.SymbolicNumber.ShiftRight(argShifts).ShiftRight(thisNumShifts);
+                sum.SymbolicNumber.ShiftLeft(argShifts).ShiftLeft(thisNumShifts);
 
                 this.SymbolicNumber.SetValue(sum.SymbolicNumber);
             }
@@ -160,5 +167,41 @@ namespace Arith.Domain.Decorations
         #endregion
     }
 
+    public static class MultiplyingNumberDecorationExtensions
+    {
+        public static MultiplyingNumberDecoration HasMultiplication(this INumber number)
+        {
+            return MultiplyingNumberDecoration.New(number);
+        }
+    }
 
+
+    public class MultiplyingNumberTests
+    {
+        public static void Test()
+        {
+            //init the set
+            NumeralSet set = new NumeralSet(".", "-");
+            for (int i = 0; i < 10; i++)
+            {
+                set.AddSymbolToSet(i.ToString());
+            }
+
+            int topLimit= 10000000;
+            for (int x = 0; x < topLimit; x++)
+            {
+                for (int y = 0; y < topLimit; y++)
+                {
+                    var num1 = Number.New(x.ToString(), set).HasMultiplication();
+                    
+                    int res = x * y;
+                    num1.Multiply(y.ToString());
+
+                    Debug.Assert(num1.SymbolsText == res.ToString());
+                }
+            }
+         
+
+        }
+    }
 }

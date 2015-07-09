@@ -94,6 +94,30 @@ namespace Arith.Domain
 
             thisNumber.Subtract(new SymbolicNumber(thisNumber.NumberSystem.OneSymbol, thisNumber.NumberSystem));
         }
+
+        /// <summary>
+        /// performs the action for as many times as the number
+        /// </summary>
+        /// <param name="number"></param>
+        /// <param name="action"></param>
+        public static void CountdownToZero(this ISymbolicNumber number, Action<ISymbolicNumber> action)
+        {
+            if (number == null) return;
+            if (action == null) throw new ArgumentNullException("action");
+
+            if (!number.IsPositive)
+                throw new ArgumentOutOfRangeException("number must be positive");
+
+            var zero = new SymbolicNumber(number.NumberSystem.ZeroSymbol, number.NumberSystem);
+            
+            var num = (number as SymbolicNumber).Clone();
+            while (num.IsGreaterThan(zero))
+            {
+                action(num);
+                num.SubtractOne();
+            }
+        }
+
         /// <summary>
         /// fluent
         /// </summary>
@@ -104,7 +128,7 @@ namespace Arith.Domain
         {
             if (thisNumber == null)
                 throw new ArgumentNullException("thisNumber");
-            
+
             if (numShifts == null)
                 throw new ArgumentNullException("numShifts");
 
@@ -136,7 +160,7 @@ namespace Arith.Domain
         }
         /// <summary>
         /// shifts the number so that it has no decimal digits.  returns the shift length. 
-        /// always a left shift. 
+        /// always a right shift. 
         /// </summary>
         /// <param name="thisNumber"></param>
         /// <returns></returns>
@@ -148,41 +172,19 @@ namespace Arith.Domain
             SymbolicNumber counter = new SymbolicNumber(thisNumber.NumberSystem.ZeroSymbol, thisNumber.NumberSystem);
             while (thisNumber.ZerothDigit.HasPreviousDigit)
             {
-                thisNumber.ShiftLeft();
+                thisNumber.ShiftRight();
                 counter.AddOne();
             }
             return counter;
         }
-        /// <summary>
-        /// performs the action for as many times as the number
-        /// </summary>
-        /// <param name="number"></param>
-        /// <param name="action"></param>
-        public static void CountdownToZero(this ISymbolicNumber number, Action<ISymbolicNumber> action)
-        {
-            if (number == null) return;
-            if (action == null) throw new ArgumentNullException("action");
-
-            if (!number.IsPositive)
-                throw new ArgumentOutOfRangeException("number must be positive");
-
-            var zero = new SymbolicNumber(number.NumberSystem.ZeroSymbol, number.NumberSystem);
-            
-            var num = SymbolicNumber.Clone(number as SymbolicNumber);
-            while (num.IsGreaterThan(zero))
-            {
-                action(num);
-                number.SubtractOne();
-            }
-        }
-
         public static SymbolicNumber GetDecimalPlaces(this SymbolicNumber thisNumber)
         {
             if (thisNumber == null)
                 throw new ArgumentNullException("thisNumber");
 
+
             var places = thisNumber.ShiftToZero();
-            thisNumber.ShiftRight(places);
+            thisNumber.ShiftLeft(places);
 
             return places;
         }
@@ -205,6 +207,50 @@ namespace Arith.Domain
                     thisNumber.Remove(thisNumber.LastNode);
                 });
             }
+        }
+        /// <summary>
+        /// returns a symbolic number with a value of 0 in thisNumber's number system
+        /// </summary>
+        /// <param name="thisNumber"></param>
+        /// <returns></returns>
+        public static SymbolicNumber GetCompatibleZero(this ISymbolicNumber thisNumber)
+        {
+            if (thisNumber == null)
+                throw new ArgumentNullException("thisNumber");
+
+            return new SymbolicNumber(thisNumber.NumberSystem.ZeroSymbol, thisNumber.NumberSystem);
+        }
+        /// <summary>
+        /// returns a symbolic number with a value of 1 in thisNumber's number system
+        /// </summary>
+        /// <param name="thisNumber"></param>
+        /// <returns></returns>
+        public static SymbolicNumber GetCompatibleOne(this ISymbolicNumber thisNumber)
+        {
+            if (thisNumber == null)
+                throw new ArgumentNullException("thisNumber");
+
+            return new SymbolicNumber(thisNumber.NumberSystem.OneSymbol, thisNumber.NumberSystem);
+        }
+        /// <summary>
+        /// returns a symbolic number with the supplied value in thisNumber's number system
+        /// </summary>
+        /// <param name="thisNumber"></param>
+        /// <returns></returns>
+        public static SymbolicNumber GetCompatibleNumber(this ISymbolicNumber thisNumber, string number)
+        {
+            if (thisNumber == null)
+                throw new ArgumentNullException("thisNumber");
+
+            return new SymbolicNumber(number, thisNumber.NumberSystem);
+        }
+        
+        public static SymbolicNumber Clone(this SymbolicNumber thisNumber)
+        {
+            if (thisNumber == null)
+                throw new ArgumentNullException("thisNumber");
+
+            return SymbolicNumber.Clone(thisNumber);
         }
     }
 }

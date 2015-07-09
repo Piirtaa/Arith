@@ -5,13 +5,14 @@ using System.Text;
 using Arith.Decorating;
 using System.Runtime.Serialization;
 using Arith.DataStructures;
+using System.Diagnostics;
 
 namespace Arith.Domain.Decorations
 {
     public interface IHasPrecision : INumberDecoration
-	{
-        INumber DecimalPlaces { get; set; } 
-	}
+    {
+        INumber DecimalPlaces { get; set; }
+    }
 
     public class PrecisionNumberDecoration : NumberDecorationBase, IHasPrecision
     {
@@ -23,21 +24,27 @@ namespace Arith.Domain.Decorations
         public PrecisionNumberDecoration(INumber decorated, INumber decimalPlaces)
             : base(decorated)
         {
-            if(decimalPlaces == null)
+            if (decimalPlaces == null)
                 throw new ArgumentNullException("decimalPlaces");
 
             this.DecimalPlaces = decimalPlaces;
 
-            var oldStrategy = this.SymbolicNumber.PostNodeInsertionStrategy;
-            this.SymbolicNumber.PostNodeInsertionStrategy = (x)=>{
-                oldStrategy(x);
-                
+            this.SymbolicNumber.PostMutateStrategy = (x) =>
+            {
                 //now ensure we don't have more than the specified decimal places
                 this.SymbolicNumber.TruncateToDecimalPlaces(this.DecimalPlaces.SymbolicNumber);
             };
+
+
         }
         #endregion
 
+        #region Static
+        public static PrecisionNumberDecoration New(INumber decorated, INumber decimalPlaces)
+        {
+            return new PrecisionNumberDecoration(decorated, decimalPlaces);
+        }
+        #endregion
 
         #region ISerializable
         protected PrecisionNumberDecoration(SerializationInfo info, StreamingContext context)
@@ -66,10 +73,49 @@ namespace Arith.Domain.Decorations
         #endregion
 
         #region Properties
-        public INumber DecimalPlaces { get; set; } 
+        public INumber DecimalPlaces { get; set; }
         #endregion
 
     }
 
+    public static class PrecisionNumberDecorationExtensions
+    {
+        public static PrecisionNumberDecoration HasPrecision(this INumber decorated, INumber decimalPlaces)
+        {
+            return PrecisionNumberDecoration.New(decorated, decimalPlaces);
+        }
+    }
 
+
+    public class PrecisionNumberTests
+    {
+        public static void Test()
+        {
+            //init the set
+            NumeralSet set = new NumeralSet(".", "-");
+            for (int i = 0; i < 10; i++)
+            {
+                set.AddSymbolToSet(i.ToString());
+            }
+
+
+            //var num = new Number(null, set);
+            //var b = num.SymbolsText;
+
+            Number num = new Number("123456789", set);
+            var precision = new Number("5", set);
+            var cake = num.HasPrecision(precision);
+
+            precision.SymbolicNumber.CountdownToZero(x =>
+            {
+                cake.SymbolicNumber.ShiftLeft();
+            });
+            Debug.Assert(cake.SymbolsText == "1234.56789");
+            cake.SymbolicNumber.ShiftLeft();
+            Debug.Assert(cake.SymbolsText == "123.45678");
+
+
+        }
+
+    }
 }

@@ -12,13 +12,11 @@ namespace Arith.Domain
     /// </summary>
     /// <remarks>
     /// the number 123.45 is represented as this sequence of nodes:
-    /// 4,5,3,2,1 with the middle node 3 being set as the ZerothNode 
-    /// 
+    /// 5 (LSD),4,3(Zeroth),2,1(MSD) 
     /// this is done so that the more significant digits are on the end of the list
     /// and the least significant at the start.  In this way we keep a correlation from
     /// ZerothNode moving to the end, as a marker of symbol position
     /// </remarks>
-    /// 
     [DebuggerDisplay("{SymbolsText}")]
     public class SymbolicNumber : Arith.DataStructures.LinkedList<IDigit>, ISymbolicNumber
     {
@@ -57,6 +55,7 @@ namespace Arith.Domain
                 if (this.ZerothDigit == null)
                     this._zerothDigit = node;
             };
+
 
             this.InitToZero();
             this.SetValue(digits);
@@ -157,8 +156,13 @@ namespace Arith.Domain
 
             DigitNode node = item as DigitNode;
             if (node.IsZerothDigit)
-                throw new InvalidOperationException("cannot remove zeroth digit");
+            {
+                //reset zeroth to next
+                if(node.NextDigit == null)
+                    throw new InvalidOperationException("cannot remove zeroth digit");
 
+                node.ParentNumber._zerothDigit = node.NextNode as DigitNode;
+            }
             return base.Remove(item);
         }
         #endregion

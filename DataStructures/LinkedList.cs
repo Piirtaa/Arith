@@ -17,6 +17,9 @@ namespace Arith.DataStructures
 
         //we keep a reference to last digit because it's very expensive to walk the list every time
         protected LinkedListNode<T> _lastNode = null;
+
+        protected bool _isInserting = false;
+        protected bool _isMutating = false;
         #endregion
 
         #region Ctor
@@ -45,6 +48,10 @@ namespace Arith.DataStructures
         /// set if we have any post insert action/scrubs to perform
         /// </summary>
         public Action<LinkedListNode<T>> PostNodeInsertionStrategy { get; set; }
+        /// <summary>
+        /// if the list changes in any way (inserts or removal) this strategy is run
+        /// </summary>
+        public Action<LinkedList<T>> PostMutateStrategy { get; set; }
         #endregion
 
         #region Calculated Properties
@@ -98,6 +105,76 @@ namespace Arith.DataStructures
         #endregion
 
         #region Methods
+        /// <summary>
+        /// runs the post insert hook.  ensures that the hook doesn't trigger a recursion
+        /// into this method if the hook implementation mutates the list itself.  which is another
+        /// way of say if your hook mutates the list don't expect this method to run any checks
+        /// </summary>
+        private void RunPostInsertHook(LinkedListNode<T> node)
+        {
+            if (this._isInserting)
+                return;
+
+            lock (this._stateLock)
+            {
+                if (this._isInserting)
+                    return;
+
+                try
+                {
+                    this._isInserting = true;
+
+                    //post post mutate hook
+                    if (this.PostNodeInsertionStrategy != null)
+                    {
+                        this.PostNodeInsertionStrategy(node);
+                    }
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    this._isInserting = false;
+                }
+            }
+        }
+        /// <summary>
+        /// runs the post mutation hook.  ensures that the hook doesn't trigger a recursion
+        /// into this method if the hook implementation mutates the list itself.  which is another
+        /// way of say if your hook mutates the list don't expect this method to run any checks
+        /// </summary>
+        private void RunPostMutateHook()
+        {
+            if (this._isMutating)
+                return;
+
+            lock (this._stateLock)
+            {
+                if (this._isMutating)
+                    return;
+
+                try
+                {
+                    this._isMutating = true;
+
+                    //post post mutate hook
+                    if (this.PostMutateStrategy != null)
+                    {
+                        this.PostMutateStrategy(this);
+                    }
+                }
+                catch 
+                {
+                    throw;
+                }
+                finally 
+                {
+                    this._isMutating = false;
+                }
+            }
+        }
         /// <summary>
         /// a method to iterate thru the list either forwards or backwards
         /// </summary>
@@ -252,10 +329,10 @@ namespace Arith.DataStructures
                         break;
                 }
                 //perform post insert hook
-                if (this.PostNodeInsertionStrategy != null)
-                {
-                    this.PostNodeInsertionStrategy(node);
-                }
+                this.RunPostInsertHook(node);
+
+                this.RunPostMutateHook();
+
             }
 
 
@@ -300,6 +377,9 @@ namespace Arith.DataStructures
                 {
                     this._lastNode = before;
                 }
+
+                //post post mutate hook
+                this.RunPostMutateHook();
             }
             return this;
         }

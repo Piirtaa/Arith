@@ -11,15 +11,6 @@ namespace Arith
     /// <summary>
     /// a number represented as a linked list of digits
     /// </summary>
-    /// <remarks>
-    /// the number 123.45 is represented as this sequence of nodes:
-    /// 4,5,3,2,1 with the middle node 3 being set as the ZerothNode 
-    /// 
-    /// this is done so that the more significant digits are on the end of the list
-    /// and the least significant at the start.  In this way we keep a correlation from
-    /// ZerothNode moving to the end, as a marker of symbol position
-    /// </remarks>
-    /// 
     [DebuggerDisplay("{SymbolsText}")]
     public class Number : INumber
     {
@@ -27,6 +18,13 @@ namespace Arith
         public Number(string digits, NumeralSet numberSystem)
         {
             this.SymbolicNumber = new SymbolicNumber(digits, numberSystem);
+        }
+        #endregion
+
+        #region Fluent Static
+        public static Number New(string digits, NumeralSet numberSystem)
+        {
+            return new Number(digits, numberSystem);
         }
         #endregion
 
