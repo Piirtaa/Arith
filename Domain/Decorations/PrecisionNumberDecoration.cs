@@ -3,31 +3,46 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Arith.Decorating;
+using System.Runtime.Serialization;
+using Arith.DataStructures;
 
 namespace Arith.Domain.Decorations
 {
     public interface IHasPrecision : INumberDecoration
 	{
-		INumber PostDecimalLength {get;}
-        INumber PreDecimalLength {get;}
+        INumber DecimalPlaces { get; set; } 
 	}
 
     public class PrecisionNumberDecoration : NumberDecorationBase, IHasPrecision
     {
+        #region Declarations
+        private readonly object _stateLock = new object();
+        #endregion
+
         #region Ctor
-        public PrecisionNumberDecoration(INumber decorated, INumber postDecimalLength,
-            INumber preDecimalLength)
+        public PrecisionNumberDecoration(INumber decorated, INumber decimalPlaces)
             : base(decorated)
         {
-            this.Id = id;
+            if(decimalPlaces == null)
+                throw new ArgumentNullException("decimalPlaces");
+
+            this.DecimalPlaces = decimalPlaces;
+
+            var oldStrategy = this.SymbolicNumber.PostNodeInsertionStrategy;
+            this.SymbolicNumber.PostNodeInsertionStrategy = (x)=>{
+                oldStrategy(x);
+                
+                //now ensure we don't have more than the specified decimal places
+                this.SymbolicNumber.TruncateToDecimalPlaces(this.DecimalPlaces.SymbolicNumber);
+            };
         }
         #endregion
 
+
         #region ISerializable
-        protected HasIdDecoration(SerializationInfo info, StreamingContext context)
+        protected PrecisionNumberDecoration(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
-            this.Id = (TId)info.GetValue("_id", typeof(TId));
         }
         /// <summary>
         /// since we don't want to expose ISerializable concerns publicly, we use a virtual protected
@@ -39,24 +54,22 @@ namespace Arith.Domain.Decorations
         /// <param name="context"></param>
         protected override void ISerializable_GetObjectData(SerializationInfo info, StreamingContext context)
         {
-            info.AddValue("_id", this.Id);
             base.ISerializable_GetObjectData(info, context);
         }
         #endregion
 
-        #region IHasId
-        public TId Id { get; set; }
-        object IHasId.Id
+        #region Overrides
+        public override IDecorationOf<INumber> ApplyThisDecorationTo(INumber thing)
         {
-            get { return this.Id; }
+            return new PrecisionNumberDecoration(thing, this.DecimalPlaces);
         }
         #endregion
 
-        #region Overrides
-        public override IDecorationOf<ICondition> ApplyThisDecorationTo(ICondition thing)
-        {
-            return new HasIdDecoration<TId>(thing, this.Id);
-        }
+        #region Properties
+        public INumber DecimalPlaces { get; set; } 
         #endregion
+
     }
+
+
 }

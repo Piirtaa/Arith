@@ -36,6 +36,7 @@ namespace Arith.Domain.Decorations
         {
             get { return this; }
         }
+        public SymbolicNumber SymbolicNumber { get { return this.Decorated.SymbolicNumber; } }
         public string SymbolsText { get { return this.Decorated.SymbolsText; } }
         public virtual void SetValue(string number) { this.Decorated.SetValue(number); }
         public virtual void Add(string number) { this.Decorated.Add(number); }

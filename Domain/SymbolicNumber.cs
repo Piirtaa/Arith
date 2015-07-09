@@ -277,6 +277,40 @@ namespace Arith.Domain
         }
         #endregion
 
+        #region List Walking
+        /// <summary>
+        /// iterates towards MSD starting at Zeroth, performing postZeroAction.  iterates
+        /// towards LSD starting at node prior to Zeroth, performing preZeroAction 
+        /// </summary>
+        /// <param name="postZeroAction"></param>
+        /// <param name="preZeroAction"></param>
+        public void IterateFromZeroth(Action<DigitNode, SymbolicNumber> postZeroAction, Action<DigitNode, SymbolicNumber> preZeroAction)
+        {
+
+            //the add process
+            var node = this.ZerothDigit;
+
+            SymbolicNumber index = new SymbolicNumber(this.NumberSystem.ZeroSymbol, this.NumberSystem);
+            while (node != null)
+            {
+                postZeroAction(node, index);
+                index.AddOne();
+                node = node.NextNode as DigitNode;
+            }
+
+            node = this.ZerothDigit.PreviousNode as DigitNode;
+            
+            index = new SymbolicNumber(this.NumberSystem.OneSymbol, this.NumberSystem);
+            while (node != null)
+            {  
+                preZeroAction(node, index);
+                index.AddOne();
+
+                node = node.PreviousNode as DigitNode;
+            }
+        }
+        #endregion
+
         #region INumber Methods
         //public void SetValue(string number)
         //{
@@ -381,9 +415,9 @@ namespace Arith.Domain
                     currentNode = this.AddLeastSignificantDigit(each);
                 }
             }
-
+            this.ScrubLeadingAndTrailingZeroes();
         }
-        private void SetValue(SymbolicNumber number)
+        public void SetValue(SymbolicNumber number)
         {
             if (number == null)
                 throw new ArgumentNullException("number");
@@ -403,6 +437,8 @@ namespace Arith.Domain
                     number._zerothDigit = newNode;
                 }
             }, false);
+
+            this.ScrubLeadingAndTrailingZeroes();
         }
         public void Add(ISymbolicNumber number)
         {
@@ -435,14 +471,7 @@ namespace Arith.Domain
             if(isClone)
                 this.SetValue(val);
         }
-        public void AddOne()
-        {
-            this.Add(new SymbolicNumber(this.NumberSystem.OneSymbol, this.NumberSystem));
-        }
-        public void SubtractOne()
-        {
-            this.Subtract(new SymbolicNumber(this.NumberSystem.OneSymbol, this.NumberSystem));
-        }
+
         #endregion
 
         #region Helpers

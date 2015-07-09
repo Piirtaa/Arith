@@ -40,11 +40,11 @@ namespace Arith.DataStructures
         /// <summary>
         /// override/replace this strategy if we want anything other than a new LinkedListNode 
         /// </summary>
-        protected Func<T, LinkedListNode<T>> NodeBuildingStrategy { get; set; }
+        public Func<T, LinkedListNode<T>> NodeBuildingStrategy { get; set; }
         /// <summary>
         /// set if we have any post insert action/scrubs to perform
         /// </summary>
-        protected Action<LinkedListNode<T>> PostNodeInsertionStrategy { get; set; }
+        public Action<LinkedListNode<T>> PostNodeInsertionStrategy { get; set; }
         #endregion
 
         #region Calculated Properties

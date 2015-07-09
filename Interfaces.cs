@@ -9,6 +9,7 @@ namespace Arith
  
     public interface INumber
     {
+        SymbolicNumber SymbolicNumber { get; }
         /// <summary>
         /// the number in symbolic form
         /// </summary>
