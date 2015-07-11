@@ -6,20 +6,19 @@ using System.Diagnostics;
 
 namespace Arith.DataStructures
 {
+
+
     [DebuggerDisplay("{DebuggerText}")]
-    public class LinkedList<T>
+    public class LinkedList<T> : ILinkedList<T>
     {
         #region Declarations
         protected enum InsertSlotEnum { First, Middle, Last, FirstAndLast }
 
         protected readonly object _stateLock = new object();
-        protected LinkedListNode<T> _firstNode = null;
+        protected ILinkedListNode<T> _firstNode = null;
 
         //we keep a reference to last digit because it's very expensive to walk the list every time
-        protected LinkedListNode<T> _lastNode = null;
-
-        protected bool _isInserting = false;
-        protected bool _isMutating = false;
+        protected ILinkedListNode<T> _lastNode = null;
         #endregion
 
         #region Ctor
@@ -39,37 +38,26 @@ namespace Arith.DataStructures
         }
         #endregion
 
-        #region Properties
-        /// <summary>
-        /// override/replace this strategy if we want anything other than a new LinkedListNode 
-        /// </summary>
-        public Func<T, LinkedListNode<T>> NodeBuildingStrategy { get; set; }
-        /// <summary>
-        /// set if we have any post insert action/scrubs to perform
-        /// </summary>
-        public Action<LinkedListNode<T>> PostNodeInsertionStrategy { get; set; }
-        /// <summary>
-        /// if the list changes in any way (inserts or removal) this strategy is run
-        /// </summary>
-        public Action<LinkedList<T>> PostMutateStrategy { get; set; }
+        #region Static Builders
+        public static LinkedList<T> New(params T[] items)
+        {
+            return new LinkedList<T>(items);
+        }
         #endregion
 
         #region Calculated Properties
-        public bool IsEmpty { get { return this._firstNode == null; } }
-        public LinkedListNode<T> FirstNode { get { return _firstNode; } }
-        public LinkedListNode<T> LastNode { get { return _lastNode; } }
         public virtual T[] Values
         {
             get
             {
                 List<T> list = new List<T>();
-                LinkedListNode<T> node = this._firstNode;
+                ILinkedListNode<T> node = this._firstNode;
 
                 while (node != null)
                 {
                     list.Add(node.Value);
 
-                    if (node.IsLast)
+                    if (node.IsLast())
                         break;
 
                     node = node.NextNode;
@@ -78,18 +66,18 @@ namespace Arith.DataStructures
                 return list.ToArray();
             }
         }
-        public virtual LinkedListNode<T>[] Nodes
+        public virtual ILinkedListNode<T>[] Nodes
         {
             get
             {
-                List<LinkedListNode<T>> list = new List<LinkedListNode<T>>();
-                LinkedListNode<T> node = this._firstNode;
+                List<ILinkedListNode<T>> list = new List<ILinkedListNode<T>>();
+                ILinkedListNode<T> node = this._firstNode;
 
                 while (node != null)
                 {
                     list.Add(node);
 
-                    if (node.IsLast)
+                    if (node.IsLast())
                         break;
 
                     node = node.NextNode;
@@ -104,138 +92,13 @@ namespace Arith.DataStructures
         private string DebuggerText { get { return string.Join(",", this.Values); } }
         #endregion
 
-        #region Methods
+        #region ILinkedList
         /// <summary>
-        /// runs the post insert hook.  ensures that the hook doesn't trigger a recursion
-        /// into this method if the hook implementation mutates the list itself.  which is another
-        /// way of say if your hook mutates the list don't expect this method to run any checks
+        /// override/replace this strategy if we want anything other than a new LinkedListNode 
         /// </summary>
-        private void RunPostInsertHook(LinkedListNode<T> node)
-        {
-            if (this._isInserting)
-                return;
-
-            lock (this._stateLock)
-            {
-                if (this._isInserting)
-                    return;
-
-                try
-                {
-                    this._isInserting = true;
-
-                    //post post mutate hook
-                    if (this.PostNodeInsertionStrategy != null)
-                    {
-                        this.PostNodeInsertionStrategy(node);
-                    }
-                }
-                catch
-                {
-                    throw;
-                }
-                finally
-                {
-                    this._isInserting = false;
-                }
-            }
-        }
-        /// <summary>
-        /// runs the post mutation hook.  ensures that the hook doesn't trigger a recursion
-        /// into this method if the hook implementation mutates the list itself.  which is another
-        /// way of say if your hook mutates the list don't expect this method to run any checks
-        /// </summary>
-        private void RunPostMutateHook()
-        {
-            if (this._isMutating)
-                return;
-
-            lock (this._stateLock)
-            {
-                if (this._isMutating)
-                    return;
-
-                try
-                {
-                    this._isMutating = true;
-
-                    //post post mutate hook
-                    if (this.PostMutateStrategy != null)
-                    {
-                        this.PostMutateStrategy(this);
-                    }
-                }
-                catch 
-                {
-                    throw;
-                }
-                finally 
-                {
-                    this._isMutating = false;
-                }
-            }
-        }
-        /// <summary>
-        /// a method to iterate thru the list either forwards or backwards
-        /// </summary>
-        /// <param name="action"></param>
-        /// <param name="fromFirstToLast"></param>
-        public void Iterate(Action<LinkedListNode<T>> action, bool fromFirstToLast)
-        {
-            if (action == null)
-                throw new ArgumentNullException("action");
-
-            if (fromFirstToLast)
-            {
-                LinkedListNode<T> node = this._firstNode;
-
-                while (node != null)
-                {
-                    action(node);
-
-                    if (node.IsLast)
-                        break;
-
-                    node = node.NextNode;
-                }
-            }
-            else
-            {
-                LinkedListNode<T> node = this._lastNode;
-
-                while (node != null)
-                {
-                    action(node);
-
-                    if (node.IsFirst)
-                        break;
-
-                    node = node.PreviousNode;
-                }
-            }
-        }
-        /// <summary>
-        /// iterates from first to last and returns item from a positive filter.
-        /// demonstrates good practice for iterating the list
-        /// </summary>
-        /// <param name="filter"></param>
-        /// <returns></returns>
-        public LinkedListNode<T> Filter(Func<LinkedListNode<T>, bool> filter)
-        {
-            if (this._firstNode == null || filter == null)
-                return null;
-
-            LinkedListNode<T> node = this._firstNode;
-            while (!filter(node))
-            {
-                if (node.IsLast)
-                    return null;
-
-                node = node.NextNode;
-            }
-
-            return node;
-        }
+        public Func<T, ILinkedListNode<T>> NodeBuildingStrategy { get; set; }
+        public ILinkedListNode<T> FirstNode { get { return _firstNode; } }
+        public ILinkedListNode<T> LastNode { get { return _lastNode; } }
         /// <summary>
         /// does any node on the linked list have the provided value
         /// </summary>
@@ -250,7 +113,7 @@ namespace Arith.DataStructures
 
             return match != null;
         }
-        protected virtual bool Contains(LinkedListNode<T> item)
+        public virtual bool Contains(ILinkedListNode<T> item)
         {
             var match = this.Filter((x) =>
             {
@@ -259,17 +122,17 @@ namespace Arith.DataStructures
 
             return match != null;
         }
-        public virtual LinkedListNode<T> AddFirst(T val)
+        public virtual ILinkedListNode<T> AddFirst(T val)
         {
             return this.Insert(val, null, this._firstNode);
         }
-        public virtual LinkedListNode<T> AddLast(T val)
+        public virtual ILinkedListNode<T> AddLast(T val)
         {
             return this.Insert(val, this.LastNode, null);
         }
-        public virtual LinkedListNode<T> Insert(T val, LinkedListNode<T> before, LinkedListNode<T> after)
+        public virtual ILinkedListNode<T> Insert(T val, ILinkedListNode<T> before, ILinkedListNode<T> after)
         {
-            LinkedListNode<T> node = null;
+            ILinkedListNode<T> node = null;
             if (this.NodeBuildingStrategy != null)
             {
                 node = this.NodeBuildingStrategy(val);
@@ -288,7 +151,7 @@ namespace Arith.DataStructures
         /// <param name="before"></param>
         /// <param name="after"></param>
         /// <returns></returns>
-        public virtual LinkedListNode<T> InsertNode(LinkedListNode<T> node, LinkedListNode<T> before, LinkedListNode<T> after)
+        public virtual ILinkedListNode<T> InsertNode(ILinkedListNode<T> node, ILinkedListNode<T> before, ILinkedListNode<T> after)
         {
             if (node == null)
                 return null;
@@ -328,18 +191,12 @@ namespace Arith.DataStructures
                         }
                         break;
                 }
-                //perform post insert hook
-                this.RunPostInsertHook(node);
-
-                this.RunPostMutateHook();
-
             }
-
 
             return node;
         }
 
-        public virtual LinkedList<T> Remove(LinkedListNode<T> item)
+        public virtual ILinkedList<T> Remove(ILinkedListNode<T> item)
         {
             lock (this._stateLock)
             {
@@ -362,74 +219,35 @@ namespace Arith.DataStructures
                 }
 
                 //reset first and last pointers
-                if (item.IsFirst && item.IsLast)
+                if (item.IsFirst() && item.IsLast())
                 {
                     this._firstNode = null;
                     this._lastNode = null;
                 }
-                else if (item.IsFirst)
+                else if (item.IsFirst())
                 {
                     this._firstNode = after;
-
-
                 }
-                else if (item.IsLast)
+                else if (item.IsLast())
                 {
                     this._lastNode = before;
                 }
-
-                //post post mutate hook
-                this.RunPostMutateHook();
             }
             return this;
         }
-        public virtual bool AreAdjacent(LinkedListNode<T> before, LinkedListNode<T> after)
-        {
-            if (before == null && after == null)
-            {
-                return false;
-            }
-
-            //if the before node is null, 
-            if (before == null)
-            {
-                return after.PreviousNode == null;
-            }
-
-            if (after == null)
-            {
-                return before.NextNode == null;
-            }
-
-            if (!object.ReferenceEquals(before.NextNode, after))
-                return false;
-
-            if (!object.ReferenceEquals(after.PreviousNode, before))
-                return false;
-
-            return true;
-        }
         #endregion
 
+
+
+
         #region Helpers
-        protected LinkedListNode<T> GetLastByWalkingList()
-        {
-            LinkedListNode<T> node = this._firstNode;
-
-            while (node != null)
-            {
-                node = node.NextNode;
-            }
-
-            return node;
-        }
         /// <summary>
         /// validates the nodes are adjacent and returns the position we're inserting at as InsertSlot enum
         /// </summary>
         /// <param name="before"></param>
         /// <param name="after"></param>
         /// <returns></returns>
-        protected InsertSlotEnum ValidateInsertSlot(LinkedListNode<T> before, LinkedListNode<T> after)
+        protected InsertSlotEnum ValidateInsertSlot(ILinkedListNode<T> before, ILinkedListNode<T> after)
         {
             //validate before node
             if (before != null && !this.Contains(before))
@@ -453,7 +271,7 @@ namespace Arith.DataStructures
                 }
 
                 //validate the after is the current first
-                if (!after.IsFirst)
+                if (!after.IsFirst())
                     throw new ArgumentOutOfRangeException("invalid slot");
 
                 return rv;
@@ -463,14 +281,14 @@ namespace Arith.DataStructures
                 rv = InsertSlotEnum.Last;
 
                 //validate the after is the current first
-                if (!before.IsLast)
+                if (!before.IsLast())
                     throw new ArgumentOutOfRangeException("invalid slot");
 
                 return rv;
             }
             else
             {
-                if (!this.AreAdjacent(before, after))
+                if (!before.IsPreceding(after))
                     throw new ArgumentOutOfRangeException("invalid slot");
             }
             return rv;
@@ -484,16 +302,15 @@ namespace Arith.DataStructures
     /// a linked list node
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    /// 
     [DebuggerDisplay("{Value}")]
-    public class LinkedListNode<T>
+    public class LinkedListNode<T> : ILinkedListNode<T>
     {
         #region Declarations
 
         #endregion
 
         #region Ctor
-        public LinkedListNode(T value, LinkedList<T> parentList)
+        public LinkedListNode(T value, ILinkedList<T> parentList)
         {
             if (value == null)
                 throw new ArgumentNullException("value");
@@ -510,29 +327,20 @@ namespace Arith.DataStructures
         }
         #endregion
 
-        #region Properties
-        public T Value { get; protected set; }
-        public LinkedListNode<T> NextNode { get; protected internal set; }
-        public LinkedListNode<T> PreviousNode { get; protected internal set; }
-        public LinkedList<T> ParentList { get; protected set; }
+        #region Static Builders
+        public static LinkedListNode<T> New(T value, ILinkedList<T> parentList)
+        {
+            return new LinkedListNode<T>(value, parentList);
+        }
         #endregion
 
-        #region Calculated Properties
-        public bool IsFirst
-        {
-            get
-            {
-                return object.ReferenceEquals(this.ParentList.FirstNode, this);
-            }
-        }
-        public bool IsLast
-        {
-            get
-            {
-                return object.ReferenceEquals(this.ParentList.LastNode, this);
-            }
-        }
+        #region Properties
+        public T Value { get; protected set; }
+        public ILinkedListNode<T> NextNode { get; set; }
+        public ILinkedListNode<T> PreviousNode { get; set; }
+        public ILinkedList<T> ParentList { get; protected set; }
         #endregion
+
     }
 
     public class LinkedListTests
@@ -550,7 +358,7 @@ namespace Arith.DataStructures
                 if (vals != null && vals.Length > 1)
                 {
                     Debug.Assert(listOfInt.LastNode.PreviousNode.Value == i - 1);
-                    Debug.Assert(listOfInt.AreAdjacent(listOfInt.LastNode.PreviousNode, listOfInt.LastNode));
+                    Debug.Assert(listOfInt.LastNode.PreviousNode.IsPreceding(listOfInt.LastNode));
                     Debug.Assert(listOfInt.LastNode.NextNode == null);
                 }
             }
@@ -559,16 +367,16 @@ namespace Arith.DataStructures
             {
                 var node = listOfInt.AddFirst(i);
                 Debug.Assert(listOfInt.FirstNode.Value == i);
-                Debug.Assert(listOfInt.AreAdjacent(listOfInt.FirstNode, node.NextNode));
+                Debug.Assert(listOfInt.FirstNode.IsPreceding(node.NextNode));
             }
 
 
-            while (listOfInt.IsEmpty == false)
+            while (listOfInt.IsEmpty() == false)
             {
                 var last = listOfInt.LastNode;
                 listOfInt.Remove(last);
 
-                if (!listOfInt.IsEmpty)
+                if (!listOfInt.IsEmpty())
                 {
                     Debug.Assert(listOfInt.LastNode.NextNode == null);
                     Debug.Assert(object.ReferenceEquals(last.PreviousNode, listOfInt.LastNode));

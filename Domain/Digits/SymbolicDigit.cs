@@ -4,8 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Diagnostics;
 using Arith.DataStructures;
+using Arith.DataStructures.Decorations;
 
-namespace Arith.Domain
+namespace Arith.Domain.Digits
 {
 
     /// <summary>
@@ -17,30 +18,31 @@ namespace Arith.Domain
         #region Declarations
         private readonly object _stateLock = new object();
 
-        private CircularLinkedListNode<string> _numeral = null;
+        private ICircularLinkedListNode<string> _numeral = null;
 
         /// <summary>
         /// the symbol that when "added" to the current symbol produces the last symbol in the set
         /// </summary>
-        private CircularLinkedListNode<string> _complementNumeral = null;
+        private ICircularLinkedListNode<string> _complementNumeral = null;
         #endregion
 
         #region Ctor
-        public SymbolicDigit(CircularLinkedListNode<string> numeral)
+        public SymbolicDigit(ICircularLinkedListNode<string> numeral)
         {
             if (numeral == null)
                 throw new ArgumentNullException("numeral");
             this._numeral = numeral;
 
-            this._complementNumeral = numeral.GetListComplement();
+            this._complementNumeral = numeral.GetListComplement() as CircularLinkedListNode<string>;
         }
         #endregion
 
         #region Hidden Properties
+        private CircularLinkedListNode<string> Numeral { get { return this._numeral as CircularLinkedListNode<string>; } }
         /// <summary>
         /// for the numeral set this digit belongs to, returns the zeroth(first) numeral 
         /// </summary>
-        public CircularLinkedListNode<string> ZeroNumeral { get { return this._numeral.ParentList.FirstNode as CircularLinkedListNode<string>; } }
+        public ICircularLinkedListNode<string> ZeroNumeral { get { return this._numeral.ParentList.FirstNode as CircularLinkedListNode<string>; } }
         #endregion
 
         #region IDigit
@@ -72,36 +74,54 @@ namespace Arith.Domain
                 if (numeral.Value.Equals(symbol))
                     return true;
 
-                if (numeral.IsLast)
+                if (numeral.IsLast())
                     throw new InvalidOperationException("bad digit compare");
 
-                numeral = numeral.NextNode as CircularLinkedListNode<string>;
+                numeral = numeral.NextNode as ICircularLinkedListNode<string>;
             }
             return null;
         }
+        /// <summary>
+        /// returns true for rollover
+        /// </summary>
+        /// <param name="symbol"></param>
+        /// <returns></returns>
         public bool Add(string symbol)
         {
-            var rv = this._numeral.MoveForwardBy(symbol, out _numeral);
+            var rv = this.Numeral.MoveForwardBy(symbol, out _numeral);
             return rv;
         }
+        /// <summary>
+        /// returns true for rollover
+        /// </summary>
+        /// <param name="symbol"></param>
+        /// <returns></returns>
         public bool Subtract(string symbol)
         {
-            var rv = this._numeral.MoveBackBy(symbol, out _numeral);
+            var rv = this.Numeral.MoveBackBy(symbol, out _numeral);
             return rv;
         }
+        /// <summary>
+        /// returns true for rollover
+        /// </summary>
+        /// <returns></returns>
         public bool AddOne()
         {
-            var rv = this._numeral.MoveForward(out _numeral);
+            var rv = this.Numeral.MoveForward(out _numeral);
             return rv;
         }
+        /// <summary>
+        /// returns true for rollover
+        /// </summary>
+        /// <returns></returns>
         public bool SubtractOne()
         {
-            var rv = this._numeral.MoveBack(out _numeral);
+            var rv = this.Numeral.MoveBack(out _numeral);
             return rv;
         }
         public void SetValue(string numeral)
         {
-            this._numeral = this._numeral.FindNodeByValue(numeral);
+            this._numeral = this.Numeral.FindNodeByValue(numeral);
         }
         #endregion
     }

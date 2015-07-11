@@ -125,7 +125,7 @@ namespace Arith
             }
         }
 
-        internal static void TestOperations()
+        public static void TestOperations()
         {
             //init the set
             NumeralSet set = new NumeralSet(".", "-");

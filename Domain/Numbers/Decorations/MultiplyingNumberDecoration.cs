@@ -7,14 +7,14 @@ using System.Runtime.Serialization;
 using Arith.DataStructures;
 using System.Diagnostics;
 
-namespace Arith.Domain.Decorations
+namespace Arith.Domain.Numbers.Decorations
 {
-    public interface IHasMultiplication : INumberDecoration
+    public interface IHasMultiplication : INumericDecoration
     {
         void Multiply(string number);
     }
 
-    public class MultiplyingNumberDecoration : NumberDecorationBase, IHasMultiplication
+    public class MultiplyingNumberDecoration : NumericDecorationBase, IHasMultiplication
     {
         #region Declarations
         private readonly object _stateLock = new object();
@@ -22,7 +22,7 @@ namespace Arith.Domain.Decorations
         #endregion
 
         #region Ctor
-        public MultiplyingNumberDecoration(INumber decorated)
+        public MultiplyingNumberDecoration(INumeric decorated)
             : base(decorated)
         {
             this.InitMap();
@@ -30,7 +30,7 @@ namespace Arith.Domain.Decorations
         #endregion
 
         #region Static
-        public static MultiplyingNumberDecoration New(INumber decorated)
+        public static MultiplyingNumberDecoration New(INumeric decorated)
         {
             return new MultiplyingNumberDecoration(decorated);
         }
@@ -56,7 +56,7 @@ namespace Arith.Domain.Decorations
         #endregion
 
         #region Overrides
-        public override IDecorationOf<INumber> ApplyThisDecorationTo(INumber thing)
+        public override IDecorationOf<INumeric> ApplyThisDecorationTo(INumeric thing)
         {
             return new MultiplyingNumberDecoration(thing);
         }
@@ -169,7 +169,7 @@ namespace Arith.Domain.Decorations
 
     public static class MultiplyingNumberDecorationExtensions
     {
-        public static MultiplyingNumberDecoration HasMultiplication(this INumber number)
+        public static MultiplyingNumberDecoration HasMultiplication(this INumeric number)
         {
             return MultiplyingNumberDecoration.New(number);
         }

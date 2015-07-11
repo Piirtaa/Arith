@@ -7,7 +7,7 @@ using Arith.Domain;
 namespace Arith
 {
  
-    public interface INumber
+    public interface INumeric
     {
         SymbolicNumber SymbolicNumber { get; }
         /// <summary>

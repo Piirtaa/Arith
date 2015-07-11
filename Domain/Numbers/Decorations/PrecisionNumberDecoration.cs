@@ -7,21 +7,21 @@ using System.Runtime.Serialization;
 using Arith.DataStructures;
 using System.Diagnostics;
 
-namespace Arith.Domain.Decorations
+namespace Arith.Domain.Numbers.Decorations
 {
-    public interface IHasPrecision : INumberDecoration
+    public interface IHasPrecision : INumericDecoration
     {
-        INumber DecimalPlaces { get; set; }
+        INumeric DecimalPlaces { get; set; }
     }
 
-    public class PrecisionNumberDecoration : NumberDecorationBase, IHasPrecision
+    public class PrecisionNumberDecoration : NumericDecorationBase, IHasPrecision
     {
         #region Declarations
         private readonly object _stateLock = new object();
         #endregion
 
         #region Ctor
-        public PrecisionNumberDecoration(INumber decorated, INumber decimalPlaces)
+        public PrecisionNumberDecoration(INumeric decorated, INumeric decimalPlaces)
             : base(decorated)
         {
             if (decimalPlaces == null)
@@ -40,7 +40,7 @@ namespace Arith.Domain.Decorations
         #endregion
 
         #region Static
-        public static PrecisionNumberDecoration New(INumber decorated, INumber decimalPlaces)
+        public static PrecisionNumberDecoration New(INumeric decorated, INumeric decimalPlaces)
         {
             return new PrecisionNumberDecoration(decorated, decimalPlaces);
         }
@@ -66,21 +66,21 @@ namespace Arith.Domain.Decorations
         #endregion
 
         #region Overrides
-        public override IDecorationOf<INumber> ApplyThisDecorationTo(INumber thing)
+        public override IDecorationOf<INumeric> ApplyThisDecorationTo(INumeric thing)
         {
             return new PrecisionNumberDecoration(thing, this.DecimalPlaces);
         }
         #endregion
 
         #region Properties
-        public INumber DecimalPlaces { get; set; }
+        public INumeric DecimalPlaces { get; set; }
         #endregion
 
     }
 
     public static class PrecisionNumberDecorationExtensions
     {
-        public static PrecisionNumberDecoration HasPrecision(this INumber decorated, INumber decimalPlaces)
+        public static PrecisionNumberDecoration HasPrecision(this INumeric decorated, INumeric decimalPlaces)
         {
             return PrecisionNumberDecoration.New(decorated, decimalPlaces);
         }

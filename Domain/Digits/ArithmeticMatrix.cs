@@ -1,10 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Arith.DataStructures;
+using Arith.Decorating;
 
-namespace Arith.Domain
+namespace Arith.Domain.Digits
 {
     /// <summary>
     /// for a given number set generates the addition, subtraction and compare tables
@@ -27,7 +27,7 @@ namespace Arith.Domain
                 throw new ArgumentNullException("numeralSet");
             this._numeralSet = numeralSet;
 
-            var keys = this._numeralSet.SymbolSet.Values;
+            var keys = this._numeralSet.SymbolSet.As<LinkedList<string>>().Values;
             this._addMap = new SquareLookup<Tuple<string, bool>>(keys);
             this._subtractMap = new SquareLookup<Tuple<string, bool>>(keys);
             this._compareMap = new SquareLookup<bool?>(keys);

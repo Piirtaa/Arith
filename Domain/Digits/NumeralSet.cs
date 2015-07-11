@@ -1,11 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
+
 using System.Linq;
 using System.Text;
 using System.Diagnostics;
 using Arith.DataStructures;
+using Arith.DataStructures.Decorations;
+using Arith.Decorating;
 
-namespace Arith.Domain
+namespace Arith.Domain.Digits
 {
     /// <summary>
     /// contains an set of numerals.  Eg. a decimal numeral set would have 0-9.
@@ -51,7 +53,7 @@ namespace Arith.Domain
         {
             get
             {
-                return string.Join(",", this.SymbolSet.Values);
+                return string.Join(",", this.SymbolSet.As<LinkedList<string>>().Values);
             }
         }
         public string ZeroSymbol
@@ -77,16 +79,31 @@ namespace Arith.Domain
         #endregion
 
         #region Methods
+        public bool IsCompatible(NumeralSet set)
+        {
+            if (set == null)
+                return false;
+
+            if (!this.DecimalSymbol.Equals(set.DecimalSymbol))
+                return false;
+
+            if (!this.NegativeSymbol.Equals(set.NegativeSymbol))
+                return false;
+
+            this
+
+            return true;
+        }
         public SymbolicDigit GetSymbolicDigit(string symbol)
         {
-            var node = this.SymbolSet.Filter((i) => { return i.Value.Equals(symbol); }) as CircularLinkedListNode<string>;
+            var node = this.SymbolSet.Filter((i) => { return i.Value.Equals(symbol); }) as ICircularLinkedListNode<string>;
             return new SymbolicDigit(node);
         }
         public MatrixDigit GetMatrixDigit(string symbol)
         {
             return new MatrixDigit(symbol, this);
         }
-        public CircularLinkedListNode<string> GetComplement(CircularLinkedListNode<string> symbol)
+        public ICircularLinkedListNode<string> GetComplement(ICircularLinkedListNode<string> symbol)
         {
             return symbol.GetListComplement();
         }
@@ -143,9 +160,12 @@ namespace Arith.Domain
         /// <returns></returns>
         public string[] ParseSymbols(string text, bool parseLeftToRight = false, bool skipNonSymbols = true)
         {
+            if (text == null)
+                return null;
+
             string remaining = text;
 
-            List<string> rv = new List<string>();
+            System.Collections.Generic.List<string> rv = new System.Collections.Generic.List<string>();
 
             while (!string.IsNullOrEmpty(remaining))
             {
@@ -164,7 +184,7 @@ namespace Arith.Domain
             string symbolOUT = null;
             bool isSuccess = false;
 
-            var values = this.SymbolSet.Values.ToList();
+            var values = this.SymbolSet.As<LinkedList<string>>().Values.ToList();
             values.Add(this.DecimalSymbol);
             values.Add(this.NegativeSymbol);
 

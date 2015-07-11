@@ -1,12 +1,31 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Diagnostics;
 using Arith.DataStructures;
+using Arith.DataStructures.Decorations;
+using Arith.Domain.Digits;
 
-namespace Arith.Domain
+namespace Arith.Domain.Numbers
 {
+    /// <summary>
+    /// extends a linked list of digits with some numeric behaviour
+    /// </summary>
+    public interface IReadOnlyNumber : ILinkedListDecoration<IDigit>
+    {
+        /// <summary>
+        /// the number in symbolic form
+        /// </summary>
+        string SymbolsText { get; }
+        void SetValue(string number);
+        bool IsPositive { get; }
+        NumeralSet NumberSystem { get; }
+        /// <summary>
+        /// false = this is less, true= this is greater, null = equal
+        /// </summary>
+        bool? Compare(IReadOnlyNumber number);
+    }
+
     /// <summary>
     /// a number represented as a linked list of digits
     /// </summary>
@@ -17,14 +36,15 @@ namespace Arith.Domain
     /// and the least significant at the start.  In this way we keep a correlation from
     /// ZerothNode moving to the end, as a marker of symbol position
     /// </remarks>
-    [DebuggerDisplay("{SymbolsText}")]
-    public class SymbolicNumber : Arith.DataStructures.LinkedList<IDigit>, ISymbolicNumber
+    public class SymbolicNumber : ISymbolicNumber
     {
         #region Declarations
         /// <summary>
         /// flag to turn off the entire functionality of this class
         /// </summary>
         private static bool _isDisabled = false;
+
+        private IHasHooks<IDigit> _list = LinkedList<IDigit>.New().HasHooks();
 
         private DigitNode _zerothDigit = null;
         private NumeralSet _numberSystem = null;
@@ -46,18 +66,20 @@ namespace Arith.Domain
             };
 
             this.PostNodeInsertionStrategy = (x) =>
-            {
-                Debug.WriteLine("post insert on " + x.Value.Symbol + " producing " + this.SymbolsText);
-
+            {  
                 DigitNode node = x as DigitNode;
-
+                
                 //set zeroth digit if it hasn't been
                 if (this.ZerothDigit == null)
                     this._zerothDigit = node;
+
+                //WEIRD DESIGN NOTE:
+                //calling an insertion from here could trigger recursion into this handler,
+                //if the insertion is on another number.  
+                Debug.WriteLine("post insert on " + x.Value.Symbol + " producing " + this.SymbolsText);
+
             };
 
-
-            this.InitToZero();
             this.SetValue(digits);
         }
         #endregion
@@ -71,7 +93,7 @@ namespace Arith.Domain
         #region Calculated Properties
         public DigitNode LastDigit { get { return this.LastNode as DigitNode; } }
         public DigitNode FirstDigit { get { return this.FirstNode as DigitNode; } }
-        public List<Tuple<string, bool>> NodeValues
+        public System.Collections.Generic.List<Tuple<string, bool>> NodeValues
         {
             get
             {
@@ -95,29 +117,17 @@ namespace Arith.Domain
                 StringBuilder sb = new StringBuilder();
                 if (!this._isPositive)
                     sb.Append(this.NumberSystem.NegativeSymbol);
-
-                bool isLeadingZero = true;
-                var mostSigNodesDesc = this.Nodes.Reverse();
-                foreach (var each in mostSigNodesDesc)
+                
+                this.Iterate((dig) =>
                 {
-                    DigitNode node = each as DigitNode;
-                    //ignore leading zeroes
-                    if (isLeadingZero && node.IsZero && node.IsZerothDigit == false)
-                    {
-                        continue;
-                    }
-                    else
-                    {
-                        isLeadingZero = false;
-                    }
-
+                    DigitNode node = dig as DigitNode;
                     sb.Append(node.Symbol);
                     if (node.IsZerothDigit)
                     {
                         sb.Append(this.NumberSystem.DecimalSymbol);
                     }
-                }
-
+                }, false);
+               
                 var rv = sb.ToString();
 
                 if (rv.EndsWith(this.NumberSystem.DecimalSymbol))
@@ -149,7 +159,7 @@ namespace Arith.Domain
         #endregion
 
         #region Overrides
-        public override Arith.DataStructures.LinkedList<IDigit> Remove(Arith.DataStructures.LinkedListNode<IDigit> item)
+        public override Arith.DataStructures.ILinkedList<IDigit> Remove(Arith.DataStructures.ILinkedListNode<IDigit> item)
         {
             if (item == null)
                 throw new ArgumentNullException("item");
@@ -179,11 +189,14 @@ namespace Arith.Domain
         {
             lock (this._stateLock)
             {
-                while (this.LastDigit.IsZerothDigit == false &&
+
+                while (this.LastDigit != null && 
+                    this.LastDigit.IsZerothDigit == false &&
                     this.LastDigit.IsZero)
                     this.Remove(this.LastNode);
 
-                while (this.FirstDigit.IsZerothDigit == false &&
+                while (this.FirstDigit != null && 
+                    this.FirstDigit.IsZerothDigit == false &&
                     this.FirstDigit.IsZero)
                     this.Remove(this.FirstNode);
             }
@@ -394,32 +407,47 @@ namespace Arith.Domain
             
             lock (this._stateLock)
             {
-                //set sign
-                if (symbols[0].Equals(this.NumberSystem.NegativeSymbol))
-                    this._isPositive = false;
-
                 this._firstNode = null;
                 this._lastNode = null;
                 this._zerothDigit = null;
+                this._isPositive = true;
 
-                DigitNode currentNode = null;
-                //parse the symbols into postdecimal and predecimal lists
-                foreach (var each in symbols)
+                if (symbols != null && symbols.Length > 0 )
                 {
-                    if (each.Equals(this.NumberSystem.NegativeSymbol))
-                        continue;
+                    bool isZeroSet = false;
 
-                    //if decimal set zeroth 
-                    if (each.Equals(this.NumberSystem.DecimalSymbol))
+                    //set sign
+                    if (symbols[0].Equals(this.NumberSystem.NegativeSymbol))
+                        this._isPositive = false;
+
+                    DigitNode currentNode = null;
+                    //parse the symbols into postdecimal and predecimal lists
+                    foreach (var each in symbols)
                     {
-                        this._zerothDigit = currentNode;
-                        continue;
+                        if (each.Equals(this.NumberSystem.NegativeSymbol))
+                            continue;
+
+                        //if decimal set zeroth 
+                        if (each.Equals(this.NumberSystem.DecimalSymbol))
+                        {
+                            this._zerothDigit = currentNode;
+                            isZeroSet = true;
+                            continue;
+                        }
+
+                        currentNode = this.AddLeastSignificantDigit(each);
                     }
 
-                    currentNode = this.AddLeastSignificantDigit(each);
+                    if (!isZeroSet)
+                        this._zerothDigit = this._firstNode as DigitNode;
+
+                    this.ScrubLeadingAndTrailingZeroes();
+                }
+                else
+                {
+                    //keeps a null list
                 }
             }
-            this.ScrubLeadingAndTrailingZeroes();
         }
         public void SetValue(SymbolicNumber number)
         {
@@ -567,7 +595,7 @@ namespace Arith.Domain
 
             SymbolicNumber rv = new SymbolicNumber(null, number.NumberSystem);
             rv._isPositive = number._isPositive;
-
+ 
             number.Iterate((node) =>
             {
                 DigitNode dNode = node as DigitNode;
@@ -627,7 +655,8 @@ namespace Arith.Domain
                         break;
                     case false:
                         isReturnCloned = true;
-                        rv = Decrement(Clone(number2), number1);
+                        var cloneNum2 = number2.Clone();
+                        rv = Decrement(cloneNum2, number1);
                         rv._isPositive = false;
                         break;
                 }
@@ -970,9 +999,9 @@ namespace Arith.Domain
         #endregion
     }
 
-    internal class SymbolicNumberTests
+    public class SymbolicNumberTests
     {
-        internal static void Test()
+        public static void Test()
         {
             //init the set
             NumeralSet set = new NumeralSet(".", "-");
@@ -1016,7 +1045,7 @@ namespace Arith.Domain
             }
         }
 
-        internal static void TestOperations()
+        public static void TestOperations()
         {
             //init the set
             NumeralSet set = new NumeralSet(".", "-");
@@ -1031,8 +1060,12 @@ namespace Arith.Domain
 
             for (int i = 0; i < 1000; i++)
             {
-                num1.AddOne();
                 number++;
+                if (number == 10)
+                {
+                    var stop = true;
+                }
+                num1.AddOne();
                 Debug.Assert(num1.SymbolsText == number.ToString());
             }
 
