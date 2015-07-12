@@ -22,8 +22,8 @@ namespace Arith.Domain.Numbers.Decorations
  
     public interface IHasAddition : INumericDecoration
     {
-        void Add(string number);
-        void Subtract(string number);
+        void Add(INumeric numeric);
+        void Subtract(INumeric numeric);
     }
 
     public class AddingNumericDecoration : NumericDecorationBase, IHasAddition
@@ -66,43 +66,45 @@ namespace Arith.Domain.Numbers.Decorations
         #endregion
 
         #region Overrides
-        public override IDecorationOf<INumeric> ApplyThisDecorationTo(INumeric thing)
+        public override IDecoration ApplyThisDecorationTo(INumeric thing)
         {
             return new AddingNumericDecoration(thing);
         }
         #endregion
 
         #region IHasAddition
-        public void Add(string number)
+        public void Add(INumeric numeric)
         {
-            if (number == null)
+            if (numeric == null)
                 return;
 
-            var num = Numeric.New(this.NumberSystem, number);
+            if (!this.HasCompatibleNumberSystem(numeric))
+                throw new InvalidOperationException("incompatible number system");
 
             bool isClone = false;
-            var val = Add(this, num, out isClone);
+            var val = Add(this, numeric, out isClone);
 
             if (isClone)
                 this.As<Numeric>().SetValue(val);
         }
-        public void Subtract(string number)
+        public void Subtract(INumeric numeric)
         {
-            if (number == null)
+            if (numeric == null)
                 return;
 
-            var num = Numeric.New(this.NumberSystem, number);
-            num.SwitchSign();
+            if (!this.HasCompatibleNumberSystem(numeric))
+                throw new InvalidOperationException("incompatible number system");
+
+            
+            numeric.As<Numeric>().SwitchSign();
             bool isClone = false;
-            var val = Add(this, num, out isClone);
-            num.SwitchSign();
+            var val = Add(this, numeric, out isClone);
+            numeric.As<Numeric>().SwitchSign(); //we don't want to return a modified arg
 
             if (isClone)
                 this.As<Numeric>().SetValue(val);
         }
         #endregion
-
-
 
         #region Static Helpers
         /// <summary>
@@ -270,16 +272,59 @@ namespace Arith.Domain.Numbers.Decorations
         }
 
         #endregion
-
-
     }
 
     public static class AddingNumericDecorationExtensions
     {
         public static AddingNumericDecoration HasAddition(this INumeric number)
         {
-            return AddingNumericDecoration.New(number);
+            //if there's already an addition decoration, return that
+            var decoration = number.As<AddingNumericDecoration>(true);
+            if(decoration == null)
+                decoration = AddingNumericDecoration.New(number);
+
+            return decoration;
         }
+
+        public static void AddOne(this IHasAddition thisNumber)
+        {
+            if (thisNumber == null)
+                throw new ArgumentNullException("thisNumber");
+
+            thisNumber.Add(thisNumber.GetCompatibleOne());
+        }
+        public static void SubtractOne(this IHasAddition thisNumber)
+        {
+            if (thisNumber == null)
+                throw new ArgumentNullException("thisNumber");
+
+            thisNumber.Subtract(thisNumber.GetCompatibleOne());
+        }
+
+        /// <summary>
+        /// performs the action for as many times as the number
+        /// </summary>
+        /// <param name="number"></param>
+        /// <param name="action"></param>
+        public static void CountdownToZero(this IHasAddition number, Action<INumeric> action)
+        {
+            if (number == null) return;
+            if (action == null) throw new ArgumentNullException("action");
+
+            if (!number.IsPositive)
+                throw new ArgumentOutOfRangeException("number must be positive");
+
+            var zero = number.GetCompatibleZero();
+
+            AddingNumericDecoration num = (number as AddingNumericDecoration).Clone() as AddingNumericDecoration;
+            while (num.IsGreaterThan(zero))
+            {
+                action(num);
+                num.SubtractOne();
+            }
+        }
+
+
     }
 
 
@@ -294,7 +339,7 @@ namespace Arith.Domain.Numbers.Decorations
                 set.AddSymbolToSet(i.ToString());
             }
 
-            int topLimit = 10000000;
+            int topLimit = 100;
             for (int x = 0; x < topLimit; x++)
             {
                 for (int y = 0; y < topLimit; y++)

@@ -40,7 +40,7 @@ namespace Arith.Decorating
             if (obj == null)
                 return null;
 
-            if (!(obj is IDecoration))
+            if (!obj.IsADecoration())
                 return null;
 
             return (obj as IDecoration).Decorated;
@@ -59,7 +59,7 @@ namespace Arith.Decorating
             //iterate down
             while (currentLayer != null)
             {
-                currentLayer = GetDecorated(currentLayer);
+                currentLayer = currentLayer.GetDecorated();
                 if (currentLayer != null)
                     last = currentLayer;
             }
@@ -108,6 +108,22 @@ namespace Arith.Decorating
 
             return returnValue;
         }
+
+        public static object CloneDecorationCake(this object obj, object inner)
+        {
+            if (obj == null)
+                return null;
+
+            var cake = obj.GetSelfAndAllDecorationsBelow();
+
+            object rv = inner;
+            for (int i = cake.Count - 1; i > 0; i--)
+            {
+                IDecoration layer = cake[i] as IDecoration;
+                rv = layer.ApplyThisDecorationTo(rv);
+            }
+            return rv;
+        }
     }
 
     /// <summary>
@@ -135,7 +151,7 @@ namespace Arith.Decorating
             if (obj == null)
                 return null;
 
-            if (!(obj is IDecoratorAwareDecoration))
+            if (!obj.IsADecoratorAwareDecoration())
                 return null;
 
             return (obj as IDecoratorAwareDecoration).Decorator;
@@ -216,10 +232,8 @@ namespace Arith.Decorating
             if (obj == null)
                 return null;
 
-            var match = IDecorationExtensions.WalkDecorationsToInner(obj, (dec) =>
+            var match = obj.WalkDecorationsToInner((dec) =>
             {
-                //do type level filtering first
-
                 //if we're exact matching, the decoration has to be the same type
                 if (exactTypeMatch && decorationType.Equals(dec.GetType()) == false)
                     return false;
@@ -257,10 +271,8 @@ namespace Arith.Decorating
             if (obj == null)
                 return null;
 
-            var match = IDecoratorAwareDecorationExtensions.WalkDecoratorsToOuter(obj, (dec) =>
+            var match = obj.WalkDecoratorsToOuter((dec) =>
             {
-                //do type level filtering first
-
                 //if we're exact matching, the decoration has to be the same type
                 if (exactTypeMatch && decorationType.Equals(dec.GetType()) == false)
                     return false;
@@ -303,12 +315,12 @@ namespace Arith.Decorating
             //if decorator aware get the outer
             object topMost = obj;
 
-            if (IDecoratorAwareDecorationExtensions.IsADecoratorAwareDecoration(obj))
+            if (obj.IsADecoratorAwareDecoration())
             {
-                topMost = IDecoratorAwareDecorationExtensions.GetOuterDecorator(obj);
+                topMost = obj.GetOuterDecorator();
             }
 
-            return AsBelow(topMost, decorationType, exactTypeMatch);
+            return topMost.AsBelow(decorationType, exactTypeMatch);
         }
         /// <summary>
         /// looks for the "As face" by walking ALL the decorations.  If DecoratorAware, walks down from Outer.  If not

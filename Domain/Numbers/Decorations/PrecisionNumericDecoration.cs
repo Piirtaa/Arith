@@ -6,6 +6,8 @@ using Arith.Decorating;
 using System.Runtime.Serialization;
 using Arith.DataStructures;
 using System.Diagnostics;
+using Arith.DataStructures.Decorations;
+using Arith.Domain.Digits;
 
 namespace Arith.Domain.Numbers.Decorations
 {
@@ -14,25 +16,28 @@ namespace Arith.Domain.Numbers.Decorations
         INumeric DecimalPlaces { get; set; }
     }
 
-    public class PrecisionNumberDecoration : NumericDecorationBase, IHasPrecision
+    public class PrecisionNumericDecoration : NumericDecorationBase, IHasPrecision
     {
         #region Declarations
         private readonly object _stateLock = new object();
         #endregion
 
         #region Ctor
-        public PrecisionNumberDecoration(INumeric decorated, INumeric decimalPlaces)
-            : base(decorated)
+        public PrecisionNumericDecoration(INumeric decorated, INumeric decimalPlaces)
+            : base(decorated.HasHooks())
         {
+            //note that we've decorated hooks on Decorated above ^^
+
             if (decimalPlaces == null)
                 throw new ArgumentNullException("decimalPlaces");
 
             this.DecimalPlaces = decimalPlaces;
 
-            this.SymbolicNumber.PostMutateStrategy = (x) =>
+            var hookDecoration = this.AsBelow<IHasHooks<IDigit>>(false);
+            hookDecoration.PostMutateStrategy = (x) =>
             {
                 //now ensure we don't have more than the specified decimal places
-                this.SymbolicNumber.TruncateToDecimalPlaces(this.DecimalPlaces.SymbolicNumber);
+                this.ThisNumeric.TruncateToDecimalPlaces(this.DecimalPlaces);
             };
 
 
@@ -40,14 +45,14 @@ namespace Arith.Domain.Numbers.Decorations
         #endregion
 
         #region Static
-        public static PrecisionNumberDecoration New(INumeric decorated, INumeric decimalPlaces)
+        public static PrecisionNumericDecoration New(INumeric decorated, INumeric decimalPlaces)
         {
-            return new PrecisionNumberDecoration(decorated, decimalPlaces);
+            return new PrecisionNumericDecoration(decorated, decimalPlaces);
         }
         #endregion
 
         #region ISerializable
-        protected PrecisionNumberDecoration(SerializationInfo info, StreamingContext context)
+        protected PrecisionNumericDecoration(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
         }
@@ -66,9 +71,9 @@ namespace Arith.Domain.Numbers.Decorations
         #endregion
 
         #region Overrides
-        public override IDecorationOf<INumeric> ApplyThisDecorationTo(INumeric thing)
+        public override IDecoration ApplyThisDecorationTo(INumeric thing)
         {
-            return new PrecisionNumberDecoration(thing, this.DecimalPlaces);
+            return new PrecisionNumericDecoration(thing, this.DecimalPlaces);
         }
         #endregion
 
@@ -80,10 +85,42 @@ namespace Arith.Domain.Numbers.Decorations
 
     public static class PrecisionNumberDecorationExtensions
     {
-        public static PrecisionNumberDecoration HasPrecision(this INumeric decorated, INumeric decimalPlaces)
+        public static PrecisionNumericDecoration HasPrecision(this INumeric decorated, INumeric decimalPlaces)
         {
-            return PrecisionNumberDecoration.New(decorated, decimalPlaces);
+            return PrecisionNumericDecoration.New(decorated, decimalPlaces);
         }
+        public static INumeric GetDecimalPlaces(this INumeric thisNumber)
+        {
+            if (thisNumber == null)
+                throw new ArgumentNullException("thisNumber");
+
+            var shifty = thisNumber.Clone().HasShift();
+            var places = shifty.ShiftToZero();
+
+            return places;
+        }
+        public static void TruncateToDecimalPlaces(this INumeric thisNumber,
+            INumeric places)
+        {
+            if (thisNumber == null)
+                throw new ArgumentNullException("thisNumber");
+
+            if (places == null)
+                throw new ArgumentNullException("places");
+
+            var currPlaces = thisNumber.GetDecimalPlaces();
+            if (currPlaces.IsGreaterThan(places))
+            {
+                var addy = currPlaces.HasAddition();
+                addy.Subtract(places);
+
+                addy.CountdownToZero(x =>
+                {
+                    thisNumber.Remove(thisNumber.LastNode);
+                });
+            }
+        }
+
     }
 
 

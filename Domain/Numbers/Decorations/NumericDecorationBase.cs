@@ -10,15 +10,23 @@ using Arith.Domain.Digits;
 
 namespace Arith.Domain.Numbers.Decorations
 {
-    public interface INumericDecoration : INumeric, IDecorationOf<INumeric> { }
+    /// <summary>
+    /// defines numeric decoration as NOT constraining decorated to being INumeric,
+    /// only that decorated has INumeric somewhere in its cake
+    /// </summary>
+    public interface INumericDecoration : INumeric, IDecoration { }
 
-    public abstract class NumericDecorationBase : DecorationOfBase<INumeric>,
+    public abstract class NumericDecorationBase : DecorationBase,
         INumericDecoration
     {
         #region Ctor
-        public NumericDecorationBase(INumeric decorated)
+        public NumericDecorationBase(object decorated)
             : base(decorated)
         {
+            if (!decorated.Is<Numeric>())
+                throw new InvalidOperationException("decorated does not have a Numeric");
+                
+
         }
         #endregion
 
@@ -34,35 +42,37 @@ namespace Arith.Domain.Numbers.Decorations
         #endregion
 
         #region Methods
-        public override INumeric This
+        public Numeric ThisNumeric
         {
-            get { return this; }
-        }  
-        public NumeralSet NumberSystem { get { return this.Decorated.NumberSystem; } }
-        public bool IsPositive { get { return this.Decorated.IsPositive; } }    
-        public string SymbolsText { get { return this.Decorated.SymbolsText; } }
+            get { return this.Inner as Numeric; }
+        }
+        public NumeralSet NumberSystem { get { return this.ThisNumeric.NumberSystem; } }
+        public bool IsPositive { get { return this.ThisNumeric.IsPositive; } }
+        public string SymbolsText { get { return this.ThisNumeric.SymbolsText; } }
         public virtual void SetValue(string number) 
         {
             if (!this.IsDecorationEnabled)
                 throw new InvalidOperationException("decoration disabled");
 
-            this.Decorated.SetValue(number); 
+            this.ThisNumeric.SetValue(number); 
         }
 
-        public IDigitNode ZerothDigit { get { return this.Decorated.ZerothDigit; } }
+        public IDigitNode ZerothDigit { get { return this.ThisNumeric.ZerothDigit; } }
         /// <summary>
         /// false = this is less, true= this is greater, null = equal
         /// </summary>
-        public bool? Compare(INumeric number) { return this.Decorated.Compare(number); }
+        public bool? Compare(INumeric number) { return this.ThisNumeric.Compare(number); }
         /// <summary>
         /// duplicates the entire decoration chain
         /// </summary>
         /// <returns></returns>
         public INumeric Clone()
         {
-            var clone = this.Decorated.Clone();
+            //get the Numeric and clone it
+            var clone = this.ThisNumeric.Clone();
 
-            return this.ApplyThisDecorationTo(clone) as INumeric;
+            var rv = this.CloneDecorationCake(clone);
+            return rv as INumeric;
         }
         #endregion
     }

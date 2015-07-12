@@ -22,7 +22,7 @@ namespace Arith.Domain.Numbers
         #endregion
 
         #region Parent Number-related Calculated Properties
-        private NumeralSet NumberSystem { get { return this.ParentNumber().NumberSystem; } }
+        private NumeralSet NumberSystem { get { return this.ParentNumeric().NumberSystem; } }
 
         /// <summary>
         /// when queried will perform a lazy load of the next digit (ie. expand the registers)
@@ -33,7 +33,7 @@ namespace Arith.Domain.Numbers
             {
                 if (this.NextNode == null)
                 {
-                    return this.ParentNumber().AddMostSignificantZeroDigit() as DigitNode;
+                    return this.ParentNumeric().AddMostSignificantZeroDigit() as DigitNode;
                 }
                 return this.NextNode as DigitNode;
             }
@@ -48,7 +48,7 @@ namespace Arith.Domain.Numbers
             {
                 if (this.PreviousNode == null)
                 {
-                    return this.ParentNumber().AddLeastSignificantZeroDigit() as DigitNode;
+                    return this.ParentNumeric().AddLeastSignificantZeroDigit() as DigitNode;
                 }
                 return this.PreviousNode as DigitNode;
             }

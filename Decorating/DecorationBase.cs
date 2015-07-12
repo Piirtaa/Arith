@@ -153,6 +153,10 @@ namespace Arith.Decorating
         }
         #endregion
 
+        #region IDecoration
+        public abstract IDecoration ApplyThisDecorationTo(object thing);
+        #endregion
+
         #region Disposable
         protected override void DisposeManaged()
         {

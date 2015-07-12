@@ -4,11 +4,13 @@ using System.Text;
 using Arith.Domain.Digits;
 using System.Diagnostics;
 using Arith.DataStructures;
+using Arith.Decorating;
 
 namespace Arith.Domain.Numbers
 {
     /// <summary>
-    /// puts numeric semantics around a linked list of digits
+    /// concrete INumeric.  in any Numeric Decoration it is assumed the innermost
+    /// layer is an instance of this type.
     /// </summary>
     public class Numeric : LinkedList<IDigit>, INumeric
     {
@@ -49,7 +51,7 @@ namespace Arith.Domain.Numbers
         #endregion
 
         #region Properties
-        public DigitNode ZerothDigit { get { return this._zerothDigit; } }
+        public DigitNode ZerothDigit { get { return this._zerothDigit; } set { this._zerothDigit = value; } }
         public DigitNode LastDigit { get { return this._lastNode as DigitNode; } }
         public DigitNode FirstDigit { get { return this._firstNode as DigitNode; } }
         #endregion
@@ -168,15 +170,21 @@ namespace Arith.Domain.Numbers
                 throw new ArgumentNullException("item");
 
             DigitNode node = item as DigitNode;
+            DigitNode newZero = null;
             if (node.IsZerothDigit())
             {
                 //reset zeroth to next
                 if (node.NextNode == null)
                     throw new InvalidOperationException("cannot remove zeroth digit");
 
-                this._zerothDigit = node.NextNode as DigitNode;
+                newZero = node.NextNode as DigitNode;
             }
-            return base.Remove(item);
+            var rv = base.Remove(item);
+            
+            if(newZero != null)
+                this._zerothDigit = newZero;
+            
+            return rv;
         }
         #endregion
 
@@ -260,28 +268,36 @@ namespace Arith.Domain.Numbers
                 return rv;
             }
         }
-        public void SetValue(Numeric number)
+        /// <summary>
+        /// this will set the value of the numeric.  it is possible to switch number system 
+        /// here also.  it's a complete rebuild of the linkedlist.
+        /// </summary>
+        /// <param name="number"></param>
+        public void SetValue(INumeric number)
         {
             if (number == null)
                 throw new ArgumentNullException("number");
 
-            this._firstNode = null;
-            this._lastNode = null;
-            this._zerothDigit = null;
-            this._numberSystem = number.NumberSystem;
-            this._isPositive = number._isPositive;
-
-            number.Iterate((node) =>
+            lock (this._stateLock)
             {
-                DigitNode dNode = node as DigitNode;
-                var newNode = this.AddLeastSignificantDigit(dNode.Symbol);
-                if (dNode.IsZerothDigit())
-                {
-                    number._zerothDigit = newNode;
-                }
-            }, false);
+                this._firstNode = null;
+                this._lastNode = null;
+                this._zerothDigit = null;
+                this._numberSystem = number.NumberSystem;
+                this._isPositive = number.IsPositive;
 
-            this.ScrubLeadingAndTrailingZeroes();
+                number.Iterate((node) =>
+                {
+                    DigitNode dNode = node as DigitNode;
+                    var newNode = this.AddLeastSignificantDigit(dNode.Symbol);
+                    if (dNode.IsZerothDigit())
+                    {
+                        this._zerothDigit = newNode;
+                    }
+                }, false);
+
+                this.ScrubLeadingAndTrailingZeroes();
+            }
         }
         #endregion
 
@@ -376,5 +392,61 @@ namespace Arith.Domain.Numbers
         #endregion
     }
 
+    public class NumericTests
+    {
+        public static void Test()
+        {
+            //init the set
+            NumeralSet set = new NumeralSet(".", "-");
+            for (int i = 0; i < 10; i++)
+            {
+                set.AddSymbolToSet(i.ToString());
+            }
+
+            //test creation
+            var num1 = Numeric.New(set, "123456789");
+            Debug.Assert(num1.SymbolsText == "123456789");
+            //test set value
+            num1.SetValue("-123456788.123");
+            Debug.Assert(num1.SymbolsText == "-123456788.123");
+
+            //test compare ops
+            for (int i = 1; i < 100; i++)
+            {
+                var low = Numeric.New(set, i.ToString());
+                var low2 = Numeric.New(set, "-" + i.ToString());
+                var med = low.GetCompatibleNumber((i + 1).ToString());
+                var high = low.GetCompatibleNumber((i + 2).ToString());
+
+                Debug.Assert(low.IsEqualTo(low2));
+                Debug.Assert(low.IsLessThan(high));
+                Debug.Assert(med.IsGreaterThan(low));
+                Debug.Assert(high.IsGreaterThan(med));
+            }
+            for (int i = 1; i < 100; i++)
+            {
+                var low = Numeric.New(set, "-" + i.ToString());
+                var low2 = Numeric.New(set, "-" + i.ToString());
+                var med = low.GetCompatibleNumber("-" + (i + 1).ToString());
+                var high = low.GetCompatibleNumber("-" + (i + 2).ToString());
+
+                Debug.Assert(low.IsEqualTo(low2));
+                Debug.Assert(low.IsGreaterThan(high));
+                Debug.Assert(med.IsLessThan(low));
+                Debug.Assert(high.IsLessThan(med));
+            }
+
+            var num2 = Numeric.New(set, "123.456789");
+            var num3 = Numeric.New(set, "123.45678");
+            Debug.Assert(num2.IsGreaterThan(num3));
+
+            num2.SwitchSign();
+            Debug.Assert(num2.IsLessThan(num3));
+            var comp = Numeric.AbsoluteValueCompare(num2, num3);
+            Debug.Assert(comp == false);
+        }
+
+
+    }
 
 }

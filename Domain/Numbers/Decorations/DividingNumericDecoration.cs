@@ -14,28 +14,28 @@ namespace Arith.Domain.Numbers.Decorations
 		void Divide(string number, string numberOfDecimalPlaces); 
 	}
 
-    public class DividingNumberDecoration : NumericDecorationBase, IHasDivision
+    public class DividingNumericDecoration : NumericDecorationBase, IHasDivision
     {
         #region Declarations
         private readonly object _stateLock = new object();
         #endregion
 
         #region Ctor
-        public DividingNumberDecoration(INumeric decorated)
+        public DividingNumericDecoration(INumeric decorated)
             : base(decorated)
         {
         }
         #endregion
 
         #region Static
-        public static DividingNumberDecoration New(INumeric decorated)
+        public static DividingNumericDecoration New(INumeric decorated)
         {
-            return new DividingNumberDecoration(decorated);
+            return new DividingNumericDecoration(decorated);
         }
         #endregion
 
         #region ISerializable
-        protected DividingNumberDecoration(SerializationInfo info, StreamingContext context)
+        protected DividingNumericDecoration(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
         }
@@ -56,7 +56,7 @@ namespace Arith.Domain.Numbers.Decorations
         #region Overrides
         public override IDecorationOf<INumeric> ApplyThisDecorationTo(INumeric thing)
         {
-            return new MultiplyingNumberDecoration(thing);
+            return new MultiplyingNumericDecoration(thing);
         }
         #endregion
 
@@ -191,9 +191,9 @@ namespace Arith.Domain.Numbers.Decorations
 
     public static class DividingNumberDecorationExtensions
     {
-        public static DividingNumberDecoration HasDivision(this INumeric number)
+        public static DividingNumericDecoration HasDivision(this INumeric number)
         {
-            return DividingNumberDecoration.New(number);
+            return DividingNumericDecoration.New(number);
         }
     }
 

@@ -14,7 +14,7 @@ namespace Arith.Domain.Numbers.Decorations
         void Multiply(string number);
     }
 
-    public class MultiplyingNumberDecoration : NumericDecorationBase, IHasMultiplication
+    public class MultiplyingNumericDecoration : NumericDecorationBase, IHasMultiplication
     {
         #region Declarations
         private readonly object _stateLock = new object();
@@ -22,7 +22,7 @@ namespace Arith.Domain.Numbers.Decorations
         #endregion
 
         #region Ctor
-        public MultiplyingNumberDecoration(INumeric decorated)
+        public MultiplyingNumericDecoration(INumeric decorated)
             : base(decorated)
         {
             this.InitMap();
@@ -30,14 +30,14 @@ namespace Arith.Domain.Numbers.Decorations
         #endregion
 
         #region Static
-        public static MultiplyingNumberDecoration New(INumeric decorated)
+        public static MultiplyingNumericDecoration New(INumeric decorated)
         {
-            return new MultiplyingNumberDecoration(decorated);
+            return new MultiplyingNumericDecoration(decorated);
         }
         #endregion
 
         #region ISerializable
-        protected MultiplyingNumberDecoration(SerializationInfo info, StreamingContext context)
+        protected MultiplyingNumericDecoration(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
         }
@@ -58,7 +58,7 @@ namespace Arith.Domain.Numbers.Decorations
         #region Overrides
         public override IDecorationOf<INumeric> ApplyThisDecorationTo(INumeric thing)
         {
-            return new MultiplyingNumberDecoration(thing);
+            return new MultiplyingNumericDecoration(thing);
         }
         #endregion
 
@@ -169,9 +169,9 @@ namespace Arith.Domain.Numbers.Decorations
 
     public static class MultiplyingNumberDecorationExtensions
     {
-        public static MultiplyingNumberDecoration HasMultiplication(this INumeric number)
+        public static MultiplyingNumericDecoration HasMultiplication(this INumeric number)
         {
-            return MultiplyingNumberDecoration.New(number);
+            return MultiplyingNumericDecoration.New(number);
         }
     }
 

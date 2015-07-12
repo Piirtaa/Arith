@@ -53,16 +53,19 @@
     <Compile Include="DataStructures\Decorations\LinkedListDecorationBase.cs" />
     <Compile Include="Domain\Digits\Interfaces.cs" />
     <Compile Include="Domain\Numbers\Decorations\AddingNumericDecoration.cs" />
-    <Compile Include="Domain\Numbers\Decorations\DividingNumberDecoration.cs" />
+    <Compile Include="Domain\Numbers\Decorations\ShiftingNumericDecoration.cs" />
+    <Compile Include="Domain\Numbers\Decorations\DividingNumericDecoration.cs" />
     <Compile Include="Domain\Numbers\Decorations\NumericDecorationBase.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Domain\Numbers\Decorations\PrecisionNumberDecoration.cs" />
-    <Compile Include="Domain\Numbers\Decorations\MultiplyingNumberDecoration.cs">
+    <Compile Include="Domain\Numbers\Decorations\PrecisionNumericDecoration.cs" />
+    <Compile Include="Domain\Numbers\Decorations\MultiplyingNumericDecoration.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Domain\Numbers\DigitNode.cs" />
+    <Compile Include="Domain\Numbers\IDigitNodeExtensions.cs" />
     <Compile Include="Domain\Numbers\Interfaces.cs" />
+    <Compile Include="Domain\Numbers\INumericExtensions.cs" />
     <Compile Include="Domain\Numbers\Numeric.cs" />
     <Compile Include="Domain\Numbers\Interfaces2.cs" />
     <Compile Include="Domain\Digits\ArithmeticMatrix.cs" />

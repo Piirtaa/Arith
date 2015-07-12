@@ -20,6 +20,15 @@ namespace Arith.Decorating
         /// the innermost decorated thing
         /// </summary>
         object Inner { get; }
+
+        /// <summary>
+        /// Essentially is a clone mechanism.  Allow the current decoration to recreate an instance like itself when
+        /// provided with a thing to decorate - think of this as a ctor with only one arg (the thing) and all other args
+        /// coming from the current instance.
+        /// </summary>
+        /// <param name="store"></param>
+        /// <returns></returns>
+        IDecoration ApplyThisDecorationTo(object thing);
     }
 
     /// <summary>

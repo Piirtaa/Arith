@@ -236,42 +236,7 @@ namespace Arith.Domain.Numbers
                 return rv;
             }
         }
-        /// <summary>
-        /// moves the decimal to the right (towards LSD) - an order of magnitude increase.
-        /// if the LSD rightmost position doesn't exist, it is added.
-        /// </summary>
-        public void ShiftRight()
-        {
-            lock (this._stateLock)
-            {
-                var node = this.ZerothDigit.PreviousNode as DigitNode;
-                if (node == null)
-                {
-                    node = this.AddLeastSignificantZeroDigit();
-                }
 
-                //move the decimal
-                this._zerothDigit = node;
-            }
-        }
-        /// <summary>
-        /// moves the decimal to the left (toward MSD) - an order of magnitude decrease.
-        /// if the leftmost(MSD) position doesn't exist, it is added.
-        /// </summary>
-        public void ShiftLeft()
-        {
-            lock (this._stateLock)
-            {
-                var node = this.ZerothDigit.NextNode as DigitNode;
-                if (node == null)
-                {
-                    node = this.AddMostSignificantZeroDigit();
-                }
-
-                //move the decimal
-                this._zerothDigit = node;
-            }
-        }
         #endregion
 
         #region List Walking
