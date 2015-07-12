@@ -15,9 +15,11 @@ namespace Arith.DataStructures
     {
         #region Ctor
         public CircularLinkedList(params T[] items)
-            : base(LinkedList<T>.New(items))
+            : base(LinkedList<T>.New(items).HasHooks())
         {
-
+            //^^note that hooks are a required layer for the circular decoration
+            //which implements IHasDecoration<IHasHooks<T>>, or it will 
+            //fail runtime validation.  so we decorate with hooks in the ctor.
         }
         #endregion
     }
