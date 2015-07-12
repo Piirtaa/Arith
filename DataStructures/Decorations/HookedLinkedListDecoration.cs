@@ -165,6 +165,7 @@ namespace Arith.DataStructures.Decorations
         #endregion
 
         #region Overrides
+
         public override ILinkedList<T> Remove(ILinkedListNode<T> item)
         {
             var rv = base.Remove(item);
@@ -207,6 +208,7 @@ namespace Arith.DataStructures.Decorations
 
             list.PostMutateStrategy = (l) =>
             {
+                Debug.WriteLine("mutating to " + l.LastNode.Value);
                 Debug.Assert(counter == l.LastNode.Value);
             };
 
@@ -223,9 +225,20 @@ namespace Arith.DataStructures.Decorations
                 list.AddLast(x);
             }
 
-            for (int x = 1; x < topLimit; x++)
+            list.PostMutateStrategy = (l) =>
             {
-                counter--;
+                if (!l.IsEmpty())
+                {
+                    Debug.WriteLine("mutating to " + l.LastNode.Value);
+                    counter--;
+                    Debug.Assert(counter == l.LastNode.Value);
+                }
+            };
+
+            list.PostNodeInsertionStrategy = null;
+
+            for (int x = 1; x < topLimit; x++)
+            {  
                 list.Remove(list.LastNode);
             }
         }

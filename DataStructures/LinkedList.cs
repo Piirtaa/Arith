@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Diagnostics;
+using Arith.Decorating;
 
 namespace Arith.DataStructures
 {
@@ -122,27 +123,7 @@ namespace Arith.DataStructures
 
             return match != null;
         }
-        public virtual ILinkedListNode<T> AddFirst(T val)
-        {
-            return this.Insert(val, null, this._firstNode);
-        }
-        public virtual ILinkedListNode<T> AddLast(T val)
-        {
-            return this.Insert(val, this.LastNode, null);
-        }
-        public virtual ILinkedListNode<T> Insert(T val, ILinkedListNode<T> before, ILinkedListNode<T> after)
-        {
-            ILinkedListNode<T> node = null;
-            if (this.NodeBuildingStrategy != null)
-            {
-                node = this.NodeBuildingStrategy(val);
-            }
-            else
-            {
-                node = new LinkedListNode<T>(val, this);
-            }
-            return this.InsertNode(node, before, after);
-        }
+
         /// <summary>
         /// this is the "gateway" method to appending the list.  To insert first, before should be null,
         /// to insert last, after should be null.  
@@ -236,9 +217,6 @@ namespace Arith.DataStructures
             return this;
         }
         #endregion
-
-
-
 
         #region Helpers
         /// <summary>

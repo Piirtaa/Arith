@@ -21,9 +21,6 @@ namespace Arith.DataStructures
 
         bool Contains(T val);
         bool Contains(ILinkedListNode<T> item);
-        ILinkedListNode<T> AddFirst(T val);
-        ILinkedListNode<T> AddLast(T val);
-        ILinkedListNode<T> Insert(T val, ILinkedListNode<T> before, ILinkedListNode<T> after);
         ILinkedListNode<T> InsertNode(ILinkedListNode<T> node, ILinkedListNode<T> before, ILinkedListNode<T> after);
         ILinkedList<T> Remove(ILinkedListNode<T> item);
     }
@@ -110,6 +107,37 @@ namespace Arith.DataStructures
                 throw new ArgumentNullException("obj");
 
             return obj.FirstNode == null;
+        }
+        public static ILinkedListNode<T> AddFirst<T>(this ILinkedList<T> obj, T val)
+        {
+            if (obj == null)
+                throw new ArgumentNullException("obj");
+
+            return obj.Insert(val, null, obj.FirstNode);
+        }
+        public static ILinkedListNode<T> AddLast<T>(this ILinkedList<T> obj, T val)
+        {
+            if (obj == null)
+                throw new ArgumentNullException("obj");
+
+            return obj.Insert(val, obj.LastNode, null);
+        }
+        public static ILinkedListNode<T> Insert<T>(this ILinkedList<T> obj, 
+            T val, ILinkedListNode<T> before, ILinkedListNode<T> after)
+        {
+            if (obj == null)
+                throw new ArgumentNullException("obj");
+
+            ILinkedListNode<T> node = null;
+            if (obj.NodeBuildingStrategy != null)
+            {
+                node = obj.NodeBuildingStrategy(val);
+            }
+            else
+            {
+                node = new LinkedListNode<T>(val, obj);
+            }
+            return obj.InsertNode(node, before, after);
         }
         public static void RemoveLast<T>(this ILinkedList<T> obj)
         {

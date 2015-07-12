@@ -43,11 +43,13 @@ namespace Arith.DataStructures.Decorations
     /// provides circularity
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public interface ICircularLinkedList<T> : ILinkedListDecoration<T>, IHasHooks<T>
+    public interface ICircularLinkedList<T> : ILinkedListDecoration<T>,
+                IHasDecoration<IHasHooks<T>>
     {
     }
 
-    public class CircularLinkedListDecoration<T> : LinkedListDecorationBase<T>, ICircularLinkedList<T>
+    public class CircularLinkedListDecoration<T> : LinkedListDecorationBase<T>, 
+        ICircularLinkedList<T>
     {
         #region Declarations
         private readonly object _stateLock = new object();
@@ -60,7 +62,7 @@ namespace Arith.DataStructures.Decorations
         public CircularLinkedListDecoration(ILinkedList<T> decorated)
             : base(decorated)
         {
-            //define the default node building strategy
+             //define the default node building strategy
             this.NodeBuildingStrategy = (x) =>
             {
                 return new CircularLinkedListNode<T>(x, this);
@@ -118,16 +120,16 @@ namespace Arith.DataStructures.Decorations
         /// </summary>
         public Action<ILinkedListNode<T>> PostNodeInsertionStrategy
         {
-            get { return this.As<IHasHooks<T>>().PostNodeInsertionStrategy; }
-            set { this.As<IHasHooks<T>>().PostNodeInsertionStrategy = value; }
+            get { return this.As<HookedLinkedListDecoration<T>>().PostNodeInsertionStrategy; }
+            set { this.As<HookedLinkedListDecoration<T>>().PostNodeInsertionStrategy = value; }
         }
         /// <summary>
         /// if the list changes in any way (inserts or removal) this strategy is run.  happens after postnodeinsert hook
         /// </summary>
         public Action<ILinkedList<T>> PostMutateStrategy
         {
-            get { return this.As<IHasHooks<T>>().PostMutateStrategy; }
-            set { this.As<IHasHooks<T>>().PostMutateStrategy = value; }
+            get { return this.As<HookedLinkedListDecoration<T>>().PostMutateStrategy; }
+            set { this.As<HookedLinkedListDecoration<T>>().PostMutateStrategy = value; }
         }
         #endregion
 

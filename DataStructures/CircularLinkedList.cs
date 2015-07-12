@@ -15,7 +15,7 @@ namespace Arith.DataStructures
     {
         #region Ctor
         public CircularLinkedList(params T[] items)
-            : base(LinkedList<T>.New(items).HasHooks())
+            : base(LinkedList<T>.New(items))
         {
 
         }
