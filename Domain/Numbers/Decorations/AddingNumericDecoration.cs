@@ -66,9 +66,9 @@ namespace Arith.Domain.Numbers.Decorations
         #endregion
 
         #region Overrides
-        public override IDecoration ApplyThisDecorationTo(INumeric thing)
+        public override IDecoration ApplyThisDecorationTo(object thing)
         {
-            return new AddingNumericDecoration(thing);
+            return new AddingNumericDecoration(thing as INumeric);
         }
         #endregion
 

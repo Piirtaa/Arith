@@ -54,14 +54,10 @@
     <Compile Include="Domain\Digits\Interfaces.cs" />
     <Compile Include="Domain\Numbers\Decorations\AddingNumericDecoration.cs" />
     <Compile Include="Domain\Numbers\Decorations\ShiftingNumericDecoration.cs" />
-    <Compile Include="Domain\Numbers\Decorations\DividingNumericDecoration.cs" />
     <Compile Include="Domain\Numbers\Decorations\NumericDecorationBase.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Domain\Numbers\Decorations\PrecisionNumericDecoration.cs" />
-    <Compile Include="Domain\Numbers\Decorations\MultiplyingNumericDecoration.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Domain\Numbers\DigitNode.cs" />
     <Compile Include="Domain\Numbers\IDigitNodeExtensions.cs" />
     <Compile Include="Domain\Numbers\Interfaces.cs" />
@@ -82,7 +78,6 @@
     <Compile Include="DataStructures\SquareLookup.cs" />
     <Compile Include="Domain\Digits\MatrixDigit.cs" />
     <Compile Include="Domain\Digits\SymbolicDigit.cs" />
-    <Compile Include="Interfaces.cs" />
     <Compile Include="DataStructures\LinkedList.cs" />
     <Compile Include="DataStructures\CircularLinkedList.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

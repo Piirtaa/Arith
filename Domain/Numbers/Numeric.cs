@@ -20,7 +20,7 @@ namespace Arith.Domain.Numbers
         /// </summary>
         private static bool _isDisabled = false;
 
-        protected DigitNode _zerothDigit = null;
+        protected IDigitNode _zerothDigit = null;
         protected NumeralSet _numberSystem = null;
         protected bool _isPositive = true;
         #endregion
@@ -51,7 +51,7 @@ namespace Arith.Domain.Numbers
         #endregion
 
         #region Properties
-        public DigitNode ZerothDigit { get { return this._zerothDigit; } set { this._zerothDigit = value; } }
+        public IDigitNode ZerothDigit { get { return this._zerothDigit; } set { this._zerothDigit = value; } }
         public DigitNode LastDigit { get { return this._lastNode as DigitNode; } }
         public DigitNode FirstDigit { get { return this._firstNode as DigitNode; } }
         #endregion

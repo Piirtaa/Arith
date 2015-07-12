@@ -167,6 +167,10 @@ namespace Arith.Decorating
         #endregion
 
         #region IDecoration
+        public IDecoration ApplyThisDecorationTo(object thing)
+        {
+            return this.ApplyThisDecorationTo((T)thing);
+        }
         public abstract IDecorationOf<T> ApplyThisDecorationTo(T thing);
         #endregion
 

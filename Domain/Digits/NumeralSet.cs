@@ -90,7 +90,22 @@ namespace Arith.Domain.Digits
             if (!this.NegativeSymbol.Equals(set.NegativeSymbol))
                 return false;
 
-            this
+            var thisNode = this.SymbolSet.FirstNode;
+            var setNode = set.SymbolSet.FirstNode;
+            while (thisNode != null && setNode != null)
+            {
+                if (!thisNode.Value.Equals(setNode.Value))
+                    return false;
+
+                thisNode = thisNode.NextNode;
+                setNode = setNode.NextNode;
+
+                if (thisNode != null && setNode == null)
+                    return false;
+
+                if (thisNode == null && setNode != null)
+                    return false;
+            }
 
             return true;
         }

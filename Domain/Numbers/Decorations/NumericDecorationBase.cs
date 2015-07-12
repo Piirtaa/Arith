@@ -41,7 +41,7 @@ namespace Arith.Domain.Numbers.Decorations
         }
         #endregion
 
-        #region Methods
+        #region INumeric
         public Numeric ThisNumeric
         {
             get { return this.Inner as Numeric; }
@@ -73,6 +73,65 @@ namespace Arith.Domain.Numbers.Decorations
 
             var rv = this.CloneDecorationCake(clone);
             return rv as INumeric;
+        }
+        #endregion
+
+        #region ILinkedList
+        public Func<IDigit, ILinkedListNode<IDigit>> NodeBuildingStrategy
+        {
+            get
+            {
+                return this.ThisNumeric.NodeBuildingStrategy;
+            }
+            set
+            {
+                this.ThisNumeric.NodeBuildingStrategy = value;
+            }
+        }
+
+        public ILinkedListNode<IDigit> FirstNode
+        {
+            get {return this.ThisNumeric.FirstNode; }
+        }
+
+        public ILinkedListNode<IDigit> LastNode
+        {
+            get { return this.ThisNumeric.LastNode ; }
+        }
+
+        public bool Contains(IDigit val)
+        {
+            return this.ThisNumeric.Contains(val);
+        }
+
+        public bool Contains(ILinkedListNode<IDigit> item)
+        {
+            return this.ThisNumeric.Contains(item);
+        }
+
+        public ILinkedListNode<IDigit> AddFirst(IDigit val)
+        {
+            return this.ThisNumeric.AddFirst(val);
+        }
+
+        public ILinkedListNode<IDigit> AddLast(IDigit val)
+        {
+            return this.ThisNumeric.AddLast(val);
+        }
+
+        public ILinkedListNode<IDigit> Insert(IDigit val, ILinkedListNode<IDigit> before, ILinkedListNode<IDigit> after)
+        {
+            return this.ThisNumeric.Insert(val, before, after);
+        }
+
+        public ILinkedListNode<IDigit> InsertNode(ILinkedListNode<IDigit> node, ILinkedListNode<IDigit> before, ILinkedListNode<IDigit> after)
+        {
+            return this.ThisNumeric.InsertNode(node, before, after);
+        }
+
+        public ILinkedList<IDigit> Remove(ILinkedListNode<IDigit> item)
+        {
+            return this.ThisNumeric.Remove(item);
         }
         #endregion
     }

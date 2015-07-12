@@ -71,16 +71,15 @@ namespace Arith.Domain.Numbers.Decorations
         #endregion
 
         #region Overrides
-        public override IDecoration ApplyThisDecorationTo(INumeric thing)
+        public override IDecoration ApplyThisDecorationTo(object thing)
         {
-            return new PrecisionNumericDecoration(thing, this.DecimalPlaces);
+            return new PrecisionNumericDecoration(thing as INumeric, this.DecimalPlaces);
         }
         #endregion
 
         #region Properties
         public INumeric DecimalPlaces { get; set; }
         #endregion
-
     }
 
     public static class PrecisionNumberDecorationExtensions
@@ -136,20 +135,20 @@ namespace Arith.Domain.Numbers.Decorations
             }
 
 
-            //var num = new Number(null, set);
-            //var b = num.SymbolsText;
+            ////var num = new Number(null, set);
+            ////var b = num.SymbolsText;
 
-            Number num = new Number("123456789", set);
-            var precision = new Number("5", set);
-            var cake = num.HasPrecision(precision);
+            //Number num = new Number("123456789", set);
+            //var precision = new Number("5", set);
+            //var cake = num.HasPrecision(precision);
 
-            precision.SymbolicNumber.CountdownToZero(x =>
-            {
-                cake.SymbolicNumber.ShiftLeft();
-            });
-            Debug.Assert(cake.SymbolsText == "1234.56789");
-            cake.SymbolicNumber.ShiftLeft();
-            Debug.Assert(cake.SymbolsText == "123.45678");
+            //precision.SymbolicNumber.CountdownToZero(x =>
+            //{
+            //    cake.SymbolicNumber.ShiftLeft();
+            //});
+            //Debug.Assert(cake.SymbolsText == "1234.56789");
+            //cake.SymbolicNumber.ShiftLeft();
+            //Debug.Assert(cake.SymbolsText == "123.45678");
 
 
         }
