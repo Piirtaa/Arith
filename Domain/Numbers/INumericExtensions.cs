@@ -145,13 +145,12 @@ namespace Arith.Domain.Numbers
 
             }, true);
 
-            var rv = sb.ToString();
             if (!hasTrailingZero)
             {
                 sb.Append(numeric.NumberSystem.DecimalSymbol);
                 sb.Append(decimals);
             }
-
+            var rv = sb.ToString();
             return rv;
         }
         public static IDigitNode LeastSignificantDigit(this INumeric numeric)

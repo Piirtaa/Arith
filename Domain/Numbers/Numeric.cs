@@ -316,9 +316,9 @@ namespace Arith.Domain.Numbers
             if (number == null)
                 throw new ArgumentNullException("number");
 
-            //validate the same number systems
-            if (!thisNumber.NumberSystem.IsCompatible(number.NumberSystem))
-                throw new InvalidOperationException("incompatible number systems");
+            ////validate the same number systems
+            //if (!thisNumber.NumberSystem.IsCompatible(number.NumberSystem))
+            //    throw new InvalidOperationException("incompatible number systems");
 
             thisNumber.ScrubLeadingAndTrailingZeroes();
             number.ScrubLeadingAndTrailingZeroes();
@@ -414,7 +414,7 @@ namespace Arith.Domain.Numbers
             for (int i = 1; i < 100; i++)
             {
                 var low = Numeric.New(set, i.ToString());
-                var low2 = Numeric.New(set, "-" + i.ToString());
+                var low2 = Numeric.New(set, i.ToString());
                 var med = low.GetCompatibleNumber((i + 1).ToString());
                 var high = low.GetCompatibleNumber((i + 2).ToString());
 
