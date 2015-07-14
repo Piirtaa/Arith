@@ -12,8 +12,8 @@ namespace Arith.Domain.Digits
     /// <summary>
     /// implements IDigit using a circular symbol list
     /// </summary>
-    [DebuggerDisplay("{Symbol}")]
-    public class SymbolicDigit : IDigit
+    [DebuggerDisplay("{DebuggerText}")]
+    public class SymbolicDigit : IDigit, IHasDebuggerText
     {
         #region Declarations
         private readonly object _stateLock = new object();
@@ -43,6 +43,16 @@ namespace Arith.Domain.Digits
         /// for the numeral set this digit belongs to, returns the zeroth(first) numeral 
         /// </summary>
         public ICircularLinkedListNode<string> ZeroNumeral { get { return this._numeral.ParentList.FirstNode as CircularLinkedListNode<string>; } }
+        #endregion
+
+        #region IHasDebuggerText
+        public string DebuggerText
+        {
+            get
+            {
+                return this.Symbol;
+            }
+        }
         #endregion
 
         #region IDigit

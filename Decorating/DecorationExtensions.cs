@@ -117,7 +117,7 @@ namespace Arith.Decorating
             var cake = obj.GetSelfAndAllDecorationsBelow();
 
             object rv = inner;
-            for (int i = cake.Count - 1; i > 0; i--)
+            for (int i = 0; i < cake.Count -1; i++)
             {
                 IDecoration layer = cake[i] as IDecoration;
                 rv = layer.ApplyThisDecorationTo(rv);

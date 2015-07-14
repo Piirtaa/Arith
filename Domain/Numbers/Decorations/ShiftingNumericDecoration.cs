@@ -120,7 +120,7 @@ namespace Arith.Domain.Numbers.Decorations
         }
 
         /// <summary>
-        /// fluent.  makes larger by numShifts orders of magnitude
+        /// fluent.  makes smaller by numShifts orders of magnitude
         /// </summary>
         /// <param name="thisNumber"></param>
         /// <param name="numShifts"></param>
@@ -140,7 +140,7 @@ namespace Arith.Domain.Numbers.Decorations
             return thisNumber;
         }
         /// <summary>
-        /// fluent.  makes smaller by numShifts orders of magnitude
+        /// fluent.  makes larger by numShifts orders of magnitude
         /// </summary>
         /// <param name="thisNumber"></param>
         /// <param name="numShifts"></param>
@@ -199,22 +199,22 @@ namespace Arith.Domain.Numbers.Decorations
             shiftNum.ShiftToZero();
             Debug.Assert(num.SymbolsText == "123456789");
 
-            shiftNum.ShiftLeft();
+            shiftNum.ShiftRight();
             Debug.Assert(num.SymbolsText == "1234567890");
 
-            shiftNum.ShiftLeft();
+            shiftNum.ShiftRight();
             Debug.Assert(num.SymbolsText == "12345678900");
 
-            shiftNum.ShiftRight();
+            shiftNum.ShiftLeft();
             Debug.Assert(num.SymbolsText == "1234567890");
 
-            shiftNum.ShiftRight();
+            shiftNum.ShiftLeft();
             Debug.Assert(num.SymbolsText == "123456789");
 
             for (int i = 0; i < 20; i++)
             {
                 var oldNum = shiftNum.Clone();
-                shiftNum.ShiftRight();
+                shiftNum.ShiftLeft();
                 Debug.Assert(oldNum.IsGreaterThan(shiftNum));
             }
         }

@@ -37,6 +37,22 @@ namespace Arith.Extensions
             return returnValue;
         }
 
+        public static List<object> ProjectList<T>(this IEnumerable<T> list, Func<T, object> projection)
+        {
+            if (list == null)
+                throw new ArgumentNullException("list");
 
+            if (projection == null)
+                throw new ArgumentNullException("projection");
+
+            List<object> returnValue = new List<object>();
+
+            list.WithEach(x =>
+            {
+                returnValue.Add(projection(x));
+            });
+
+            return returnValue;
+        }
     }
 }

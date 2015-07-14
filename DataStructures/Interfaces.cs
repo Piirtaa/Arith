@@ -5,6 +5,7 @@ using System.Text;
 
 namespace Arith.DataStructures
 {
+
     public interface ILinkedListNode<T>
     {
         T Value { get; }

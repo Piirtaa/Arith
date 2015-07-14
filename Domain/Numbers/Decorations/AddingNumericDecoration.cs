@@ -78,8 +78,8 @@ namespace Arith.Domain.Numbers.Decorations
             if (numeric == null)
                 return;
 
-            if (!this.HasCompatibleNumberSystem(numeric))
-                throw new InvalidOperationException("incompatible number system");
+            //if (!this.HasCompatibleNumberSystem(numeric))
+            //    throw new InvalidOperationException("incompatible number system");
 
             bool isClone = false;
             var val = Add(this, numeric, out isClone);
@@ -92,8 +92,8 @@ namespace Arith.Domain.Numbers.Decorations
             if (numeric == null)
                 return;
 
-            if (!this.HasCompatibleNumberSystem(numeric))
-                throw new InvalidOperationException("incompatible number system");
+            //if (!this.HasCompatibleNumberSystem(numeric))
+            //    throw new InvalidOperationException("incompatible number system");
 
             
             numeric.As<Numeric>().SwitchSign();

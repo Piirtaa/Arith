@@ -4,13 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Diagnostics;
 using Arith.Decorating;
+using Arith.Extensions;
 
 namespace Arith.DataStructures
 {
 
 
     [DebuggerDisplay("{DebuggerText}")]
-    public class LinkedList<T> : ILinkedList<T>
+    public class LinkedList<T> : ILinkedList<T>, IHasDebuggerText
     {
         #region Declarations
         protected enum InsertSlotEnum { First, Middle, Last, FirstAndLast }
@@ -87,10 +88,28 @@ namespace Arith.DataStructures
                 return list.ToArray();
             }
         }
+        #endregion
+
+        #region IHasDebuggerText
         /// <summary>
         /// used by DebuggerDisplay attribute
         /// </summary>
-        private string DebuggerText { get { return string.Join(",", this.Values); } }
+        public string DebuggerText
+        {
+            get
+            {
+                var vals = this.Values;
+                var list = vals.ProjectList((x) =>
+                {
+                    if (x is IHasDebuggerText)
+                    {
+                        return (x as IHasDebuggerText).DebuggerText;
+                    }
+                    return x;
+                });
+                return string.Join(",", list);
+            }
+        }
         #endregion
 
         #region ILinkedList

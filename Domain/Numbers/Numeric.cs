@@ -141,7 +141,11 @@ namespace Arith.Domain.Numbers
             if (this.IsPositive && number.IsPositive == false)
                 return true;
 
-            return AbsoluteValueCompare(this, number as Numeric);
+            if (this.IsPositive == false && number.IsPositive == false)
+            {
+                return AbsoluteValueCompare(number.As<Numeric>(), this);
+            }
+            return AbsoluteValueCompare(this, number.As<Numeric>());
         }
 
         public INumeric Clone()
@@ -443,7 +447,7 @@ namespace Arith.Domain.Numbers
             num2.SwitchSign();
             Debug.Assert(num2.IsLessThan(num3));
             var comp = Numeric.AbsoluteValueCompare(num2, num3);
-            Debug.Assert(comp == false);
+            Debug.Assert(comp == true);
         }
 
 

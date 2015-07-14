@@ -11,8 +11,8 @@ namespace Arith.Domain.Digits
     /// Implements IDigit using an arithmetic matrix generated from SymbolicDigits.
     /// SymbolicDigits are slow as they iterate, whereas this class uses lookup tables
     /// </summary>
-    [DebuggerDisplay("{Symbol}")]
-    public class MatrixDigit : IDigit
+    [DebuggerDisplay("{DebuggerText}")]
+    public class MatrixDigit : IDigit, IHasDebuggerText
     {
         #region Declarations
         private string _symbol = null;
@@ -26,6 +26,16 @@ namespace Arith.Domain.Digits
                 throw new ArgumentNullException("symbol");
             this._symbol = symbol;
             this._matrix = numberSystem.Matrix;
+        }
+        #endregion
+
+        #region IHasDebuggerText
+        public string DebuggerText
+        {
+            get
+            {
+                return this.Symbol;
+            }
         }
         #endregion
 

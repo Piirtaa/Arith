@@ -134,21 +134,17 @@ namespace Arith.Domain.Numbers.Decorations
                 set.AddSymbolToSet(i.ToString());
             }
 
+            var num = new Numeric(set, "123456789").HasShift();
+            var precision = new Numeric(set, "5").HasAddition();
+            var cake = num.HasPrecision(precision);
 
-            ////var num = new Number(null, set);
-            ////var b = num.SymbolsText;
-
-            //Number num = new Number("123456789", set);
-            //var precision = new Number("5", set);
-            //var cake = num.HasPrecision(precision);
-
-            //precision.SymbolicNumber.CountdownToZero(x =>
-            //{
-            //    cake.SymbolicNumber.ShiftLeft();
-            //});
-            //Debug.Assert(cake.SymbolsText == "1234.56789");
-            //cake.SymbolicNumber.ShiftLeft();
-            //Debug.Assert(cake.SymbolsText == "123.45678");
+            precision.CountdownToZero(x =>
+            {
+                cake.As<IHasShift>(false).ShiftLeft();
+            });
+            Debug.Assert(cake.SymbolsText == "1234.56789");
+            cake.As<IHasShift>(false).ShiftLeft();
+            Debug.Assert(cake.SymbolsText == "123.45678");
 
 
         }
