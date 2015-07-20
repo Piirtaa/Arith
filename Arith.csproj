@@ -68,7 +68,6 @@
     <Compile Include="Decorating\DisposableBase.cs" />
     <Compile Include="Decorating\DecorationBase.cs" />
     <Compile Include="Decorating\DecorationExtensions.cs" />
-    <Compile Include="Decorating\DecorationOfBase.cs" />
     <Compile Include="Decorating\Interfaces.cs" />
     <Compile Include="Extensions\ConversionExtensions.cs" />
     <Compile Include="Extensions\EnumerableExtensions.cs" />

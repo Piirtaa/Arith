@@ -19,7 +19,7 @@ namespace Arith.Domain.Numbers
             if (thisNumber == null)
                 throw new ArgumentNullException("thisNumber");
 
-            return new Numeric(thisNumber.NumberSystem, thisNumber.NumberSystem.OneSymbol);
+            return new Numeric(thisNumber.NumberSystem, thisNumber.NumberSystem.ZeroSymbol);
         }
         /// <summary>
         /// returns a symbolic number with a value of 1 in thisNumber's number system

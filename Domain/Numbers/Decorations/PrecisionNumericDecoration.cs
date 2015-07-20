@@ -16,36 +16,35 @@ namespace Arith.Domain.Numbers.Decorations
         INumeric DecimalPlaces { get; set; }
     }
 
-    public class PrecisionNumericDecoration : NumericDecorationBase, IHasPrecision
+    public class PrecisionNumericDecoration : NumericDecorationBase, 
+        IHasPrecision, IIsA<HookedLinkedListDecoration<IDigit>>
     {
         #region Declarations
         private readonly object _stateLock = new object();
         #endregion
 
         #region Ctor
-        public PrecisionNumericDecoration(INumeric decorated, INumeric decimalPlaces)
-            : base(decorated.HasHooks())
+        public PrecisionNumericDecoration(object decorated, INumeric decimalPlaces)
+            : base(decorated)
         {
-            //note that we've decorated hooks on Decorated above ^^
-
             if (decimalPlaces == null)
                 throw new ArgumentNullException("decimalPlaces");
 
             this.DecimalPlaces = decimalPlaces;
 
-            var hookDecoration = this.AsBelow<IHasHooks<IDigit>>(false);
-            hookDecoration.PostMutateStrategy = (x) =>
+            var hookDecoration = this.AsBelow<HookedLinkedListDecoration<IDigit>>(false);
+            hookDecoration.AppendPostMutateStrategy((x) =>
             {
                 //now ensure we don't have more than the specified decimal places
                 this.ThisNumeric.TruncateToDecimalPlaces(this.DecimalPlaces);
-            };
+            });
 
 
         }
         #endregion
 
         #region Static
-        public static PrecisionNumericDecoration New(INumeric decorated, INumeric decimalPlaces)
+        public static PrecisionNumericDecoration New(object decorated, INumeric decimalPlaces)
         {
             return new PrecisionNumericDecoration(decorated, decimalPlaces);
         }
@@ -84,7 +83,7 @@ namespace Arith.Domain.Numbers.Decorations
 
     public static class PrecisionNumberDecorationExtensions
     {
-        public static PrecisionNumericDecoration HasPrecision(this INumeric decorated, INumeric decimalPlaces)
+        public static PrecisionNumericDecoration HasPrecision(this object decorated, INumeric decimalPlaces)
         {
             return PrecisionNumericDecoration.New(decorated, decimalPlaces);
         }
@@ -93,7 +92,7 @@ namespace Arith.Domain.Numbers.Decorations
             if (thisNumber == null)
                 throw new ArgumentNullException("thisNumber");
 
-            var shifty = thisNumber.Clone().HasShift();
+            var shifty = thisNumber.Clone().HasHooks<IDigit>().HasShift();
             var places = shifty.ShiftToZero();
 
             return places;
@@ -115,7 +114,7 @@ namespace Arith.Domain.Numbers.Decorations
 
                 addy.CountdownToZero(x =>
                 {
-                    thisNumber.Remove(thisNumber.LastNode);
+                    thisNumber.Remove(thisNumber.FirstNode);
                 });
             }
         }
@@ -134,17 +133,20 @@ namespace Arith.Domain.Numbers.Decorations
                 set.AddSymbolToSet(i.ToString());
             }
 
-            var num = new Numeric(set, "123456789").HasShift();
             var precision = new Numeric(set, "5").HasAddition();
-            var cake = num.HasPrecision(precision);
-
-            precision.CountdownToZero(x =>
+            var num = new Numeric(set, "123456789").HasHooks<IDigit>().HasShift().HasPrecision(precision);
+            
+            var counter = precision.Clone() as AddingNumericDecoration ;
+            counter.CountdownToZero(x =>
             {
-                cake.As<IHasShift>(false).ShiftLeft();
+                var shifty = num.As<IHasShift>(false);
+                shifty.ShiftLeft();
             });
-            Debug.Assert(cake.SymbolsText == "1234.56789");
-            cake.As<IHasShift>(false).ShiftLeft();
-            Debug.Assert(cake.SymbolsText == "123.45678");
+            Debug.Assert(num.SymbolsText == "1234.56789");
+            num.As<IHasShift>(false).ShiftLeft();
+
+            //the precision is maintained to 5 digits
+            Debug.Assert(num.SymbolsText == "123.45678");
 
 
         }

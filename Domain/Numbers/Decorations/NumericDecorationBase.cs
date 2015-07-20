@@ -23,9 +23,9 @@ namespace Arith.Domain.Numbers.Decorations
         public NumericDecorationBase(object decorated)
             : base(decorated)
         {
-            if (!decorated.Is<Numeric>())
-                throw new InvalidOperationException("decorated does not have a Numeric");
-                
+            var inner = decorated.GetInnerDecorated();
+            if(!(inner is Numeric))
+                throw new InvalidOperationException("decorated does not have inner Numeric");
 
         }
         #endregion

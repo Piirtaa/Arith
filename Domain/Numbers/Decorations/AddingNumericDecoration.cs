@@ -33,7 +33,7 @@ namespace Arith.Domain.Numbers.Decorations
         #endregion
 
         #region Ctor
-        public AddingNumericDecoration(INumeric decorated)
+        public AddingNumericDecoration(object decorated)
             : base(decorated)
         {
         }

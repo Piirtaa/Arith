@@ -3,3 +3,4 @@ C:\mystuff\Arith\Arith\obj\x86\Debug\Arith.pdb
 C:\mystuff\Arith\Arith\bin\Debug\Arith.dll.config
 C:\mystuff\Arith\Arith\bin\Debug\Arith.dll
 C:\mystuff\Arith\Arith\obj\x86\Debug\Arith.dll
+C:\mystuff\Arith\Arith\obj\x86\Debug\Arith.csprojResolveAssemblyReference.cache

@@ -27,20 +27,22 @@ namespace Arith.Domain.Numbers.Decorations
     }
 
     public class ShiftNumericDecoration : NumericDecorationBase, IHasShift
+        , IIsA<HookedLinkedListDecoration<IDigit>>
     {
         #region Declarations
         private readonly object _stateLock = new object();
         #endregion
 
         #region Ctor
-        public ShiftNumericDecoration(INumeric decorated)
+        public ShiftNumericDecoration(object decorated)
             : base(decorated)
         {
+           
         }
         #endregion
 
         #region Static
-        public static ShiftNumericDecoration New(INumeric decorated)
+        public static ShiftNumericDecoration New(object decorated)
         {
             return new ShiftNumericDecoration(decorated);
         }
@@ -89,6 +91,10 @@ namespace Arith.Domain.Numbers.Decorations
 
                 //move the decimal
                 this.ThisNumeric.ZerothDigit = node;
+
+                //run hooks
+                var hookDecoration = this.AsBelow<HookedLinkedListDecoration<IDigit>>(false);
+                hookDecoration.RunPostMutateHook();
             }
         }
         /// <summary>
@@ -107,6 +113,10 @@ namespace Arith.Domain.Numbers.Decorations
 
                 //move the decimal
                 this.ThisNumeric.ZerothDigit = node;
+
+                //run hooks
+                var hookDecoration = this.AsBelow<HookedLinkedListDecoration<IDigit>>(false);
+                hookDecoration.RunPostMutateHook();
             }
         }
         #endregion
@@ -114,7 +124,7 @@ namespace Arith.Domain.Numbers.Decorations
 
     public static class ShiftNumberDecorationExtensions
     {
-        public static ShiftNumericDecoration HasShift(this INumeric decorated)
+        public static ShiftNumericDecoration HasShift(this object decorated)
         {
             return ShiftNumericDecoration.New(decorated);
         }

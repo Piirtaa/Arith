@@ -35,7 +35,7 @@ namespace Arith.DataStructures.Decorations
         #endregion
 
         #region Ctor
-        public HookedLinkedListDecoration(ILinkedList<T> decorated,
+        public HookedLinkedListDecoration(object decorated,
             Action<ILinkedListNode<T>> postNodeInsertionStrategy = null,
             Action<ILinkedList<T>> postMutateStrategy = null)
             : base(decorated)
@@ -46,7 +46,7 @@ namespace Arith.DataStructures.Decorations
         #endregion
 
         #region Static
-        public static HookedLinkedListDecoration<T> New(ILinkedList<T> decorated,
+        public static HookedLinkedListDecoration<T> New(object decorated,
             Action<ILinkedListNode<T>> postNodeInsertionStrategy = null,
             Action<ILinkedList<T>> postMutateStrategy = null)
         {
@@ -74,7 +74,7 @@ namespace Arith.DataStructures.Decorations
         #endregion
 
         #region Overrides
-        public override IDecorationOf<ILinkedList<T>> ApplyThisDecorationTo(ILinkedList<T> thing)
+        public override IDecoration ApplyThisDecorationTo(object thing)
         {
             return new HookedLinkedListDecoration<T>(thing);
         }
@@ -97,7 +97,7 @@ namespace Arith.DataStructures.Decorations
         /// into this method if the hook implementation mutates the list itself.  which is another
         /// way of say if your hook mutates the list don't expect this method to run any checks
         /// </summary>
-        private void RunPostInsertHook(ILinkedListNode<T> node)
+        public void RunPostInsertHook(ILinkedListNode<T> node)
         {
             if (this._isInserting)
                 return;
@@ -132,7 +132,7 @@ namespace Arith.DataStructures.Decorations
         /// into this method if the hook implementation mutates the list itself.  which is another
         /// way of say if your hook mutates the list don't expect this method to run any checks
         /// </summary>
-        private void RunPostMutateHook()
+        public void RunPostMutateHook()
         {
             if (this._isMutating)
                 return;
@@ -195,6 +195,31 @@ namespace Arith.DataStructures.Decorations
         {
             return HookedLinkedListDecoration<T>.New(thing, postNodeInsertionStrategy, postMutateStrategy);
         }
+
+        public static void AppendNodeInsertionStrategy<T>(this HookedLinkedListDecoration<T> thing,
+            Action<ILinkedListNode<T>> postNodeInsertionStrategy = null)
+        {
+            var oldStrategy = thing.PostNodeInsertionStrategy;
+            thing.PostNodeInsertionStrategy = (node) =>
+            {
+                if (oldStrategy != null)
+                    oldStrategy(node);
+
+                postNodeInsertionStrategy(node);
+            };
+        }
+        public static void AppendPostMutateStrategy<T>(this HookedLinkedListDecoration<T> thing,
+            Action<ILinkedList<T>> postMutateStrategy = null)
+        {
+            var oldStrategy = thing.PostMutateStrategy;
+            thing.PostMutateStrategy = (list) =>
+            {
+                if (oldStrategy != null)
+                    oldStrategy(list);
+
+                postMutateStrategy(list);
+            };
+        }
     }
 
 
@@ -238,7 +263,7 @@ namespace Arith.DataStructures.Decorations
             list.PostNodeInsertionStrategy = null;
 
             for (int x = 1; x < topLimit; x++)
-            {  
+            {
                 list.Remove(list.LastNode);
             }
         }

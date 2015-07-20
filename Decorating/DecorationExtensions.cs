@@ -64,7 +64,7 @@ namespace Arith.Decorating
                     last = currentLayer;
             }
 
-            return (last as IDecoration).Decorated;
+            return last;
         }
         /// <summary>
         /// walks Decorated chain to the core, or until the stop condition is met
@@ -506,17 +506,17 @@ namespace Arith.Decorating
     public static class IHasDecorationExtensions
     {
         /// <summary>
-        /// if a cake constraint (aka IHasDecoration) is declared anywhere in the stack
+        /// if a cake constraint (aka IIsA) is declared anywhere in the stack
         /// we validate the current cake supports the constraint.  this is a topdown walk
         /// </summary>
         /// <param name="obj"></param>
-        public static void ValidateIHasAConstraints(this object obj)
+        public static void ValidateIIsAConstraints(this object obj)
         {
 
             var cake = obj.GetAllDecorations();
             cake.WithEach(layer =>
             {
-                if (layer is IHasDecoration)
+                if (layer is IIsA)
                 {
                     //get all the interfaces it has, that derive from IHasDecoration
                     var layerType = layer.GetType();
@@ -524,7 +524,7 @@ namespace Arith.Decorating
                     var interfaces = layerType.GetInterfaces();
                     foreach (var interfaceType in interfaces)
                     {
-                        if (!interfaceType.Name.Contains("IHasDecoration`"))
+                        if (!interfaceType.Name.Contains("IIsA`"))
                             continue;
 
                         var requiredDecorations = interfaceType.GetGenericArguments();

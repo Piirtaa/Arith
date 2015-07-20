@@ -34,6 +34,7 @@ namespace Arith.Decorating
         /// <param name="decorated">kacks on null</param>
         public DecorationBase(object decorated)
         {
+            this.IsDecorationEnabled = true;
             this.SetDecorated(decorated);
         }
         #endregion
@@ -148,8 +149,8 @@ namespace Arith.Decorating
                 (decorated as IDecoratorAwareDecoration).Decorator = this;
             }
             
-            //validate IHasA declarations exist
-            this.ValidateIHasAConstraints();
+            //validate IIsA declarations exist
+            this.ValidateIIsAConstraints();
         }
         #endregion
 

@@ -44,7 +44,7 @@ namespace Arith.DataStructures.Decorations
     /// </summary>
     /// <typeparam name="T"></typeparam>
     public interface ICircularLinkedList<T> : ILinkedListDecoration<T>,
-                IHasDecoration<IHasHooks<T>>
+                IIsA<IHasHooks<T>>
     {
     }
 
@@ -59,7 +59,7 @@ namespace Arith.DataStructures.Decorations
         #endregion
 
         #region Ctor
-        public CircularLinkedListDecoration(ILinkedList<T> decorated)
+        public CircularLinkedListDecoration(object decorated)
             : base(decorated)
         {
              //define the default node building strategy
@@ -82,7 +82,7 @@ namespace Arith.DataStructures.Decorations
         #endregion
 
         #region Static
-        public static CircularLinkedListDecoration<T> New(ILinkedList<T> decorated)
+        public static CircularLinkedListDecoration<T> New(object decorated)
         {
             return new CircularLinkedListDecoration<T>(decorated);
         }
@@ -108,7 +108,7 @@ namespace Arith.DataStructures.Decorations
         #endregion
 
         #region Overrides
-        public override IDecorationOf<ILinkedList<T>> ApplyThisDecorationTo(ILinkedList<T> thing)
+        public override IDecoration ApplyThisDecorationTo(object thing)
         {
             return new CircularLinkedListDecoration<T>(thing);
         }
