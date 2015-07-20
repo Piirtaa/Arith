@@ -49,6 +49,13 @@ namespace Arith.Domain.Digits
         #endregion
 
         #region Calculated Properties
+        public string[] Symbols
+        {
+            get
+            {
+                return this.SymbolSet.As<LinkedList<string>>().Values;
+            }
+        }
         public string Text
         {
             get

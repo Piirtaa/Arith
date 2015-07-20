@@ -53,7 +53,7 @@ namespace Arith.DataStructures
             get
             {
                 List<T> list = new List<T>();
-                ILinkedListNode<T> node = this._firstNode;
+                ILinkedListNode<T> node = this.FirstNode;
 
                 while (node != null)
                 {
@@ -73,7 +73,7 @@ namespace Arith.DataStructures
             get
             {
                 List<ILinkedListNode<T>> list = new List<ILinkedListNode<T>>();
-                ILinkedListNode<T> node = this._firstNode;
+                ILinkedListNode<T> node = this.FirstNode;
 
                 while (node != null)
                 {

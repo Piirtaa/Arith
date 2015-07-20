@@ -1,11 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Arith.Decorating;
 using System.Runtime.Serialization;
 using Arith.DataStructures;
 using System.Diagnostics;
+using Arith.DataStructures.Decorations;
+using Arith.Domain.Digits;
 
 namespace Arith.Domain.Numbers.Decorations
 {
@@ -18,11 +19,11 @@ namespace Arith.Domain.Numbers.Decorations
     {
         #region Declarations
         private readonly object _stateLock = new object();
-        private SquareLookup<SymbolicNumber> _multMap = null;
+        private SquareLookup<Numeric> _multMap = null;
         #endregion
 
         #region Ctor
-        public MultiplyingNumericDecoration(INumeric decorated)
+        public MultiplyingNumericDecoration(object decorated)
             : base(decorated)
         {
             this.InitMap();
@@ -30,7 +31,7 @@ namespace Arith.Domain.Numbers.Decorations
         #endregion
 
         #region Static
-        public static MultiplyingNumericDecoration New(INumeric decorated)
+        public static MultiplyingNumericDecoration New(object decorated)
         {
             return new MultiplyingNumericDecoration(decorated);
         }
@@ -56,7 +57,7 @@ namespace Arith.Domain.Numbers.Decorations
         #endregion
 
         #region Overrides
-        public override IDecorationOf<INumeric> ApplyThisDecorationTo(INumeric thing)
+        public override IDecoration ApplyThisDecorationTo(object thing)
         {
             return new MultiplyingNumericDecoration(thing);
         }
@@ -65,23 +66,23 @@ namespace Arith.Domain.Numbers.Decorations
         #region Helpers
         private void InitMap()
         {
-            var keys = this.NumberSystem.SymbolSet.Values;
-            this._multMap = new SquareLookup<SymbolicNumber>(keys);
+            var keys = this.NumberSystem.Symbols;
+            this._multMap = new SquareLookup<Numeric>(keys);
 
             foreach (string each in keys)
             {
                 foreach (string each2 in keys)
                 {
                     //add each to itself, each2 times
-                    var total = new SymbolicNumber(each, this.NumberSystem);
-                    var counter = new SymbolicNumber(each2, this.NumberSystem);
+                    var total =  Numeric.New(this.NumberSystem, each).HasAddition();
+                    var counter = Numeric.New(this.NumberSystem, each2).HasAddition();
                     counter.CountdownToZero(c =>
                     {
                         total.Add(total);
                     });
 
                     //register it
-                    this._multMap.Add(each, each2, total);
+                    this._multMap.Add(each, each2, total.InnerNumeric);
                 }
             }
         }
@@ -93,22 +94,23 @@ namespace Arith.Domain.Numbers.Decorations
         /// <param name="digit1Pos"></param>
         /// <param name="digit2Pos"></param>
         /// <returns></returns>
-        private SymbolicNumber MultiplyDigits(string digit1, string digit2,
-            SymbolicNumber digit1Pos, SymbolicNumber digit2Pos)
+        private Numeric MultiplyDigits(string digit1, string digit2,
+            Numeric digit1Pos, Numeric digit2Pos)
         {
             var val = this._multMap.Get(digit1, digit2);
 
-            var rv = SymbolicNumber.Clone(val);
-
-            digit1Pos.CountdownToZero((c) =>
+            var rv = val.Clone().HasHooks<IDigit>().HasShift();
+            var counter = digit1Pos.HasAddition();
+            counter.CountdownToZero((c) =>
             {
                 rv.ShiftLeft();
             });
-            digit2Pos.CountdownToZero((c) =>
+            counter = digit2Pos.HasAddition();
+            counter.CountdownToZero((c) =>
             {
                 rv.ShiftLeft();
             });
-            return rv;
+            return rv.InnerNumeric;
         }
         #endregion
 
@@ -132,9 +134,9 @@ namespace Arith.Domain.Numbers.Decorations
 
             lock (this._stateLock)
             {
-                var arg = new SymbolicNumber(number, this.NumberSystem);
-                var thisNum = SymbolicNumber.Clone(this.SymbolicNumber);
-                Number sum = new Number(this.NumberSystem.ZeroSymbol, this.NumberSystem);
+                var arg = Numeric.New(this.NumberSystem, number).HasHooks<IDigit>().HasShift();
+                var thisNum = this.InnerNumeric.Clone().HasHooks<IDigit>().HasShift();
+                var sum = Numeric.New(this.NumberSystem, this.NumberSystem.ZeroSymbol).HasHooks<IDigit>().HasShift().HasAddition();
 
                 //shift both arg and thisnum to zero, to eliminate clarity with decimal shift handling
                 //we'll shift back at the end.  this way we're only multiplying whole numbers.
@@ -143,12 +145,14 @@ namespace Arith.Domain.Numbers.Decorations
                 var argShifts = arg.ShiftToZero();
                 var thisNumShifts = thisNum.ShiftToZero();
 
-                this.SymbolicNumber.IterateFromZeroth((thisDigit, thisIdx) =>
+                this.InnerNumeric.ZoneIterateWithIndex((thisDigit, thisIdx) =>
                 {
-                    arg.IterateFromZeroth((argDigit, argIdx) =>
+                    arg.ZoneIterateWithIndex((argDigit, argIdx) =>
                     {
-                        var digitProduct = this.MultiplyDigits(argDigit.Symbol, thisDigit.Symbol, argIdx, thisIdx);
-                        sum.SymbolicNumber.Add(digitProduct);
+                        var digitProduct = this.MultiplyDigits(argDigit.Value.Symbol,
+                            thisDigit.Value.Symbol, argIdx, thisIdx);
+
+                        sum.Add(digitProduct);
                     }, (argDigit, argIdx) =>
                     {
                         //no operation will happen here because we've shifted to zero
@@ -159,9 +163,10 @@ namespace Arith.Domain.Numbers.Decorations
                 });
 
                 //shift back
-                sum.SymbolicNumber.ShiftLeft(argShifts).ShiftLeft(thisNumShifts);
+                var shifty = sum.AsBelow<IHasShift>(false);
+                shifty.ShiftLeft(argShifts).ShiftLeft(thisNumShifts);
 
-                this.SymbolicNumber.SetValue(sum.SymbolicNumber);
+                this.InnerNumeric.SetValue(sum);
             }
         }
         #endregion
@@ -187,12 +192,12 @@ namespace Arith.Domain.Numbers.Decorations
                 set.AddSymbolToSet(i.ToString());
             }
 
-            int topLimit= 10000000;
+            int topLimit= 100;
             for (int x = 0; x < topLimit; x++)
             {
                 for (int y = 0; y < topLimit; y++)
                 {
-                    var num1 = Number.New(x.ToString(), set).HasMultiplication();
+                    var num1 = Numeric.New(set, x.ToString()).HasMultiplication();
                     
                     int res = x * y;
                     num1.Multiply(y.ToString());

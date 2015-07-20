@@ -36,7 +36,7 @@ namespace Arith.Domain.Numbers.Decorations
             hookDecoration.AppendPostMutateStrategy((x) =>
             {
                 //now ensure we don't have more than the specified decimal places
-                this.ThisNumeric.TruncateToDecimalPlaces(this.DecimalPlaces);
+                this.InnerNumeric.TruncateToDecimalPlaces(this.DecimalPlaces);
             });
 
 

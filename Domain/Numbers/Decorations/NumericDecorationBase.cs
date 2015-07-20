@@ -42,26 +42,29 @@ namespace Arith.Domain.Numbers.Decorations
         #endregion
 
         #region INumeric
-        public Numeric ThisNumeric
+        /// <summary>
+        /// Returns the inner, undecorated numeric
+        /// </summary>
+        public Numeric InnerNumeric
         {
             get { return this.Inner as Numeric; }
         }
-        public NumeralSet NumberSystem { get { return this.ThisNumeric.NumberSystem; } }
-        public bool IsPositive { get { return this.ThisNumeric.IsPositive; } }
-        public string SymbolsText { get { return this.ThisNumeric.SymbolsText; } }
+        public NumeralSet NumberSystem { get { return this.InnerNumeric.NumberSystem; } }
+        public bool IsPositive { get { return this.InnerNumeric.IsPositive; } }
+        public string SymbolsText { get { return this.InnerNumeric.SymbolsText; } }
         public virtual void SetValue(string number) 
         {
             if (!this.IsDecorationEnabled)
                 throw new InvalidOperationException("decoration disabled");
 
-            this.ThisNumeric.SetValue(number); 
+            this.InnerNumeric.SetValue(number); 
         }
 
-        public IDigitNode ZerothDigit { get { return this.ThisNumeric.ZerothDigit; } }
+        public IDigitNode ZerothDigit { get { return this.InnerNumeric.ZerothDigit; } }
         /// <summary>
         /// false = this is less, true= this is greater, null = equal
         /// </summary>
-        public bool? Compare(INumeric number) { return this.ThisNumeric.Compare(number); }
+        public bool? Compare(INumeric number) { return this.InnerNumeric.Compare(number); }
         /// <summary>
         /// duplicates the entire decoration chain
         /// </summary>
@@ -69,7 +72,7 @@ namespace Arith.Domain.Numbers.Decorations
         public INumeric Clone()
         {
             //get the Numeric and clone it
-            var clone = this.ThisNumeric.Clone();
+            var clone = this.InnerNumeric.Clone();
 
             var rv = this.CloneDecorationCake(clone);
             return rv as INumeric;
@@ -81,57 +84,57 @@ namespace Arith.Domain.Numbers.Decorations
         {
             get
             {
-                return this.ThisNumeric.NodeBuildingStrategy;
+                return this.InnerNumeric.NodeBuildingStrategy;
             }
             set
             {
-                this.ThisNumeric.NodeBuildingStrategy = value;
+                this.InnerNumeric.NodeBuildingStrategy = value;
             }
         }
 
         public ILinkedListNode<IDigit> FirstNode
         {
-            get {return this.ThisNumeric.FirstNode; }
+            get {return this.InnerNumeric.FirstNode; }
         }
 
         public ILinkedListNode<IDigit> LastNode
         {
-            get { return this.ThisNumeric.LastNode ; }
+            get { return this.InnerNumeric.LastNode ; }
         }
 
         public bool Contains(IDigit val)
         {
-            return this.ThisNumeric.Contains(val);
+            return this.InnerNumeric.Contains(val);
         }
 
         public bool Contains(ILinkedListNode<IDigit> item)
         {
-            return this.ThisNumeric.Contains(item);
+            return this.InnerNumeric.Contains(item);
         }
 
         public ILinkedListNode<IDigit> AddFirst(IDigit val)
         {
-            return this.ThisNumeric.AddFirst(val);
+            return this.InnerNumeric.AddFirst(val);
         }
 
         public ILinkedListNode<IDigit> AddLast(IDigit val)
         {
-            return this.ThisNumeric.AddLast(val);
+            return this.InnerNumeric.AddLast(val);
         }
 
         public ILinkedListNode<IDigit> Insert(IDigit val, ILinkedListNode<IDigit> before, ILinkedListNode<IDigit> after)
         {
-            return this.ThisNumeric.Insert(val, before, after);
+            return this.InnerNumeric.Insert(val, before, after);
         }
 
         public ILinkedListNode<IDigit> InsertNode(ILinkedListNode<IDigit> node, ILinkedListNode<IDigit> before, ILinkedListNode<IDigit> after)
         {
-            return this.ThisNumeric.InsertNode(node, before, after);
+            return this.InnerNumeric.InsertNode(node, before, after);
         }
 
         public ILinkedList<IDigit> Remove(ILinkedListNode<IDigit> item)
         {
-            return this.ThisNumeric.Remove(item);
+            return this.InnerNumeric.Remove(item);
         }
         #endregion
     }

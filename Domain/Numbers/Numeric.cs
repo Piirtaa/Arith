@@ -147,7 +147,10 @@ namespace Arith.Domain.Numbers
             }
             return AbsoluteValueCompare(this, number.As<Numeric>());
         }
-
+        /// <summary>
+        /// clones a numeric into an undecorated Numeric
+        /// </summary>
+        /// <returns></returns>
         public INumeric Clone()
         {
             Numeric rv = new Numeric(this.NumberSystem, null);

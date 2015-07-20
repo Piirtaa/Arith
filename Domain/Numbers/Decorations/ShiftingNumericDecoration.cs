@@ -86,11 +86,11 @@ namespace Arith.Domain.Numbers.Decorations
                 var node = this.ZerothDigit.PreviousNode as DigitNode;
                 if (node == null)
                 {
-                    node = this.ThisNumeric.AddLeastSignificantZeroDigit();
+                    node = this.InnerNumeric.AddLeastSignificantZeroDigit();
                 }
 
                 //move the decimal
-                this.ThisNumeric.ZerothDigit = node;
+                this.InnerNumeric.ZerothDigit = node;
 
                 //run hooks
                 var hookDecoration = this.AsBelow<HookedLinkedListDecoration<IDigit>>(false);
@@ -108,11 +108,11 @@ namespace Arith.Domain.Numbers.Decorations
                 var node = this.ZerothDigit.NextNode as DigitNode;
                 if (node == null)
                 {
-                    node = this.ThisNumeric.AddMostSignificantZeroDigit();
+                    node = this.InnerNumeric.AddMostSignificantZeroDigit();
                 }
 
                 //move the decimal
-                this.ThisNumeric.ZerothDigit = node;
+                this.InnerNumeric.ZerothDigit = node;
 
                 //run hooks
                 var hookDecoration = this.AsBelow<HookedLinkedListDecoration<IDigit>>(false);

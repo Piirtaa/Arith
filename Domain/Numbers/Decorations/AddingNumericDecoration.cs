@@ -19,7 +19,7 @@ namespace Arith.Domain.Numbers.Decorations
      * Either way we can ensure a reference to the core.
        * 
      */
- 
+
     public interface IHasAddition : INumericDecoration
     {
         void Add(INumeric numeric);
@@ -95,7 +95,7 @@ namespace Arith.Domain.Numbers.Decorations
             //if (!this.HasCompatibleNumberSystem(numeric))
             //    throw new InvalidOperationException("incompatible number system");
 
-            
+
             numeric.As<Numeric>().SwitchSign();
             bool isClone = false;
             var val = Add(this, numeric, out isClone);
@@ -257,9 +257,9 @@ namespace Arith.Domain.Numbers.Decorations
             //add before the decimal
             addNode2 = number2.ZerothDigit.PreviousNode as DigitNode;
 
-            if(addNode2 != null)
+            if (addNode2 != null)
                 addNode1 = (number1.ZerothDigit as DigitNode).LoadPreviousDigit;
-           
+
             while (addNode2 != null)
             {
                 addNode1.Value.Subtract(addNode2.Symbol);
@@ -280,7 +280,7 @@ namespace Arith.Domain.Numbers.Decorations
         {
             //if there's already an addition decoration, return that
             var decoration = number.As<AddingNumericDecoration>(true);
-            if(decoration == null)
+            if (decoration == null)
                 decoration = AddingNumericDecoration.New(number);
 
             return decoration;
@@ -323,8 +323,76 @@ namespace Arith.Domain.Numbers.Decorations
                 num.SubtractOne();
             }
         }
+        public static void GetNumericSize(this INumeric thisNumber, out Numeric wholeNumberLength,
+            out Numeric decimalLength)
+        {
+            if (thisNumber == null)
+                throw new ArgumentNullException("thisNumber");
+
+            var counter1 = thisNumber.GetCompatibleZero().HasAddition();
+            var counter2 = thisNumber.GetCompatibleZero().HasAddition();
+            thisNumber.ZoneIterate((node)=>{
+                counter1.AddOne();
+            }, (node)=>{
+                counter2.AddOne();
+            }, false);
+
+            wholeNumberLength = counter1.InnerNumeric;
+            decimalLength = counter2.InnerNumeric;
+        }
+
+        public static void ZoneIterateWithIndex(this INumeric numeric,
+    Action<IDigitNode, Numeric> postZeroAction,
+    Action<IDigitNode, Numeric> preZeroAction,
+    bool towardsZero = true)
+        {
+            if (numeric == null)
+                throw new ArgumentNullException("numeric");
+
+            //the add process
+            var zero = numeric.ZerothDigit;
+            var lsd = numeric.LeastSignificantDigit();
+            var msd = numeric.MostSignificantDigit();
+
+            if (towardsZero)
+            {
+                Numeric counter1 = null;
+                Numeric counter2 = null;
+                numeric.GetNumericSize(out counter1, out counter2);
+                counter2.SwitchSign();
+                var addCounter1 = counter1.HasAddition();
+                var addCounter2 = counter2.HasAddition();
+
+                numeric.ZoneIterate((node) =>
+                {
+                    postZeroAction(node, counter1);
+                    addCounter1.SubtractOne();
+                }, (node) =>
+                {
+                    preZeroAction(node, counter2);
+                    addCounter2.AddOne();
+                }, true);
+
+            }
+            else
+            {
+                var counter1 = numeric.GetCompatibleZero().HasAddition();
+                var counter2 = numeric.GetCompatibleOne().HasAddition();
+                counter2.InnerNumeric.SwitchSign();
+
+                numeric.ZoneIterate((node) =>
+                {
+                    postZeroAction(node, counter1.InnerNumeric);
+                    counter1.AddOne();
+                }, (node) =>
+                {
+                    preZeroAction(node, counter2.InnerNumeric);
+                    counter2.SubtractOne();
+                }, false);
 
 
+            }
+        }
     }
 
 
