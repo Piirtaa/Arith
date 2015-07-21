@@ -70,7 +70,7 @@ namespace Arith.Domain.Numbers.Decorations
         #region Overrides
         public override IDecoration ApplyThisDecorationTo(object thing)
         {
-            return new ShiftNumericDecoration(thing as INumeric);
+            return new ShiftNumericDecoration(thing);
         }
         #endregion
 
@@ -143,7 +143,7 @@ namespace Arith.Domain.Numbers.Decorations
             if (numShifts == null)
                 throw new ArgumentNullException("numShifts");
 
-            numShifts.CountdownToZero(c =>
+            numShifts.PerformThisManyTimes(c =>
             {
                 thisNumber.ShiftLeft();
             });
@@ -163,7 +163,7 @@ namespace Arith.Domain.Numbers.Decorations
             if (numShifts == null)
                 throw new ArgumentNullException("numShifts");
 
-            numShifts.CountdownToZero(c =>
+            numShifts.PerformThisManyTimes(c =>
             {
                 thisNumber.ShiftRight();
             });
@@ -204,7 +204,7 @@ namespace Arith.Domain.Numbers.Decorations
             }
 
             Numeric num = new Numeric(set, "123456789");
-            var shiftNum = num.HasShift();
+            var shiftNum = num.HasHooks<IDigit>().HasShift();
 
             shiftNum.ShiftToZero();
             Debug.Assert(num.SymbolsText == "123456789");

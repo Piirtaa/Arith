@@ -92,7 +92,8 @@ namespace Arith.Decorating
         }
 
         /// <summary>
-        /// gets all the decorations, including the core, below this object including itself
+        /// gets all the decorations, including the core, below this object including itself.
+        /// From outer to inner.
         /// </summary>
         /// <param name="obj"></param>
         /// <returns></returns>
@@ -108,7 +109,12 @@ namespace Arith.Decorating
 
             return returnValue;
         }
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <param name="inner"></param>
+        /// <returns></returns>
         public static object CloneDecorationCake(this object obj, object inner)
         {
             if (obj == null)
@@ -116,8 +122,17 @@ namespace Arith.Decorating
 
             var cake = obj.GetSelfAndAllDecorationsBelow();
 
+            //is there something to decorate?
+            if (cake.Count == 1)
+            {
+                //nope, return inner
+                return inner;
+            }
+
             object rv = inner;
-            for (int i = 0; i < cake.Count -1; i++)
+            //remove the old inner
+            cake.RemoveAt(cake.Count - 1);
+            for (int i = cake.Count - 1; i >= 0; i--)
             {
                 IDecoration layer = cake[i] as IDecoration;
                 rv = layer.ApplyThisDecorationTo(rv);
@@ -201,6 +216,11 @@ namespace Arith.Decorating
             return null;
         }
 
+        /// <summary>
+        /// from inner to outer
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
         public static List<object> GetSelfAndAllDecoratorsAbove(this object obj)
         {
             List<object> returnValue = new List<object>();

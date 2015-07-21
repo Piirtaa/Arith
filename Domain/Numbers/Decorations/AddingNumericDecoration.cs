@@ -306,7 +306,7 @@ namespace Arith.Domain.Numbers.Decorations
         /// </summary>
         /// <param name="number"></param>
         /// <param name="action"></param>
-        public static void CountdownToZero(this IHasAddition number, Action<INumeric> action)
+        public static void PerformThisManyTimes(this IHasAddition number, Action<INumeric> action)
         {
             if (number == null) return;
             if (action == null) throw new ArgumentNullException("action");
@@ -316,7 +316,9 @@ namespace Arith.Domain.Numbers.Decorations
 
             var zero = number.GetCompatibleZero();
 
-            AddingNumericDecoration num = (number as AddingNumericDecoration).Clone() as AddingNumericDecoration;
+            var clone = number.Clone();
+
+            AddingNumericDecoration num = clone.As<AddingNumericDecoration>(true);
             while (num.IsGreaterThan(zero))
             {
                 action(num);
@@ -342,9 +344,9 @@ namespace Arith.Domain.Numbers.Decorations
         }
 
         public static void ZoneIterateWithIndex(this INumeric numeric,
-    Action<IDigitNode, Numeric> postZeroAction,
-    Action<IDigitNode, Numeric> preZeroAction,
-    bool towardsZero = true)
+                Action<IDigitNode, Numeric> postZeroAction,
+                Action<IDigitNode, Numeric> preZeroAction,
+                bool towardsZero = true)
         {
             if (numeric == null)
                 throw new ArgumentNullException("numeric");
@@ -362,6 +364,10 @@ namespace Arith.Domain.Numbers.Decorations
                 counter2.SwitchSign();
                 var addCounter1 = counter1.HasAddition();
                 var addCounter2 = counter2.HasAddition();
+
+                //index number range is one less than length/size
+                addCounter1.SubtractOne();
+                addCounter2.SubtractOne();
 
                 numeric.ZoneIterate((node) =>
                 {
@@ -418,6 +424,17 @@ namespace Arith.Domain.Numbers.Decorations
                     num1.Add(num2);
 
                     Debug.Assert(num1.SymbolsText == res.ToString());
+                    Debug.WriteLine("{0} + {1} = {2}", x, y, res);
+
+                    num1.Subtract(num2);
+                    int res2 = x;
+                    Debug.Assert(num1.SymbolsText == res2.ToString());
+
+                    num2.Subtract(num1);
+                    int res3 = y - x;
+                    Debug.Assert(num2.SymbolsText == res3.ToString());
+                    Debug.WriteLine("{0} - {1} = {2}", y, x, res3);
+                    
                 }
             }
 

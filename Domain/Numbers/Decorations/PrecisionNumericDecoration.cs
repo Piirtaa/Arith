@@ -112,7 +112,7 @@ namespace Arith.Domain.Numbers.Decorations
                 var addy = currPlaces.HasAddition();
                 addy.Subtract(places);
 
-                addy.CountdownToZero(x =>
+                addy.PerformThisManyTimes(x =>
                 {
                     thisNumber.Remove(thisNumber.FirstNode);
                 });
@@ -137,7 +137,7 @@ namespace Arith.Domain.Numbers.Decorations
             var num = new Numeric(set, "123456789").HasHooks<IDigit>().HasShift().HasPrecision(precision);
             
             var counter = precision.Clone() as AddingNumericDecoration ;
-            counter.CountdownToZero(x =>
+            counter.PerformThisManyTimes(x =>
             {
                 var shifty = num.As<IHasShift>(false);
                 shifty.ShiftLeft();

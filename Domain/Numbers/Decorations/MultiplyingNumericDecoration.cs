@@ -73,16 +73,22 @@ namespace Arith.Domain.Numbers.Decorations
             {
                 foreach (string each2 in keys)
                 {
+                    //Debug.WriteLine("creating entry for {0} x {1}", each, each2);
+
                     //add each to itself, each2 times
-                    var total =  Numeric.New(this.NumberSystem, each).HasAddition();
+                    var eachNum =  Numeric.New(this.NumberSystem, each);
                     var counter = Numeric.New(this.NumberSystem, each2).HasAddition();
-                    counter.CountdownToZero(c =>
+                    var total = eachNum.GetCompatibleZero().HasAddition();
+
+                    counter.PerformThisManyTimes(c =>
                     {
-                        total.Add(total);
+                        //Debug.WriteLine("interim total for {0} x {1} = {2} ", each, each2, total.SymbolsText);
+                        total.Add(eachNum);
                     });
 
                     //register it
                     this._multMap.Add(each, each2, total.InnerNumeric);
+                    //Debug.WriteLine("creating entry for {0} x {1} = {2}", each, each2, total.InnerNumeric.SymbolsText);
                 }
             }
         }
@@ -97,19 +103,27 @@ namespace Arith.Domain.Numbers.Decorations
         private Numeric MultiplyDigits(string digit1, string digit2,
             Numeric digit1Pos, Numeric digit2Pos)
         {
+            Debug.WriteLine("multiplying digits {0} and {1} at positions {2} and {3}",
+                digit1, digit2, digit1Pos.SymbolsText, digit2Pos.SymbolsText);
+
             var val = this._multMap.Get(digit1, digit2);
+            Debug.WriteLine("{0} * {1} = {2}",
+                    digit1, digit2, val.SymbolsText);
 
             var rv = val.Clone().HasHooks<IDigit>().HasShift();
+            var number1 = Numeric.New(this.NumberSystem, digit1).HasHooks<IDigit>().HasShift();
+            var number2 = Numeric.New(this.NumberSystem, digit2).HasHooks<IDigit>().HasShift();
+
             var counter = digit1Pos.HasAddition();
-            counter.CountdownToZero((c) =>
-            {
-                rv.ShiftLeft();
-            });
+            rv.ShiftRight(counter); 
+            number1.ShiftRight(counter);
+
             counter = digit2Pos.HasAddition();
-            counter.CountdownToZero((c) =>
-            {
-                rv.ShiftLeft();
-            });
+            rv.ShiftRight(counter);
+            number2.ShiftRight(counter);
+
+            Debug.WriteLine("equivalent to {0} * {1} = {2}",
+                    number1.SymbolsText, number2.SymbolsText, rv.SymbolsText);
             return rv.InnerNumeric;
         }
         #endregion
@@ -117,6 +131,8 @@ namespace Arith.Domain.Numbers.Decorations
         #region IHasMultiplication
         public void Multiply(string number)
         {
+            Debug.WriteLine("multiplying {0} * {1}", this.SymbolsText, number);
+ 
             /*
              * Xn, Xn-1,...,X1, X0
              * Yn, Yn-1,...,Y1, Y0
@@ -193,9 +209,9 @@ namespace Arith.Domain.Numbers.Decorations
             }
 
             int topLimit= 100;
-            for (int x = 0; x < topLimit; x++)
+            for (int x = 1; x < topLimit; x++)
             {
-                for (int y = 0; y < topLimit; y++)
+                for (int y = 1; y < topLimit; y++)
                 {
                     var num1 = Numeric.New(set, x.ToString()).HasMultiplication();
                     
