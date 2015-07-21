@@ -258,7 +258,7 @@ namespace Arith.Domain.Numbers.Decorations
             return DividingNumericDecoration.New(number);
         }
 
-                /// <summary>
+        /// <summary>
         /// walks the most sig digits of a number until the filter function returns true.
         /// The filter args are the number portion and its order of magnitude
         /// eg. for a number 1234 the iterations would look like this
@@ -274,10 +274,14 @@ namespace Arith.Domain.Numbers.Decorations
         {
             numeric.Filter(node =>
             {
+                //first get the number portion
                 DigitNode dNode = node as DigitNode;
                 var trimNum = numeric.Trim(dNode, true);
 
+                //then get the number order of magnitude
+                var mag = numeric.GetDigitMagnitude(dNode);
 
+                return filter(trimNum, mag);
             }, false);
         }
     }
