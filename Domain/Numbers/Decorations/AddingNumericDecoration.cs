@@ -342,6 +342,44 @@ namespace Arith.Domain.Numbers.Decorations
             wholeNumberLength = counter1.InnerNumeric;
             decimalLength = counter2.InnerNumeric;
         }
+        /// <summary>
+        /// returns the position of the node.  zero is the first node.  irrespective of
+        /// zeroth node/decimal place
+        /// </summary>
+        /// <param name="numeric"></param>
+        /// <param name="node"></param>
+        /// <returns></returns>
+        public static Numeric GetDigitPosition(this Numeric numeric, DigitNode digit)
+        {
+            var pos = numeric.GetCompatibleZero().HasAddition();
+
+            numeric.Filter((node) =>
+            {
+                if (object.ReferenceEquals(digit, node))
+                    return true;
+                
+                pos.AddOne();
+                return false;
+            }, true);
+
+            return pos.InnerNumeric;
+        }
+        public static Numeric GetDigitMagnitude(this Numeric numeric, DigitNode digit)
+        {
+            Numeric digitIdx = null;
+            numeric.ZoneIterateWithIndex((node, idx) =>
+            {
+                if (object.ReferenceEquals(digit, node))
+                    digitIdx = idx;
+            }, (node, idx) =>
+            {
+                if (object.ReferenceEquals(digit, node))
+                    digitIdx = idx;
+
+            }, false);
+
+            return digitIdx;
+        }
 
         public static void ZoneIterateWithIndex(this INumeric numeric,
                 Action<IDigitNode, Numeric> postZeroAction,
@@ -351,7 +389,6 @@ namespace Arith.Domain.Numbers.Decorations
             if (numeric == null)
                 throw new ArgumentNullException("numeric");
 
-            //the add process
             var zero = numeric.ZerothDigit;
             var lsd = numeric.LeastSignificantDigit();
             var msd = numeric.MostSignificantDigit();

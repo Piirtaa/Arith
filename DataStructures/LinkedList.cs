@@ -129,7 +129,7 @@ namespace Arith.DataStructures
             var match = this.Filter((x) =>
             {
                 return x.Value.Equals(val);
-            });
+            }, true);
 
             return match != null;
         }
@@ -138,7 +138,7 @@ namespace Arith.DataStructures
             var match = this.Filter((x) =>
             {
                 return object.ReferenceEquals(x, item);
-            });
+            }, true);
 
             return match != null;
         }

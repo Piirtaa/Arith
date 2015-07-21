@@ -6,12 +6,18 @@ using Arith.Decorating;
 using System.Runtime.Serialization;
 using Arith.DataStructures;
 using System.Diagnostics;
+using Arith.Domain.Digits;
+using Arith.DataStructures.Decorations;
 
 namespace Arith.Domain.Numbers.Decorations
 {
-    public interface IHasDivision : INumericDecoration
+    /// <summary>
+    /// note we require a precision decoration to perform division (else we run into endless loops
+    /// on repeating numbers)
+    /// </summary>
+    public interface IHasDivision : INumericDecoration, IIsA<IHasPrecision>
 	{
-		void Divide(string number, string numberOfDecimalPlaces); 
+		void Divide(string number); 
 	}
 
     public class DividingNumericDecoration : NumericDecorationBase, IHasDivision
@@ -21,14 +27,14 @@ namespace Arith.Domain.Numbers.Decorations
         #endregion
 
         #region Ctor
-        public DividingNumericDecoration(INumeric decorated)
+        public DividingNumericDecoration(object decorated)
             : base(decorated)
         {
         }
         #endregion
 
         #region Static
-        public static DividingNumericDecoration New(INumeric decorated)
+        public static DividingNumericDecoration New(object decorated)
         {
             return new DividingNumericDecoration(decorated);
         }
@@ -54,22 +60,22 @@ namespace Arith.Domain.Numbers.Decorations
         #endregion
 
         #region Overrides
-        public override IDecorationOf<INumeric> ApplyThisDecorationTo(INumeric thing)
+        public override IDecoration ApplyThisDecorationTo(object thing)
         {
-            return new MultiplyingNumericDecoration(thing);
+            return new DividingNumericDecoration(thing);
         }
         #endregion
 
         #region IHasDivision
-        public void Divide(string number, string numberOfDecimalPlaces)
+        public void Divide(string number)
         {
             lock (this._stateLock)
             {
-                var rv = DivideWithPrecision(this.SymbolicNumber,
-                    new SymbolicNumber(number, this.NumberSystem),
-                    new SymbolicNumber(numberOfDecimalPlaces, this.NumberSystem));
+                var rv = DivideWithPrecision(this.Numeric,
+                    new Numeric(number, this.NumberSystem),
+                    new Numeric(numberOfDecimalPlaces, this.NumberSystem));
 
-                this.SymbolicNumber.SetValue(rv);
+                this.Numeric.SetValue(rv);
             }
         }
         #endregion
@@ -81,22 +87,31 @@ namespace Arith.Domain.Numbers.Decorations
         /// <param name="divisor"></param>
         /// <param name="toNumberOfDecimalPlaces"></param>
         /// <returns></returns>
-        public static SymbolicNumber DivideWithPrecision(SymbolicNumber dividend, SymbolicNumber divisor,
-            SymbolicNumber toNumberOfDecimalPlaces)
+        public static Numeric DivideWithPrecision(Numeric dividend, Numeric divisor,
+            Numeric toNumberOfDecimalPlaces)
         {
-            var product = new SymbolicNumber(dividend.NumberSystem.ZeroSymbol, dividend.NumberSystem);
-            product._isPositive = dividend.IsPositive;
+            if (dividend == null)
+                throw new ArgumentNullException("dividend");
+
+            if (divisor == null)
+                throw new ArgumentNullException("divisor");
+
+            if (toNumberOfDecimalPlaces == null)
+                throw new ArgumentNullException("toNumberOfDecimalPlaces");
+
+            //build sum
+            var product = dividend.GetCompatibleZero().HasAddition();
+            product.InnerNumeric.IsPositive = dividend.IsPositive;
 
             //shift dividend and divisor to zero, to eliminate clarity with decimal shift handling
             //we'll shift back at the end.  this way we're only dividing whole numbers.
             //also makes the code cleaner
-
-            var dividendShifts = dividend.ShiftToZero();
-            var divisorShifts = divisor.ShiftToZero();
+            var dividendShifts = dividend.HasHooks<IDigit>().HasShift().ShiftToZero();
+            var divisorShifts = divisor.HasHooks<IDigit>().HasShift().ShiftToZero();
 
             //we use a cloned value of the dividend because it will be subtracted from at each step
             //and we don't want to change the passed in reference object - treat it as if it were a value type
-            var rv = divide(SymbolicNumber.Clone(dividend), divisor, product, toNumberOfDecimalPlaces);
+            var rv = divide(Numeric.Clone(dividend), divisor, product, toNumberOfDecimalPlaces);
 
             //shift back
             rv.ShiftLeft(dividendShifts).ShiftLeft(divisorShifts);
@@ -123,11 +138,70 @@ namespace Arith.Domain.Numbers.Decorations
          *            -no. recurse  
          *          
         */
-        private static SymbolicNumber divide(SymbolicNumber dividend, SymbolicNumber divisor, 
-            SymbolicNumber product, SymbolicNumber toNumberOfDecimalPlaces)
+        /// <summary>
+        /// tests if the dividend is less than the divisor and needs to be shifted right until it is
+        /// greater
+        /// </summary>
+        /// <param name="dividend"></param>
+        /// <param name="divisor"></param>
+        /// <param name="product"></param>
+        /// <returns></returns>
+        private static bool shiftDividendToGreaterThanDivisor(Numeric dividend, Numeric divisor,
+    Numeric product)
         {
-            SymbolicNumber zero = new SymbolicNumber(product.NumberSystem.ZeroSymbol, product.NumberSystem);
+            //if the divisor is less than or equal to the dividend, we do no shifting
+            if (!divisor.IsGreaterThanOrEqual(dividend))
+                return false;
 
+            while(!divisor.IsGreaterThanOrEqual(dividend))
+            {
+                dividend.HasHooks<IDigit>().HasShift().ShiftRight();
+                product.HasHooks<IDigit>().HasShift().ShiftRight();//apply same shift to the product
+            }
+
+            return true;
+        }
+        /// <summary>
+        /// most from MSD inwards, finds the smallest number that is greater than the divisor,
+        /// and returns the multiple and the number of shifts right (eg. order of magnitude of 
+        /// the MSD digits)
+        /// </summary>
+        /// <param name="dividend"></param>
+        /// <param name="divisor"></param>
+        /// <param name="numShiftsRights"></param>
+        /// <returns></returns>
+        private static Numeric getMostSignificantDigits(Numeric dividend, Numeric divisor, out Numeric numShiftsRights)
+        {
+            //get MSD's that are greater than divisor
+            //eg.  7 into 120
+            //      returns 1 - as 7 goes into 12 1 time
+            //      and returns shifts of 1
+
+            var portion = dividend.GetCompatibleZero();
+
+            dividend.Filter(digitnode=>{
+
+                
+
+            }, false);
+        }
+        private static Numeric calcDivisorMultiple(Numeric dividend, Numeric divisor)
+        {
+            //get MSD's that are greater than 
+        }
+        /// <summary>
+        /// recursive division step
+        /// </summary>
+        /// <param name="dividend"></param>
+        /// <param name="divisor"></param>
+        /// <param name="product"></param>
+        /// <param name="toNumberOfDecimalPlaces"></param>
+        /// <returns></returns>
+        private static void recursiveDivideStep(Numeric dividend, Numeric divisor, 
+            Numeric product, Numeric toNumberOfDecimalPlaces)
+        {
+            Numeric zero = dividend.GetCompatibleZero();
+            
             //divide by zero check
             if (divisor.IsEqualTo(zero))
                 throw new InvalidOperationException("divide by zero");
@@ -139,27 +213,15 @@ namespace Arith.Domain.Numbers.Decorations
                 {
                     //truncate and return
                     product.TruncateToDecimalPlaces(toNumberOfDecimalPlaces);
-                    return product;
+                    return;
                 }
             }
             
-            if (divisor.IsGreaterThan(dividend))
-            {
-                //can't divide a smaller number into a digit, 
-                //so we have to add an order of magnitude to the dividend 
-                //to make it greater than the divisor - a shift right.
-                dividend.ShiftRight();
+            //shift the dividend
+            shiftDividendToGreaterThanDivisor(dividend, divisor, product);
 
-                //record this shift in the product as shift right in the product
-                product.ShiftRight();
-
-                //recurse
-                divide(dividend, divisor, product, toNumberOfDecimalPlaces);
-            }
-            else
-            {
                 //find out how many times divisor fits into the dividend
-                SymbolicNumber counter = new SymbolicNumber(product.NumberSystem.ZeroSymbol, product.NumberSystem);
+                Numeric counter = new Numeric(product.NumberSystem.ZeroSymbol, product.NumberSystem);
                 while (dividend.IsGreaterThan(divisor)) 
                 {
                     dividend.Subtract(divisor);
@@ -186,14 +248,37 @@ namespace Arith.Domain.Numbers.Decorations
                 }
             }
             return product;
-        }
+        
     }
 
     public static class DividingNumberDecorationExtensions
     {
-        public static DividingNumericDecoration HasDivision(this INumeric number)
+        public static DividingNumericDecoration HasDivision(this object number)
         {
             return DividingNumericDecoration.New(number);
+        }
+
+                /// <summary>
+        /// walks the most sig digits of a number until the filter function returns true.
+        /// The filter args are the number portion and its order of magnitude
+        /// eg. for a number 1234 the iterations would look like this
+        /// 1, order of mag = 3.  1 * 10^3 = 1000
+        /// 12, order of mag = 2.  12 * 10^2 = 1200
+        /// 123, order of mag = 1.  123 * 10^1 = 1230
+        /// 1234, order of mag = 0.  1234 * 10^0 = 1234
+        /// </summary>
+        /// <param name="numeric"></param>
+        /// <param name="filter"></param>
+        public static void IterateMSDs(this Numeric numeric,
+            Func<INumeric, INumeric, bool> filter)
+        {
+            numeric.Filter(node =>
+            {
+                DigitNode dNode = node as DigitNode;
+                var trimNum = numeric.Trim(dNode, true);
+
+
+            }, false);
         }
     }
 
@@ -215,7 +300,7 @@ namespace Arith.Domain.Numbers.Decorations
             {
                 for (int y = 0; y < topLimit; y++)
                 {
-                    var num1 = Number.New(x.ToString(), set).HasMultiplication();
+                    var num1 = Numeric.New(set, x.ToString() ).HasMultiplication();
 
                     int res = x * y;
                     num1.Multiply(y.ToString());

@@ -121,6 +121,8 @@ namespace Arith.DataStructures
             if (obj == null)
                 throw new ArgumentNullException("obj");
 
+            
+            
             return obj.Insert(val, obj.LastNode, null);
         }
         public static ILinkedListNode<T> Insert<T>(this ILinkedList<T> obj, 
@@ -208,24 +210,47 @@ namespace Arith.DataStructures
         /// <param name="filter"></param>
         /// <returns></returns>
         public static ILinkedListNode<T> Filter<T>(this ILinkedList<T> obj,
-            Func<ILinkedListNode<T>, bool> filter)
+            Func<ILinkedListNode<T>, bool> filter,
+            bool fromFirstToLast)
         {
             if (obj == null)
                 throw new ArgumentNullException("obj");
 
-            if (obj.FirstNode == null || filter == null)
-                return null;
+            if (filter == null)
+                throw new ArgumentNullException("filter");
 
-            ILinkedListNode<T> node = obj.FirstNode;
-            while (!filter(node))
+            if (fromFirstToLast)
             {
-                if (node.IsLast())
-                    return null;
+                ILinkedListNode<T> node = obj.FirstNode;
 
-                node = node.NextNode;
+                while (node != null)
+                {
+                    if (filter(node))
+                        break;
+
+                    if (node.IsLast())
+                        break;
+
+                    node = node.NextNode;
+                }
+                return node;
             }
+            else
+            {
+                ILinkedListNode<T> node = obj.LastNode;
 
-            return node;
+                while (node != null)
+                {
+                    if (filter(node))
+                        break;
+
+                    if (node.IsFirst())
+                        break;
+
+                    node = node.PreviousNode;
+                }
+                return node;
+            }
         }
 
     }

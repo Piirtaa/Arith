@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Arith.DataStructures;
+using Arith.DataStructures.Decorations;
 
 namespace Arith.Domain.Numbers
 {
@@ -78,12 +80,26 @@ namespace Arith.Domain.Numbers
 
             return thisNumber.Compare(number).Equals(true);
         }
+        public static bool IsGreaterThanOrEqual(this INumeric thisNumber, INumeric number)
+        {
+            if (thisNumber == null)
+                throw new ArgumentNullException("thisNumber");
+
+            return !thisNumber.Compare(number).Equals(false);
+        }
         public static bool IsLessThan(this INumeric thisNumber, INumeric number)
         {
             if (thisNumber == null)
                 throw new ArgumentNullException("thisNumber");
 
             return thisNumber.Compare(number).Equals(false);
+        }
+        public static bool IsLessThanOrEqual(this INumeric thisNumber, INumeric number)
+        {
+            if (thisNumber == null)
+                throw new ArgumentNullException("thisNumber");
+
+            return !thisNumber.Compare(number).Equals(true);
         }
         #endregion
 
@@ -225,6 +241,44 @@ namespace Arith.Domain.Numbers
                 preZeroAction(lsd);
             }
         }
+        /// <summary>
+        /// returns a numeric that are the digits trimmed to(and including) the specified
+        /// digit.
+        /// </summary>
+        /// <param name="numeric"></param>
+        /// <param name="digit"></param>
+        /// <param name="toMSD"></param>
+        /// <returns></returns>
+        public static Numeric Trim(this Numeric numeric,
+            DigitNode digit, bool toMSD)
+        {
+            var rv = numeric.GetCompatibleZero();
+
+            numeric.Filter(node =>
+            {
+                DigitNode newNode =  null;
+                if (toMSD)
+                {
+                    newNode = rv.AddLeastSignificantDigit(node.Value.Symbol);
+                }
+                else
+                {
+                    newNode = rv.AddMostSignificantDigit(node.Value.Symbol);
+                }
+
+                DigitNode dnode = node as DigitNode;
+                if (dnode.IsZerothDigit())
+                    rv.ZerothDigit = newNode;
+
+                if (object.ReferenceEquals(digit, node))
+                    return true;
+
+                return false;
+            }, !toMSD);
+
+            return rv;
+        }
+
 
     }
 }
