@@ -523,8 +523,27 @@ namespace Arith.Decorating
         }
     }
 
-    public static class IHasDecorationExtensions
+    public static class IIsADecorationExtensions
     {
+        /// <summary>
+        /// decorates as a T if the decoration is not present
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="obj"></param>
+        /// <param name="factory"></param>
+        /// <returns></returns>
+        public static T ApplyDecorationIfNotPresent<T>(this object obj, Func<object, T> factory)
+        {
+            if (obj == null)
+                throw new ArgumentNullException("obj");
+
+            var rv = obj.As<T>(true);
+            if (rv != null)
+                return rv;
+
+            rv = factory(obj);
+            return rv;
+        }
         /// <summary>
         /// if a cake constraint (aka IIsA) is declared anywhere in the stack
         /// we validate the current cake supports the constraint.  this is a topdown walk
