@@ -526,7 +526,8 @@ namespace Arith.Decorating
     public static class IIsADecorationExtensions
     {
         /// <summary>
-        /// decorates as a T if the decoration is not present
+        /// decorates as a T if the decoration is not present, using the supplied factory.
+        /// does an exact type decoration search as the test.
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="obj"></param>
@@ -537,6 +538,7 @@ namespace Arith.Decorating
             if (obj == null)
                 throw new ArgumentNullException("obj");
 
+            //note we use an exact type search
             var rv = obj.As<T>(true);
             if (rv != null)
                 return rv;
