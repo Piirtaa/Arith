@@ -16,9 +16,9 @@ namespace Arith.Domain.Numbers.Decorations
     /// on repeating numbers)
     /// </summary>
     public interface IHasDivision : INumericDecoration, IIsA<IHasPrecision>
-	{
-		void Divide(string number); 
-	}
+    {
+        void Divide(string number);
+    }
 
     public class DividingNumericDecoration : NumericDecorationBase, IHasDivision
     {
@@ -71,11 +71,12 @@ namespace Arith.Domain.Numbers.Decorations
         {
             lock (this._stateLock)
             {
-                var rv = DivideWithPrecision(this.Numeric,
-                    new Numeric(number, this.NumberSystem),
-                    new Numeric(numberOfDecimalPlaces, this.NumberSystem));
+                var rv = DivideWithPrecision(
+                    this.InnerNumeric,
+                    this.GetCompatibleNumber(number),
+                    this.As<IHasPrecision>(false).DecimalPlaces as Numeric);
 
-                this.Numeric.SetValue(rv);
+                this.InnerNumeric.SetValue(rv);
             }
         }
         #endregion
@@ -111,14 +112,21 @@ namespace Arith.Domain.Numbers.Decorations
 
             //we use a cloned value of the dividend because it will be subtracted from at each step
             //and we don't want to change the passed in reference object - treat it as if it were a value type
-            var rv = divide(Numeric.Clone(dividend), divisor, product, toNumberOfDecimalPlaces);
+            recursiveDivideStep(
+                dividend.Clone() as Numeric,
+                divisor,
+                product.InnerNumeric,
+                toNumberOfDecimalPlaces);
 
             //shift back
-            rv.ShiftLeft(dividendShifts).ShiftLeft(divisorShifts);
+            product.HasShift().ShiftLeft(dividendShifts).ShiftLeft(divisorShifts);
 
-            return rv;
+            return product.InnerNumeric;
         }
-        /*
+
+
+        #region Dividing Steps
+         /*
         * The division process follows the "Long-hand Arithmetic" approach.  We maintain
          * a dividend (the number we are dividing into), a result (the output of the division),
          * and a divisor (the number we are dividing by).  It's a recursive process wherein the
@@ -139,57 +147,6 @@ namespace Arith.Domain.Numbers.Decorations
          *          
         */
         /// <summary>
-        /// tests if the dividend is less than the divisor and needs to be shifted right until it is
-        /// greater
-        /// </summary>
-        /// <param name="dividend"></param>
-        /// <param name="divisor"></param>
-        /// <param name="product"></param>
-        /// <returns></returns>
-        private static bool shiftDividendToGreaterThanDivisor(Numeric dividend, Numeric divisor,
-    Numeric product)
-        {
-            //if the divisor is less than or equal to the dividend, we do no shifting
-            if (!divisor.IsGreaterThanOrEqual(dividend))
-                return false;
-
-            while(!divisor.IsGreaterThanOrEqual(dividend))
-            {
-                dividend.HasHooks<IDigit>().HasShift().ShiftRight();
-                product.HasHooks<IDigit>().HasShift().ShiftRight();//apply same shift to the product
-            }
-
-            return true;
-        }
-        /// <summary>
-        /// most from MSD inwards, finds the smallest number that is greater than the divisor,
-        /// and returns the multiple and the number of shifts right (eg. order of magnitude of 
-        /// the MSD digits)
-        /// </summary>
-        /// <param name="dividend"></param>
-        /// <param name="divisor"></param>
-        /// <param name="numShiftsRights"></param>
-        /// <returns></returns>
-        private static Numeric getMostSignificantDigits(Numeric dividend, Numeric divisor, out Numeric numShiftsRights)
-        {
-            //get MSD's that are greater than divisor
-            //eg.  7 into 120
-            //      returns 1 - as 7 goes into 12 1 time
-            //      and returns shifts of 1
-
-            var portion = dividend.GetCompatibleZero();
-
-            dividend.Filter(digitnode=>{
-
-                
-
-            }, false);
-        }
-        private static Numeric calcDivisorMultiple(Numeric dividend, Numeric divisor)
-        {
-            //get MSD's that are greater than 
-        }
-        /// <summary>
         /// recursive division step
         /// </summary>
         /// <param name="dividend"></param>
@@ -197,11 +154,12 @@ namespace Arith.Domain.Numbers.Decorations
         /// <param name="product"></param>
         /// <param name="toNumberOfDecimalPlaces"></param>
         /// <returns></returns>
-        private static void recursiveDivideStep(Numeric dividend, Numeric divisor, 
+        private static void recursiveDivideStep(Numeric dividend, Numeric divisor,
             Numeric product, Numeric toNumberOfDecimalPlaces)
         {
             Numeric zero = dividend.GetCompatibleZero();
-            
+
+            //VALIDATIONS-----------------
             //divide by zero check
             if (divisor.IsEqualTo(zero))
                 throw new InvalidOperationException("divide by zero");
@@ -216,39 +174,131 @@ namespace Arith.Domain.Numbers.Decorations
                     return;
                 }
             }
-            
+
+            //STEP 1
             //shift the dividend
-            shiftDividendToGreaterThanDivisor(dividend, divisor, product);
+            shiftDividendToGreaterThanDivisorStep(dividend, divisor, product);
 
-                //find out how many times divisor fits into the dividend
-                Numeric counter = new Numeric(product.NumberSystem.ZeroSymbol, product.NumberSystem);
-                while (dividend.IsGreaterThan(divisor)) 
-                {
-                    dividend.Subtract(divisor);
-                    counter.AddOne();
-                }
+            //get the the nearest, larger divided segment that is less than an order of mag
+            //greater than the divisor
+            Numeric orderOfMag =  null;
+            var dividendSegment = getDividendSegmentLargerThanDivisor(dividend, divisor, out orderOfMag);
+ 
+            //divide this segment number by the dividend
+            Numeric remainder = null;
+            Numeric subtracted = null;
+            var count = divisionByIteratedSubtraction(dividendSegment, divisor, out subtracted, out remainder);
 
-                //record the count as least significant digits
-                counter.Iterate(digit =>
-                {
-                    DigitNode dNode = digit as DigitNode;
-                    product.AddLeastSignificantDigit(dNode.Symbol);
-                }, false);
+            //validate this count is less than the max digit. ie. it's one symbol
+            if (!count.FirstNode.IsLast())
+                throw new InvalidOperationException("count exceeds order of magnitude");
+
+            //STEP 2
+            //perform partial divide operation
+            //subtract the count * divisor * shift by orderOfMag greater(right)
+            //this value to subtract should be less than or equal to the dividend segment shifted by order of mag
+            //record the num of times in the product - append lsd
+            //change the dividend to be the remainder and recurse
+            subtracted.HasShift().ShiftRight(orderOfMag.HasAddition());
+            dividend.HasAddition().Subtract(subtracted);
+            product.AddLeastSignificantDigit(count.FirstDigit.Symbol);
 
 
-                //recurse if the dividend is greater than zero
-                if (dividend.IsGreaterThan(zero))
-                {
-                    divide(dividend, divisor, product, toNumberOfDecimalPlaces);
-                }
-                else
-                {
-                    //we're done!
-                    return product;
-                }
+            //STEP 3 
+            //recurse if the dividend is greater than zero
+            if (dividend.IsGreaterThan(zero))
+            {
+                recursiveDivideStep(dividend, divisor, product, toNumberOfDecimalPlaces);
             }
-            return product;
-        
+        }
+        /// <summary>
+        /// tests if the dividend is less than the divisor and needs to be shifted right until it is
+        /// greater
+        /// </summary>
+        /// <param name="dividend"></param>
+        /// <param name="divisor"></param>
+        /// <param name="product"></param>
+        /// <returns></returns>
+        private static bool shiftDividendToGreaterThanDivisorStep(Numeric dividend, Numeric divisor,
+    Numeric product)
+        {
+            //if the divisor is less than or equal to the dividend, we do no shifting
+            if (!divisor.IsGreaterThanOrEqual(dividend))
+                return false;
+
+            while (!divisor.IsGreaterThanOrEqual(dividend))
+            {
+                dividend.HasHooks<IDigit>().HasShift().ShiftRight();
+                product.HasHooks<IDigit>().HasShift().ShiftRight();//apply same shift to the product
+            }
+
+            return true;
+        }
+        /// <summary>
+        /// most from MSD inwards, finds the smallest number that is greater than the divisor,
+        /// and returns the multiple and the number of shifts right (eg. order of magnitude of 
+        /// the MSD digits)
+        /// 
+        /// Example:
+        /// 17 into 1234
+        /// would return a 123, and an order of mag of 1
+        /// 
+        /// 17 into 1700
+        /// would return 17, and an order of mag of 2
+        /// </summary>
+        /// <param name="dividend"></param>
+        /// <param name="divisor"></param>
+        /// <param name="numShiftsRights"></param>
+        /// <returns></returns>
+        private static Numeric getDividendSegmentLargerThanDivisor( Numeric dividend,
+            Numeric divisor, out Numeric orderOfMagnitude)
+        {
+            //get MSD's that are greater than divisor
+            //eg.  7 into 120
+            //      returns 1 - as 7 goes into 12 1 time
+            //      and returns shifts of 1
+            Numeric orderOfMag = null;
+            Numeric portionNumber = null;
+            dividend.IterateMSDs((portion, mag) =>
+            {
+                if (divisor.IsLessThanOrEqual(portion))
+                {
+                    portionNumber = portion;
+                    orderOfMag = mag;
+                    return true;
+                }
+                return false;
+            });
+
+            orderOfMagnitude = orderOfMag;
+            return portionNumber;
+        }
+        /// <summary>
+        /// removes the divisor from the dividend until the dividend is smaller than the divisor.
+        /// requires that the divisor is less than or equal to dividend to begin with
+        /// </summary>
+        /// <param name="dividend"></param>
+        /// <param name="divisor"></param>
+        /// <returns></returns>
+        private static Numeric divisionByIteratedSubtraction(Numeric dividend,
+            Numeric divisor, out Numeric subtracted, out Numeric remainder)
+        {
+            var count = dividend.GetCompatibleZero().HasAddition();
+            var total = dividend.GetCompatibleZero().HasAddition();
+
+            var subtracty = dividend.Clone().HasAddition();
+            while(subtracty.IsGreaterThan(divisor))
+            {
+                subtracty.Subtract(divisor);
+                total.Add(divisor);
+                count.AddOne();
+            }
+            remainder = subtracty.InnerNumeric;
+            subtracted = total.InnerNumeric;
+            return count.InnerNumeric;
+        }
+
+        #endregion
     }
 
     public static class DividingNumberDecorationExtensions
@@ -270,7 +320,7 @@ namespace Arith.Domain.Numbers.Decorations
         /// <param name="numeric"></param>
         /// <param name="filter"></param>
         public static void IterateMSDs(this Numeric numeric,
-            Func<INumeric, INumeric, bool> filter)
+            Func<Numeric, Numeric, bool> filter)
         {
             numeric.Filter(node =>
             {
@@ -304,7 +354,7 @@ namespace Arith.Domain.Numbers.Decorations
             {
                 for (int y = 0; y < topLimit; y++)
                 {
-                    var num1 = Numeric.New(set, x.ToString() ).HasMultiplication();
+                    var num1 = Numeric.New(set, x.ToString()).HasMultiplication();
 
                     int res = x * y;
                     num1.Multiply(y.ToString());
