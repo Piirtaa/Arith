@@ -303,9 +303,17 @@ namespace Arith.Domain.Numbers.Decorations
 
     public static class DividingNumberDecorationExtensions
     {
-        public static DividingNumericDecoration HasDivision(this object number)
+        public static DividingNumericDecoration HasDivision(this object number, INumeric decimalPlaces)
         {
-            return DividingNumericDecoration.New(number);
+            var decoration = number.ApplyDecorationIfNotPresent<DividingNumericDecoration>(x =>
+            {
+                //note the precision decoration injection
+                return DividingNumericDecoration.New(number.HasPrecision(decimalPlaces));
+            });
+            //update the precision to passed arg
+            decoration.AsBelow<PrecisionNumericDecoration>(true).DecimalPlaces = decimalPlaces;
+
+            return decoration;
         }
 
         /// <summary>

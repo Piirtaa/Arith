@@ -189,11 +189,16 @@ namespace Arith.DataStructures.Decorations
 
     public static class HookedLinkedListDecorationExtensions
     {
-        public static HookedLinkedListDecoration<T> HasHooks<T>(this ILinkedList<T> thing,
+        public static HookedLinkedListDecoration<T> HasHooks<T>(this object thing,
             Action<ILinkedListNode<T>> postNodeInsertionStrategy = null,
             Action<ILinkedList<T>> postMutateStrategy = null)
         {
-            return HookedLinkedListDecoration<T>.New(thing, postNodeInsertionStrategy, postMutateStrategy);
+            var decoration = thing.ApplyDecorationIfNotPresent<HookedLinkedListDecoration<T>>(x =>
+            {
+                return HookedLinkedListDecoration<T>.New(thing, postNodeInsertionStrategy, postMutateStrategy);
+            });
+
+            return decoration;
         }
 
         public static void AppendNodeInsertionStrategy<T>(this HookedLinkedListDecoration<T> thing,
@@ -228,7 +233,7 @@ namespace Arith.DataStructures.Decorations
     {
         public static void Test()
         {
-            var list = LinkedList<int>.New().HasHooks();
+            var list = LinkedList<int>.New().HasHooks<int>();
             int counter = 0;
 
             list.PostMutateStrategy = (l) =>

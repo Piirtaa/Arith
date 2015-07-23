@@ -158,7 +158,7 @@ namespace Arith.Domain.Digits
                 throw new InvalidOperationException("symbol taken");
             }
             //validate other reservations
-            if (null != this._symbols.Filter((x) =>
+            var match = this._symbols.Filter((x) =>
             {
                 if (symbol.Contains(x.Value) ||
                 x.Value.Contains(symbol))
@@ -167,7 +167,9 @@ namespace Arith.Domain.Digits
                 }
 
                 return false;
-            }, true))
+            }, true);
+
+            if(match != null)
             {
                 throw new InvalidOperationException("symbol taken");
             }

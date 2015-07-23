@@ -150,9 +150,15 @@ namespace Arith.DataStructures.Decorations
 
     public static class CircularLinkedListDecorationExtensions
     {
-        public static CircularLinkedListDecoration<T> HasCircularity<T>(this ILinkedList<T> thing)
+        public static CircularLinkedListDecoration<T> HasCircularity<T>(this object thing)
         {
-            return CircularLinkedListDecoration<T>.New(thing);
+            var decoration = thing.ApplyDecorationIfNotPresent<CircularLinkedListDecoration<T>>(x =>
+            {
+                //note injection of hooks
+                return CircularLinkedListDecoration<T>.New(thing.HasHooks<T>().Outer);
+            });
+
+            return decoration;
         }
     }
 
@@ -296,7 +302,7 @@ namespace Arith.DataStructures.Decorations
     {
         public static void Test()
         {
-            var listOfInt = new LinkedList<int>().HasHooks().HasCircularity();
+            var listOfInt = new LinkedList<int>().HasCircularity<int>();
             for (int i = 0; i < 100; i++)
             {
                 var node = listOfInt.AddLast(i);
@@ -361,7 +367,7 @@ namespace Arith.DataStructures.Decorations
 
         public static void SequenceTest()
         {
-            var listOfInt = new LinkedList<int>().HasHooks().HasCircularity();;
+            var listOfInt = new LinkedList<int>().HasCircularity<int>();;
             for (int i = 0; i < 10; i++)
             {
                 listOfInt.AddLast(i);

@@ -229,8 +229,10 @@ namespace Arith.DataStructures
                         break;
 
                     if (node.IsLast())
+                    {
+                        node = null;
                         break;
-
+                    }
                     node = node.NextNode;
                 }
                 return node;
@@ -245,8 +247,10 @@ namespace Arith.DataStructures
                         break;
 
                     if (node.IsFirst())
+                    {
+                        node = null;
                         break;
-
+                    }
                     node = node.PreviousNode;
                 }
                 return node;

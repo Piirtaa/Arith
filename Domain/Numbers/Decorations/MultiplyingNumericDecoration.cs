@@ -76,7 +76,7 @@ namespace Arith.Domain.Numbers.Decorations
                     //Debug.WriteLine("creating entry for {0} x {1}", each, each2);
 
                     //add each to itself, each2 times
-                    var eachNum =  Numeric.New(this.NumberSystem, each);
+                    var eachNum = Numeric.New(this.NumberSystem, each);
                     var counter = Numeric.New(this.NumberSystem, each2).HasAddition();
                     var total = eachNum.GetCompatibleZero().HasAddition();
 
@@ -110,12 +110,12 @@ namespace Arith.Domain.Numbers.Decorations
             Debug.WriteLine("{0} * {1} = {2}",
                     digit1, digit2, val.SymbolsText);
 
-            var rv = val.Clone().HasHooks<IDigit>().HasShift();
-            var number1 = Numeric.New(this.NumberSystem, digit1).HasHooks<IDigit>().HasShift();
-            var number2 = Numeric.New(this.NumberSystem, digit2).HasHooks<IDigit>().HasShift();
+            var rv = val.Clone().HasShift();
+            var number1 = Numeric.New(this.NumberSystem, digit1).HasShift();
+            var number2 = Numeric.New(this.NumberSystem, digit2).HasShift();
 
             var counter = digit1Pos.HasAddition();
-            rv.ShiftRight(counter); 
+            rv.ShiftRight(counter);
             number1.ShiftRight(counter);
 
             counter = digit2Pos.HasAddition();
@@ -132,7 +132,7 @@ namespace Arith.Domain.Numbers.Decorations
         public void Multiply(string number)
         {
             Debug.WriteLine("multiplying {0} * {1}", this.SymbolsText, number);
- 
+
             /*
              * Xn, Xn-1,...,X1, X0
              * Yn, Yn-1,...,Y1, Y0
@@ -150,9 +150,9 @@ namespace Arith.Domain.Numbers.Decorations
 
             lock (this._stateLock)
             {
-                var arg = Numeric.New(this.NumberSystem, number).HasHooks<IDigit>().HasShift();
-                var thisNum = this.InnerNumeric.Clone().HasHooks<IDigit>().HasShift();
-                var sum = Numeric.New(this.NumberSystem, this.NumberSystem.ZeroSymbol).HasHooks<IDigit>().HasShift().HasAddition();
+                var arg = Numeric.New(this.NumberSystem, number).HasShift();
+                var thisNum = this.InnerNumeric.Clone().HasShift();
+                var sum = Numeric.New(this.NumberSystem, this.NumberSystem.ZeroSymbol).HasShift().HasAddition();
 
                 //shift both arg and thisnum to zero, to eliminate clarity with decimal shift handling
                 //we'll shift back at the end.  this way we're only multiplying whole numbers.
@@ -190,9 +190,14 @@ namespace Arith.Domain.Numbers.Decorations
 
     public static class MultiplyingNumberDecorationExtensions
     {
-        public static MultiplyingNumericDecoration HasMultiplication(this INumeric number)
+        public static MultiplyingNumericDecoration HasMultiplication(this object number)
         {
-            return MultiplyingNumericDecoration.New(number);
+            var decoration = number.ApplyDecorationIfNotPresent<MultiplyingNumericDecoration>(x =>
+            {
+                return MultiplyingNumericDecoration.New(number);
+            });
+
+            return decoration;
         }
     }
 
@@ -208,20 +213,20 @@ namespace Arith.Domain.Numbers.Decorations
                 set.AddSymbolToSet(i.ToString());
             }
 
-            int topLimit= 100;
+            int topLimit = 100;
             for (int x = 1; x < topLimit; x++)
             {
                 for (int y = 1; y < topLimit; y++)
                 {
                     var num1 = Numeric.New(set, x.ToString()).HasMultiplication();
-                    
+
                     int res = x * y;
                     num1.Multiply(y.ToString());
 
                     Debug.Assert(num1.SymbolsText == res.ToString());
                 }
             }
-         
+
 
         }
     }

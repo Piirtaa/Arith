@@ -527,7 +527,7 @@ namespace Arith.Decorating
     {
         /// <summary>
         /// decorates as a T if the decoration is not present, using the supplied factory.
-        /// does an exact type decoration search as the test.
+        /// does an exact type decoration search as the test.  returns the T decoration
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="obj"></param>

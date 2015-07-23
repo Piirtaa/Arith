@@ -72,7 +72,7 @@ namespace Arith.Domain.Numbers.Decorations
         #region Overrides
         public override IDecoration ApplyThisDecorationTo(object thing)
         {
-            return new PrecisionNumericDecoration(thing as INumeric, this.DecimalPlaces);
+            return new PrecisionNumericDecoration(thing, this.DecimalPlaces);
         }
         #endregion
 
@@ -83,16 +83,28 @@ namespace Arith.Domain.Numbers.Decorations
 
     public static class PrecisionNumberDecorationExtensions
     {
-        public static PrecisionNumericDecoration HasPrecision(this object decorated, INumeric decimalPlaces)
+        public static PrecisionNumericDecoration HasPrecision(this object decorated, 
+            INumeric decimalPlaces)
         {
-            return PrecisionNumericDecoration.New(decorated, decimalPlaces);
+            var decoration = decorated.ApplyDecorationIfNotPresent<PrecisionNumericDecoration>(x =>
+            {
+                //note the hooking injection
+                //When decorating inline, return the outermost
+                return PrecisionNumericDecoration.New(decorated.HasHooks<IDigit>().Outer, decimalPlaces);
+            });
+
+            //update precision with passed in value
+            decoration.DecimalPlaces = decimalPlaces;
+
+            return decoration;
         }
+
         public static INumeric GetDecimalPlaces(this INumeric thisNumber)
         {
             if (thisNumber == null)
                 throw new ArgumentNullException("thisNumber");
 
-            var shifty = thisNumber.Clone().HasHooks<IDigit>().HasShift();
+            var shifty = thisNumber.Clone().HasShift();
             var places = shifty.ShiftToZero();
 
             return places;
@@ -134,7 +146,7 @@ namespace Arith.Domain.Numbers.Decorations
             }
 
             var precision = new Numeric(set, "5").HasAddition();
-            var num = new Numeric(set, "123456789").HasHooks<IDigit>().HasShift().HasPrecision(precision);
+            var num = new Numeric(set, "123456789").HasShift().HasPrecision(precision);
             
             var counter = precision.Clone() as AddingNumericDecoration ;
             counter.PerformThisManyTimes(x =>

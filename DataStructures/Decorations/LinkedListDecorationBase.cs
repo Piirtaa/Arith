@@ -10,12 +10,13 @@ using System.Runtime.Serialization;
 namespace Arith.DataStructures.Decorations
 {
     public interface ILinkedListDecoration<T> : ILinkedList<T>,
-        IDecorationOf<ILinkedList<T>> 
+        IDecorationOf<ILinkedList<T>>
     { 
     }
 
     public abstract class LinkedListDecorationBase<T> : DecorationBase,
-        ILinkedListDecoration<T>, IDecorationOf<ILinkedList<T>>
+        ILinkedListDecoration<T>, 
+        IDecorationOf<ILinkedList<T>>
     {
         #region Ctor
         public LinkedListDecorationBase(object decorated)

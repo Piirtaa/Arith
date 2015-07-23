@@ -58,6 +58,11 @@ namespace Arith.Decorating
         bool IsDecorationEnabled { get; set; }
     }
 
+    /// <summary>
+    /// specifies that T is contained in the decoration layer cake
+    /// and provides strongly typed property to pull this from the cake
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
     public interface IDecorationOf<T> : IDecoration, IIsA<T>
     {
         T DecoratedOf { get; }
@@ -66,6 +71,7 @@ namespace Arith.Decorating
     //a bunch of marker interfaces to use as placeholders, type constraints 
     //indicating that the decoration cake contains the specified type,
     //ie. that an Is<T> operation will succeed
+
     public interface IIsA { }
     public interface IIsA<T1> : IIsA { }
     public interface IIsA<T1, T2> : IIsA { }

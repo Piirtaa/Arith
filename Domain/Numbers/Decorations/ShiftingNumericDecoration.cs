@@ -124,9 +124,15 @@ namespace Arith.Domain.Numbers.Decorations
 
     public static class ShiftNumberDecorationExtensions
     {
-        public static ShiftNumericDecoration HasShift(this object decorated)
+        public static ShiftNumericDecoration HasShift(this object number)
         {
-            return ShiftNumericDecoration.New(decorated);
+            var decoration = number.ApplyDecorationIfNotPresent<ShiftNumericDecoration>(x =>
+            {
+                //note the hooking injection
+                return ShiftNumericDecoration.New(number.HasHooks<IDigit>().Outer);
+            });
+
+            return decoration;
         }
 
         /// <summary>
@@ -204,7 +210,7 @@ namespace Arith.Domain.Numbers.Decorations
             }
 
             Numeric num = new Numeric(set, "123456789");
-            var shiftNum = num.HasHooks<IDigit>().HasShift();
+            var shiftNum = num.HasShift();
 
             shiftNum.ShiftToZero();
             Debug.Assert(num.SymbolsText == "123456789");

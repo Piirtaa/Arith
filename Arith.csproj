@@ -53,9 +53,6 @@
     <Compile Include="DataStructures\Decorations\LinkedListDecorationBase.cs" />
     <Compile Include="Domain\Digits\Interfaces.cs" />
     <Compile Include="Domain\Numbers\Decorations\AddingNumericDecoration.cs" />
-    <Compile Include="Domain\Numbers\Decorations\DividingNumericDecoration.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Domain\Numbers\Decorations\MultiplyingNumericDecoration.cs" />
     <Compile Include="Domain\Numbers\Decorations\ShiftingNumericDecoration.cs" />
     <Compile Include="Domain\Numbers\Decorations\NumericDecorationBase.cs">

@@ -40,7 +40,7 @@ namespace Arith.Domain.Numbers.Decorations
         #endregion
 
         #region Static
-        public static AddingNumericDecoration New(INumeric decorated)
+        public static AddingNumericDecoration New(object decorated)
         {
             return new AddingNumericDecoration(decorated);
         }
@@ -68,7 +68,7 @@ namespace Arith.Domain.Numbers.Decorations
         #region Overrides
         public override IDecoration ApplyThisDecorationTo(object thing)
         {
-            return new AddingNumericDecoration(thing as INumeric);
+            return new AddingNumericDecoration(thing);
         }
         #endregion
 
@@ -276,12 +276,12 @@ namespace Arith.Domain.Numbers.Decorations
 
     public static class AddingNumericDecorationExtensions
     {
-        public static AddingNumericDecoration HasAddition(this INumeric number)
+        public static AddingNumericDecoration HasAddition(this object number)
         {
-            //if there's already an addition decoration, return that
-            var decoration = number.As<AddingNumericDecoration>(true);
-            if (decoration == null)
-                decoration = AddingNumericDecoration.New(number);
+            var decoration = number.ApplyDecorationIfNotPresent<AddingNumericDecoration>(x =>
+            {
+                return AddingNumericDecoration.New(number);
+            });
 
             return decoration;
         }
@@ -364,6 +364,13 @@ namespace Arith.Domain.Numbers.Decorations
 
             return pos.InnerNumeric;
         }
+        /// <summary>
+        /// 0 is Zeroth, positive values are post-decimal digits, negative values are
+        /// pre-decimal digits
+        /// </summary>
+        /// <param name="numeric"></param>
+        /// <param name="digit"></param>
+        /// <returns></returns>
         public static Numeric GetDigitMagnitude(this Numeric numeric, DigitNode digit)
         {
             Numeric digitIdx = null;
@@ -380,7 +387,15 @@ namespace Arith.Domain.Numbers.Decorations
 
             return digitIdx;
         }
-
+        /// <summary>
+        /// zone iterates but includes the index as an additional strategy argument.
+        /// 0 is Zeroth, positive values are post-decimal digits, negative values are
+        /// pre-decimal digits
+        /// </summary>
+        /// <param name="numeric"></param>
+        /// <param name="postZeroAction"></param>
+        /// <param name="preZeroAction"></param>
+        /// <param name="towardsZero"></param>
         public static void ZoneIterateWithIndex(this INumeric numeric,
                 Action<IDigitNode, Numeric> postZeroAction,
                 Action<IDigitNode, Numeric> preZeroAction,
