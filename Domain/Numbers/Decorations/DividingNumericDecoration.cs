@@ -100,6 +100,11 @@ namespace Arith.Domain.Numbers.Decorations
             if (toNumberOfDecimalPlaces == null)
                 throw new ArgumentNullException("toNumberOfDecimalPlaces");
 
+
+            Debug.WriteLine("dividing. {0} / {1} to {2} places", dividend.SymbolsText,
+             divisor.SymbolsText,
+             toNumberOfDecimalPlaces.SymbolsText);
+
             //build sum
             var product = dividend.GetCompatibleZero().HasAddition();
             product.InnerNumeric.IsPositive = dividend.IsPositive;
@@ -121,12 +126,17 @@ namespace Arith.Domain.Numbers.Decorations
             //shift back
             product.HasShift().ShiftLeft(dividendShifts).ShiftLeft(divisorShifts);
 
+            Debug.WriteLine("dividing. {0} / {1} to {2} places ={3}", dividend.SymbolsText,
+             divisor.SymbolsText,
+             toNumberOfDecimalPlaces.SymbolsText,
+             product.SymbolsText);
+
             return product.InnerNumeric;
         }
 
 
         #region Dividing Steps
-         /*
+        /*
         * The division process follows the "Long-hand Arithmetic" approach.  We maintain
          * a dividend (the number we are dividing into), a result (the output of the division),
          * and a divisor (the number we are dividing by).  It's a recursive process wherein the
@@ -167,7 +177,8 @@ namespace Arith.Domain.Numbers.Decorations
             //decimal place check
             if (toNumberOfDecimalPlaces != null)
             {
-                if (product.GetDecimalPlaces().IsGreaterThan(toNumberOfDecimalPlaces))
+                var prodDecPlaces = product.GetDecimalPlaces();
+                if (prodDecPlaces.IsGreaterThan(toNumberOfDecimalPlaces))
                 {
                     //truncate and return
                     product.TruncateToDecimalPlaces(toNumberOfDecimalPlaces);
@@ -175,19 +186,40 @@ namespace Arith.Domain.Numbers.Decorations
                 }
             }
 
+            //log step
+            Debug.WriteLine("division step begins. {0} / {1} to {2} places. current product={3}", dividend.SymbolsText,
+                divisor.SymbolsText,
+                toNumberOfDecimalPlaces.SymbolsText,
+                product.SymbolsText);
+
             //STEP 1
             //shift the dividend
-            shiftDividendToGreaterThanDivisorStep(dividend, divisor, product);
+            if (shiftDividendToGreaterThanDivisorStep(dividend, divisor, product))
+                Debug.WriteLine("division shift step. {0} / {1} to {2} places. current product={3}", dividend.SymbolsText,
+     divisor.SymbolsText,
+     toNumberOfDecimalPlaces.SymbolsText,
+     product.SymbolsText);
 
             //get the the nearest, larger divided segment that is less than an order of mag
             //greater than the divisor
-            Numeric orderOfMag =  null;
+            Numeric orderOfMag = null;
             var dividendSegment = getDividendSegmentLargerThanDivisor(dividend, divisor, out orderOfMag);
- 
+
+            Debug.WriteLine("nearest larger segment={0}  magnitude {1}", 
+                dividendSegment.SymbolsText,
+    orderOfMag.SymbolsText);
+
             //divide this segment number by the dividend
             Numeric remainder = null;
             Numeric subtracted = null;
             var count = divisionByIteratedSubtraction(dividendSegment, divisor, out subtracted, out remainder);
+
+            Debug.WriteLine("division segment calc step. {0} / {1} = {2} . remainder={3} . subtracted={4}",
+                dividendSegment.SymbolsText,
+                divisor.SymbolsText,
+                count.SymbolsText,
+                remainder.SymbolsText,
+                subtracted.SymbolsText);
 
             //validate this count is less than the max digit. ie. it's one symbol
             if (!count.FirstNode.IsLast())
@@ -200,9 +232,20 @@ namespace Arith.Domain.Numbers.Decorations
             //record the num of times in the product - append lsd
             //change the dividend to be the remainder and recurse
             subtracted.HasShift().ShiftRight(orderOfMag.HasAddition());
+            var oldDividend = dividend.SymbolsText;
             dividend.HasAddition().Subtract(subtracted);
             product.AddLeastSignificantDigit(count.FirstDigit.Symbol);
 
+            Debug.WriteLine("dividend subtraction step. {0} - {1} = {2}, dividing {3} times",
+       oldDividend,
+       subtracted.SymbolsText,
+       dividend.SymbolsText,
+       count.SymbolsText);
+
+            Debug.WriteLine("division step complete. {0} / {1} to {2} places. current product={3}", dividend.SymbolsText,
+    divisor.SymbolsText,
+    toNumberOfDecimalPlaces.SymbolsText,
+    product.SymbolsText);
 
             //STEP 3 
             //recurse if the dividend is greater than zero
@@ -223,7 +266,7 @@ namespace Arith.Domain.Numbers.Decorations
     Numeric product)
         {
             //if the divisor is less than or equal to the dividend, we do no shifting
-            if (!divisor.IsGreaterThanOrEqual(dividend))
+            if (divisor.IsLessThanOrEqual(dividend))
                 return false;
 
             while (!divisor.IsGreaterThanOrEqual(dividend))
@@ -250,7 +293,7 @@ namespace Arith.Domain.Numbers.Decorations
         /// <param name="divisor"></param>
         /// <param name="numShiftsRights"></param>
         /// <returns></returns>
-        private static Numeric getDividendSegmentLargerThanDivisor( Numeric dividend,
+        private static Numeric getDividendSegmentLargerThanDivisor(Numeric dividend,
             Numeric divisor, out Numeric orderOfMagnitude)
         {
             //get MSD's that are greater than divisor
@@ -287,7 +330,7 @@ namespace Arith.Domain.Numbers.Decorations
             var total = dividend.GetCompatibleZero().HasAddition();
 
             var subtracty = dividend.Clone().HasAddition();
-            while(subtracty.IsGreaterThan(divisor))
+            while (subtracty.IsGreaterThan(divisor))
             {
                 subtracty.Subtract(divisor);
                 total.Add(divisor);
@@ -308,7 +351,7 @@ namespace Arith.Domain.Numbers.Decorations
             var decoration = number.ApplyDecorationIfNotPresent<DividingNumericDecoration>(x =>
             {
                 //note the precision decoration injection
-                return DividingNumericDecoration.New(number.HasPrecision(decimalPlaces));
+                return DividingNumericDecoration.New(number.HasPrecision(decimalPlaces).Outer);
             });
             //update the precision to passed arg
             decoration.AsBelow<PrecisionNumericDecoration>(true).DecimalPlaces = decimalPlaces;
@@ -357,17 +400,37 @@ namespace Arith.Domain.Numbers.Decorations
                 set.AddSymbolToSet(i.ToString());
             }
 
-            int topLimit = 10000000;
-            for (int x = 0; x < topLimit; x++)
+            var bigNum = Numeric.New(set, "1234567890");
+
+            bigNum.Iterate(digit =>
             {
-                for (int y = 0; y < topLimit; y++)
+                var trim = bigNum.Trim(digit as DigitNode, true);
+                Debug.WriteLine("on digit={0} trim to msd={1}", digit.Value.Symbol, trim.SymbolsText);
+
+                var trim2 = bigNum.Trim(digit as DigitNode, false);
+                Debug.WriteLine("on digit={0} trim to lsd={1}", digit.Value.Symbol, trim2.SymbolsText);
+
+            }, true);
+
+            bigNum.IterateMSDs((portion, mag) =>
+            {
+                Debug.WriteLine("portion={0}, mag={1}", portion.SymbolsText, mag.SymbolsText);
+                return false;
+            });
+
+            int topLimit = 100;
+            var precision = Numeric.New(set, set.OneSymbol);
+
+            for (int x = 1; x < topLimit; x++)
+            {
+                for (int y = 1; y < topLimit; y++)
                 {
-                    var num1 = Numeric.New(set, x.ToString()).HasMultiplication();
+                    var num1 = Numeric.New(set, x.ToString()).HasDivision(precision);
 
-                    int res = x * y;
-                    num1.Multiply(y.ToString());
+                    decimal res = (decimal)x / (decimal)y;
+                    num1.Divide(y.ToString());
 
-                    Debug.Assert(num1.SymbolsText == res.ToString());
+                    Debug.Assert(num1.SymbolsText == res.ToString("#.#"));
                 }
             }
 

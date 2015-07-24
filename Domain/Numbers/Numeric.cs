@@ -143,9 +143,9 @@ namespace Arith.Domain.Numbers
 
             if (this.IsPositive == false && number.IsPositive == false)
             {
-                return AbsoluteValueCompare(number.As<Numeric>(), this);
+                return AbsoluteValueCompare(number.GetInnerNumeric(), this);
             }
-            return AbsoluteValueCompare(this, number.As<Numeric>());
+            return AbsoluteValueCompare(this, number.GetInnerNumeric());
         }
         /// <summary>
         /// clones a numeric into an undecorated Numeric
@@ -451,6 +451,18 @@ namespace Arith.Domain.Numbers
             Debug.Assert(num2.IsLessThan(num3));
             var comp = Numeric.AbsoluteValueCompare(num2, num3);
             Debug.Assert(comp == true);
+
+            //test parallel iteration
+            var numA = Numeric.New(set, "1234567890");
+            var numB = numA.Clone();
+            numA.ParallelIterate(numB, (diga, digb) =>
+            {
+                Debug.Assert(diga.Value.Symbol.Equals(digb.Value.Symbol));
+            }, true);
+            numA.ParallelIterate(numB, (diga, digb) =>
+            {
+                Debug.Assert(diga.Value.Symbol.Equals(digb.Value.Symbol));
+            }, false);
         }
 
 

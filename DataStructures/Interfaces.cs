@@ -120,8 +120,6 @@ namespace Arith.DataStructures
         {
             if (obj == null)
                 throw new ArgumentNullException("obj");
-
-            
             
             return obj.Insert(val, obj.LastNode, null);
         }
@@ -200,6 +198,63 @@ namespace Arith.DataStructures
                         break;
 
                     node = node.PreviousNode;
+                }
+            }
+        }
+
+        /// <summary>
+        /// performs Iterate, but on 2 lists, such that each are traversed in the same
+        /// steps, in parallel
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="obj"></param>
+        /// <param name="action"></param>
+        /// <param name="fromFirstToLast"></param>
+        public static void ParallelIterate<T>(this ILinkedList<T> obj,
+            ILinkedList<T> list2,
+            Action<ILinkedListNode<T>, ILinkedListNode<T>> action,
+            bool fromFirstToLast)
+        {
+            if (obj == null)
+                throw new ArgumentNullException("obj");
+
+            if (action == null)
+                throw new ArgumentNullException("action");
+
+            if (fromFirstToLast)
+            {
+                ILinkedListNode<T> node = obj.FirstNode;
+                ILinkedListNode<T> node2 = list2.FirstNode;
+
+                while (node != null)
+                {
+                    action(node, node2);
+
+                    if (node.IsLast())
+                        break;
+
+                    node = node.NextNode;
+
+                    if(node2 != null)
+                        node2 = node2.NextNode;
+                }
+            }
+            else
+            {
+                ILinkedListNode<T> node = obj.LastNode;
+                ILinkedListNode<T> node2 = list2.LastNode;
+
+                while (node != null)
+                {
+                    action(node, node2);
+
+                    if (node.IsFirst())
+                        break;
+
+                    node = node.PreviousNode;
+
+                    if (node2 != null)
+                        node2 = node2.PreviousNode;
                 }
             }
         }

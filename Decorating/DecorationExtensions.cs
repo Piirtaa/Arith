@@ -254,12 +254,14 @@ namespace Arith.Decorating
 
             var match = obj.WalkDecorationsToInner((dec) =>
             {
+                var layerType = dec.GetType();
+
                 //if we're exact matching, the decoration has to be the same type
-                if (exactTypeMatch && decorationType.Equals(dec.GetType()) == false)
+                if (exactTypeMatch && decorationType.Equals(layerType) == false)
                     return false;
 
                 //if we're not exact matching, the decoration has to be Of the same type
-                if (exactTypeMatch == false && (!(decorationType.IsAssignableFrom(dec.GetType()))))
+                if (exactTypeMatch == false && (!(decorationType.IsAssignableFrom(layerType))))
                     return false;
 
                 return true;

@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using Arith.DataStructures;
 using Arith.DataStructures.Decorations;
+using Arith.Domain.Numbers.Decorations;
+using Arith.Domain.Digits;
 
 namespace Arith.Domain.Numbers
 {
@@ -62,6 +64,22 @@ namespace Arith.Domain.Numbers
                 return false;
 
             return thisNumber.NumberSystem.IsCompatible(number.NumberSystem);
+        }
+        #endregion
+
+        #region Inner Numeric
+        public static Numeric GetInnerNumeric(this INumeric thisNumber)
+        {
+            if (thisNumber == null)
+                throw new ArgumentNullException("thisNumber");
+
+            if (thisNumber is Numeric)
+                return thisNumber as Numeric;
+
+            if (thisNumber is NumericDecorationBase)
+                return (thisNumber as NumericDecorationBase).InnerNumeric;
+
+            throw new InvalidOperationException("cannot find inner numeric");
         }
         #endregion
 
@@ -244,6 +262,10 @@ namespace Arith.Domain.Numbers
         /// <summary>
         /// returns a numeric that are the digits trimmed to(and including) the specified
         /// digit.
+        /// 
+        /// Eg. 123456 trimmed to the 3 "towards most significant digit" == 123
+        /// 123456 trimmed to the 3 where toMSD = false == 3456
+        /// 123.456 trimmed to the 3 where toMSD = false == 3.456
         /// </summary>
         /// <param name="numeric"></param>
         /// <param name="digit"></param>
@@ -252,29 +274,29 @@ namespace Arith.Domain.Numbers
         public static Numeric Trim(this Numeric numeric,
             DigitNode digit, bool toMSD)
         {
-            var rv = numeric.GetCompatibleZero();
+            var rv = numeric.Clone() as Numeric;
 
-            numeric.Filter(node =>
+            numeric.ParallelIterate(rv, (node, dupNode) =>
             {
-                DigitNode newNode =  null;
-                if (toMSD)
+                if (object.ReferenceEquals(node, digit))
                 {
-                    newNode = rv.AddLeastSignificantDigit(node.Value.Symbol);
+                    DigitNode dnode = dupNode as DigitNode;
+
+                    //we've found the node!
+                    if (toMSD)
+                    {
+                        //remove node's previous digits, and set first digit to this node
+                        dnode.PreviousNode = null;
+                        rv.HasTweaks<IDigit>().SetFirstNode(dnode);
+                    }
+                    else
+                    {
+                        //remove node's next digits, and set last digit to this node
+                        dnode.NextNode = null;
+                        rv.HasTweaks<IDigit>().SetLastNode(dnode);
+                    }
                 }
-                else
-                {
-                    newNode = rv.AddMostSignificantDigit(node.Value.Symbol);
-                }
-
-                DigitNode dnode = node as DigitNode;
-                if (dnode.IsZerothDigit())
-                    rv.ZerothDigit = newNode;
-
-                if (object.ReferenceEquals(digit, node))
-                    return true;
-
-                return false;
-            }, !toMSD);
+            }, true);
 
             return rv;
         }

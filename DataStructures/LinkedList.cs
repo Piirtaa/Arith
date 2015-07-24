@@ -17,10 +17,10 @@ namespace Arith.DataStructures
         protected enum InsertSlotEnum { First, Middle, Last, FirstAndLast }
 
         protected readonly object _stateLock = new object();
-        protected ILinkedListNode<T> _firstNode = null;
+        protected internal ILinkedListNode<T> _firstNode = null;
 
         //we keep a reference to last digit because it's very expensive to walk the list every time
-        protected ILinkedListNode<T> _lastNode = null;
+        protected internal ILinkedListNode<T> _lastNode = null;
         #endregion
 
         #region Ctor
@@ -143,6 +143,7 @@ namespace Arith.DataStructures
             return match != null;
         }
 
+
         /// <summary>
         /// this is the "gateway" method to appending the list.  To insert first, before should be null,
         /// to insert last, after should be null.  
@@ -163,20 +164,24 @@ namespace Arith.DataStructures
                 switch (slotType)
                 {
                     case InsertSlotEnum.First:
-                        node.NextNode = this._firstNode;
+                        var oldFirst = this._firstNode;
                         this._firstNode = node;
-                        node.NextNode.PreviousNode = node;
+                        this._firstNode.NextNode = oldFirst;
+                        this._firstNode.PreviousNode = null;
+                        oldFirst.PreviousNode = node;
                         break;
                     case InsertSlotEnum.FirstAndLast:
-                        node.NextNode = null;
-                        node.PreviousNode = null;
                         this._firstNode = node;
                         this._lastNode = node;
+                        this._firstNode.PreviousNode = null;
+                        this._firstNode.NextNode = null;
                         break;
                     case InsertSlotEnum.Last:
-                        node.PreviousNode = this._lastNode;
+                        var oldLast = this._lastNode;
                         this._lastNode = node;
-                        node.PreviousNode.NextNode = node;
+                        this._lastNode.PreviousNode = oldLast;
+                        this._lastNode.NextNode = null;
+                        oldLast.NextNode = node;
                         break;
                     case InsertSlotEnum.Middle:
                         node.PreviousNode = before;

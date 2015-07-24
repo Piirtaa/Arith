@@ -48,11 +48,15 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DataStructures\Decorations\CircularLinkedListDecoration.cs" />
+    <Compile Include="DataStructures\Decorations\TweakableLinkedListDecoration.cs" />
     <Compile Include="DataStructures\Decorations\HookedLinkedListDecoration.cs" />
     <Compile Include="DataStructures\Interfaces.cs" />
     <Compile Include="DataStructures\Decorations\LinkedListDecorationBase.cs" />
     <Compile Include="Domain\Digits\Interfaces.cs" />
     <Compile Include="Domain\Numbers\Decorations\AddingNumericDecoration.cs" />
+    <Compile Include="Domain\Numbers\Decorations\DividingNumericDecoration.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Domain\Numbers\Decorations\MultiplyingNumericDecoration.cs" />
     <Compile Include="Domain\Numbers\Decorations\ShiftingNumericDecoration.cs" />
     <Compile Include="Domain\Numbers\Decorations\NumericDecorationBase.cs">
