@@ -456,11 +456,13 @@ namespace Arith.Domain.Numbers
 
             var numA = Numeric.New(set, "1234567890");
             var numB = numA.Clone();
+            var numC = Numeric.New(set, "1234567890.246");
             var nullNum = Numeric.New(set, null);
             var zeroNum = Numeric.New(set, "0");
             ZoneIterateTest(nullNum);
             ZoneIterateTest(zeroNum);
             ZoneIterateTest(numA);
+            ZoneIterateTest(numC);
 
             //test parallel iteration
             numA.ParallelIterate(numB, (diga, digb) =>

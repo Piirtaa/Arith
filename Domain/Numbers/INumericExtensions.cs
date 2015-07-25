@@ -263,7 +263,7 @@ namespace Arith.Domain.Numbers
                 while (node != null && node.IsLeastSignificantDigit() == false)
                 {
                     preZeroAction(node);
-                    node = node.NextDigit();
+                    node = node.PreviousDigit();
                 }
                 preZeroAction(lsd);
             }

@@ -409,13 +409,14 @@ namespace Arith.Domain.Numbers.Decorations
             var counter2 = numeric.GetCompatibleOne().HasAddition();
             counter2.InnerNumeric.SwitchSign();
 
+            //note we iterate from zeroth outwards to msd to facilitate counting the index 
             numeric.ZoneIterate((node) =>
             {
-                postZeroAction(node, counter1.InnerNumeric);
+                postZeroAction(node, counter1.InnerNumeric.Clone() as Numeric);
                 counter1.AddOne();
             }, (node) =>
             {
-                preZeroAction(node, counter2.InnerNumeric);
+                preZeroAction(node, counter2.InnerNumeric.Clone() as Numeric);
                 counter2.SubtractOne();
             }, false);
         }
@@ -432,6 +433,24 @@ namespace Arith.Domain.Numbers.Decorations
             {
                 set.AddSymbolToSet(i.ToString());
             }
+
+            var numA = Numeric.New(set, "1234567890.246");
+            numA.ZoneIterateWithIndex((node, idx) =>
+            {
+                Debug.WriteLine("on number {0} digit {1} idx {2}", numA.SymbolsText,
+                    node.Value.Symbol, idx.SymbolsText);
+
+                var mag = numA.GetDigitMagnitude(node as DigitNode);
+                Debug.WriteLine("digit order of mag " + mag.SymbolsText);
+            }, (node, idx) =>
+            {
+                Debug.WriteLine("on number {0} digit {1} idx {2}", numA.SymbolsText,
+    node.Value.Symbol, idx.SymbolsText);
+
+                var mag = numA.GetDigitMagnitude(node as DigitNode);
+                Debug.WriteLine("digit order of mag " + mag.SymbolsText);
+            });
+
 
             int topLimit = 100;
             for (int x = 0; x < topLimit; x++)
@@ -458,16 +477,7 @@ namespace Arith.Domain.Numbers.Decorations
                 }
             }
 
-            var numA = Numeric.New(set, "1234567890");
-            numA.ZoneIterateWithIndex((node, idx) =>
-            {
-                Debug.WriteLine("on number {0} digit {1} idx {2}", numA.SymbolsText,
-                    node.Value.Symbol, idx.SymbolsText);
-            }, (node, idx) =>
-            {
-                Debug.WriteLine("on number {0} digit {1} idx {2}", numA.SymbolsText,
-    node.Value.Symbol, idx.SymbolsText);
-            });
+
 
 
         }
