@@ -400,7 +400,7 @@ namespace Arith.Domain.Numbers.Decorations
                 set.AddSymbolToSet(i.ToString());
             }
 
-            var bigNum = Numeric.New(set, "1234567890");
+            var bigNum = Numeric.New(set, "1234567890.246");
 
             bigNum.Iterate(digit =>
             {
@@ -414,7 +414,7 @@ namespace Arith.Domain.Numbers.Decorations
 
             bigNum.IterateMSDs((portion, mag) =>
             {
-                Debug.WriteLine("portion={0}, mag={1}", portion.SymbolsText, mag.SymbolsText);
+                //Debug.WriteLine("portion={0}, mag={1}", portion.SymbolsText, mag.SymbolsText);
                 return false;
             });
 

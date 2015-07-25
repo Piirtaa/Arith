@@ -442,6 +442,9 @@ namespace Arith.Domain.Numbers.Decorations
 
                 var mag = numA.GetDigitMagnitude(node as DigitNode);
                 Debug.WriteLine("digit order of mag " + mag.SymbolsText);
+
+                var pos = numA.GetDigitPosition(node as DigitNode);
+                Debug.WriteLine("digit pos " + pos.SymbolsText);
             }, (node, idx) =>
             {
                 Debug.WriteLine("on number {0} digit {1} idx {2}", numA.SymbolsText,
@@ -449,6 +452,9 @@ namespace Arith.Domain.Numbers.Decorations
 
                 var mag = numA.GetDigitMagnitude(node as DigitNode);
                 Debug.WriteLine("digit order of mag " + mag.SymbolsText);
+
+                var pos = numA.GetDigitPosition(node as DigitNode);
+                Debug.WriteLine("digit pos " + pos.SymbolsText);
             });
 
 
