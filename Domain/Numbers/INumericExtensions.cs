@@ -6,6 +6,7 @@ using Arith.DataStructures;
 using Arith.DataStructures.Decorations;
 using Arith.Domain.Numbers.Decorations;
 using Arith.Domain.Digits;
+using System.Diagnostics;
 
 namespace Arith.Domain.Numbers
 {
@@ -84,6 +85,7 @@ namespace Arith.Domain.Numbers
         #endregion
 
         #region Compare
+
         public static bool IsEqualTo(this INumeric thisNumber, INumeric number)
         {
             if (thisNumber == null)
@@ -219,7 +221,9 @@ namespace Arith.Domain.Numbers
             if (numeric == null)
                 throw new ArgumentNullException("numeric");
 
-            //the add process
+            //cannot iterate empty lists
+            if (numeric.IsEmpty())
+                return;
 
             var zero = numeric.ZerothDigit;
             var lsd = numeric.LeastSignificantDigit();
@@ -234,6 +238,7 @@ namespace Arith.Domain.Numbers
                     node = node.PreviousDigit();
                 }
                 postZeroAction(zero);
+
                 node = lsd;
                 while (node != null && node.IsZerothDigit() == false)
                 {
@@ -250,7 +255,11 @@ namespace Arith.Domain.Numbers
                     node = node.NextDigit();
                 }
                 postZeroAction(msd);
+
                 node = zero.PreviousDigit();
+                if (node == null)
+                    return;
+
                 while (node != null && node.IsLeastSignificantDigit() == false)
                 {
                     preZeroAction(node);
@@ -274,29 +283,43 @@ namespace Arith.Domain.Numbers
         public static Numeric Trim(this Numeric numeric,
             DigitNode digit, bool toMSD)
         {
-            var rv = numeric.Clone() as Numeric;
+            var rv = Numeric.New(numeric.NumberSystem, null);
+            bool nodeFound = false;
 
-            numeric.ParallelIterate(rv, (node, dupNode) =>
+            numeric.Iterate((node) =>
             {
                 if (object.ReferenceEquals(node, digit))
                 {
-                    DigitNode dnode = dupNode as DigitNode;
+                    nodeFound = true;
+                }
 
-                    //we've found the node!
+                if (nodeFound)
+                {
+                    DigitNode newNode = null;
                     if (toMSD)
                     {
-                        //remove node's previous digits, and set first digit to this node
-                        dnode.PreviousNode = null;
-                        rv.HasTweaks<IDigit>().SetFirstNode(dnode);
+                        newNode = rv.AddMostSignificantDigit(node.Value.Symbol);
                     }
                     else
                     {
-                        //remove node's next digits, and set last digit to this node
-                        dnode.NextNode = null;
-                        rv.HasTweaks<IDigit>().SetLastNode(dnode);
+                        newNode = rv.AddLeastSignificantDigit(node.Value.Symbol);
                     }
+                    DigitNode dNode = node as DigitNode;
+                    if (dNode.IsZerothDigit())
+                        rv.ZerothDigit = newNode;
                 }
-            }, true);
+
+            }, toMSD);
+
+            //set zeroth to first if it's not set
+            if (rv.ZerothDigit == null)
+                rv.ZerothDigit = rv.FirstDigit;
+
+            Debug.WriteLine("trimming number={0} on digit={1} to msd={2} result={3}",
+                numeric.SymbolsText,
+                digit.Value.Symbol,
+                toMSD.ToString(),
+                rv.SymbolsText);
 
             return rv;
         }

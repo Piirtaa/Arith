@@ -452,9 +452,17 @@ namespace Arith.Domain.Numbers
             var comp = Numeric.AbsoluteValueCompare(num2, num3);
             Debug.Assert(comp == true);
 
-            //test parallel iteration
+
+
             var numA = Numeric.New(set, "1234567890");
             var numB = numA.Clone();
+            var nullNum = Numeric.New(set, null);
+            var zeroNum = Numeric.New(set, "0");
+            ZoneIterateTest(nullNum);
+            ZoneIterateTest(zeroNum);
+            ZoneIterateTest(numA);
+
+            //test parallel iteration
             numA.ParallelIterate(numB, (diga, digb) =>
             {
                 Debug.Assert(diga.Value.Symbol.Equals(digb.Value.Symbol));
@@ -465,7 +473,27 @@ namespace Arith.Domain.Numbers
             }, false);
         }
 
+        public static void ZoneIterateTest(Numeric num)
+        {
+            Debug.WriteLine("zone iterate test on " + num.SymbolsText);
+            Debug.WriteLine("zone iteration towards zero");
+            num.ZoneIterate(digit =>
+            {
+                Debug.WriteLine("post dec zone iterating {0} on digit {1}", num.SymbolsText, digit.Value.Symbol);
+            }, digit =>
+            {
+                Debug.WriteLine("pre dec zone iterating {0} on digit {1}", num.SymbolsText, digit.Value.Symbol);
+            }, true);
 
+            Debug.WriteLine("zone iteration away from zero");
+            num.ZoneIterate(digit =>
+            {
+                Debug.WriteLine("post dec zone iterating {0} on digit {1}", num.SymbolsText, digit.Value.Symbol);
+            }, digit =>
+            {
+                Debug.WriteLine("pre dec zone iterating {0} on digit {1}", num.SymbolsText, digit.Value.Symbol);
+            }, false);
+        }
     }
 
 }

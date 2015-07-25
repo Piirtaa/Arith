@@ -405,10 +405,10 @@ namespace Arith.Domain.Numbers.Decorations
             bigNum.Iterate(digit =>
             {
                 var trim = bigNum.Trim(digit as DigitNode, true);
-                Debug.WriteLine("on digit={0} trim to msd={1}", digit.Value.Symbol, trim.SymbolsText);
+                //Debug.WriteLine("on digit={0} trim to msd={1}", digit.Value.Symbol, trim.SymbolsText);
 
                 var trim2 = bigNum.Trim(digit as DigitNode, false);
-                Debug.WriteLine("on digit={0} trim to lsd={1}", digit.Value.Symbol, trim2.SymbolsText);
+                //Debug.WriteLine("on digit={0} trim to lsd={1}", digit.Value.Symbol, trim2.SymbolsText);
 
             }, true);
 

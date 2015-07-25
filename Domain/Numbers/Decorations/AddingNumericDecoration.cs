@@ -333,9 +333,11 @@ namespace Arith.Domain.Numbers.Decorations
 
             var counter1 = thisNumber.GetCompatibleZero().HasAddition();
             var counter2 = thisNumber.GetCompatibleZero().HasAddition();
-            thisNumber.ZoneIterate((node)=>{
+            thisNumber.ZoneIterate((node) =>
+            {
                 counter1.AddOne();
-            }, (node)=>{
+            }, (node) =>
+            {
                 counter2.AddOne();
             }, false);
 
@@ -357,7 +359,7 @@ namespace Arith.Domain.Numbers.Decorations
             {
                 if (object.ReferenceEquals(digit, node))
                     return true;
-                
+
                 pos.AddOne();
                 return false;
             }, true);
@@ -383,7 +385,7 @@ namespace Arith.Domain.Numbers.Decorations
                 if (object.ReferenceEquals(digit, node))
                     digitIdx = idx;
 
-            }, false);
+            });
 
             return digitIdx;
         }
@@ -398,58 +400,24 @@ namespace Arith.Domain.Numbers.Decorations
         /// <param name="towardsZero"></param>
         public static void ZoneIterateWithIndex(this INumeric numeric,
                 Action<IDigitNode, Numeric> postZeroAction,
-                Action<IDigitNode, Numeric> preZeroAction,
-                bool towardsZero = true)
+                Action<IDigitNode, Numeric> preZeroAction)
         {
             if (numeric == null)
                 throw new ArgumentNullException("numeric");
 
-            var zero = numeric.ZerothDigit;
-            var lsd = numeric.LeastSignificantDigit();
-            var msd = numeric.MostSignificantDigit();
+            var counter1 = numeric.GetCompatibleZero().HasAddition();
+            var counter2 = numeric.GetCompatibleOne().HasAddition();
+            counter2.InnerNumeric.SwitchSign();
 
-            if (towardsZero)
+            numeric.ZoneIterate((node) =>
             {
-                Numeric counter1 = null;
-                Numeric counter2 = null;
-                numeric.GetNumericSize(out counter1, out counter2);
-                counter2.SwitchSign();
-                var addCounter1 = counter1.HasAddition();
-                var addCounter2 = counter2.HasAddition();
-
-                //index number range is one less than length/size
-                addCounter1.SubtractOne();
-                addCounter2.SubtractOne();
-
-                numeric.ZoneIterate((node) =>
-                {
-                    postZeroAction(node, counter1);
-                    addCounter1.SubtractOne();
-                }, (node) =>
-                {
-                    preZeroAction(node, counter2);
-                    addCounter2.AddOne();
-                }, true);
-
-            }
-            else
+                postZeroAction(node, counter1.InnerNumeric);
+                counter1.AddOne();
+            }, (node) =>
             {
-                var counter1 = numeric.GetCompatibleZero().HasAddition();
-                var counter2 = numeric.GetCompatibleOne().HasAddition();
-                counter2.InnerNumeric.SwitchSign();
-
-                numeric.ZoneIterate((node) =>
-                {
-                    postZeroAction(node, counter1.InnerNumeric);
-                    counter1.AddOne();
-                }, (node) =>
-                {
-                    preZeroAction(node, counter2.InnerNumeric);
-                    counter2.SubtractOne();
-                }, false);
-
-
-            }
+                preZeroAction(node, counter2.InnerNumeric);
+                counter2.SubtractOne();
+            }, false);
         }
     }
 
@@ -486,9 +454,20 @@ namespace Arith.Domain.Numbers.Decorations
                     int res3 = y - x;
                     Debug.Assert(num2.SymbolsText == res3.ToString());
                     Debug.WriteLine("{0} - {1} = {2}", y, x, res3);
-                    
+
                 }
             }
+
+            var numA = Numeric.New(set, "1234567890");
+            numA.ZoneIterateWithIndex((node, idx) =>
+            {
+                Debug.WriteLine("on number {0} digit {1} idx {2}", numA.SymbolsText,
+                    node.Value.Symbol, idx.SymbolsText);
+            }, (node, idx) =>
+            {
+                Debug.WriteLine("on number {0} digit {1} idx {2}", numA.SymbolsText,
+    node.Value.Symbol, idx.SymbolsText);
+            });
 
 
         }
