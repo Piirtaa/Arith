@@ -286,19 +286,19 @@ namespace Arith.Domain.Numbers.Decorations
             return decoration;
         }
 
-        public static void AddOne(this IHasAddition thisNumber)
+        public static void AddOne(this INumeric thisNumber)
         {
             if (thisNumber == null)
                 throw new ArgumentNullException("thisNumber");
 
-            thisNumber.Add(thisNumber.GetCompatibleOne());
+            thisNumber.HasAddition().Add(thisNumber.GetCompatibleOne());
         }
-        public static void SubtractOne(this IHasAddition thisNumber)
+        public static void SubtractOne(this INumeric thisNumber)
         {
             if (thisNumber == null)
                 throw new ArgumentNullException("thisNumber");
 
-            thisNumber.Subtract(thisNumber.GetCompatibleOne());
+            thisNumber.HasAddition().Subtract(thisNumber.GetCompatibleOne());
         }
 
         /// <summary>
@@ -306,7 +306,7 @@ namespace Arith.Domain.Numbers.Decorations
         /// </summary>
         /// <param name="number"></param>
         /// <param name="action"></param>
-        public static void PerformThisManyTimes(this IHasAddition number, Action<INumeric> action)
+        public static void PerformThisManyTimes(this INumeric number, Action<INumeric> action)
         {
             if (number == null) return;
             if (action == null) throw new ArgumentNullException("action");
@@ -316,9 +316,7 @@ namespace Arith.Domain.Numbers.Decorations
 
             var zero = number.GetCompatibleZero();
 
-            var clone = number.Clone();
-
-            AddingNumericDecoration num = clone.As<AddingNumericDecoration>(true);
+            AddingNumericDecoration num = number.GetInnerNumeric().Clone().HasAddition();
             while (num.IsGreaterThan(zero))
             {
                 action(num);

@@ -99,7 +99,7 @@ namespace Arith.Domain.Numbers.Decorations
             return decoration;
         }
 
-        public static INumeric GetDecimalPlaces(this INumeric thisNumber)
+        public static Numeric GetDecimalPlaces(this INumeric thisNumber)
         {
             if (thisNumber == null)
                 throw new ArgumentNullException("thisNumber");
@@ -107,10 +107,10 @@ namespace Arith.Domain.Numbers.Decorations
             var shifty = thisNumber.Clone().HasShift();
             var places = shifty.ShiftToZero();
 
-            return places;
+            return places.GetInnerNumeric();
         }
         public static void TruncateToDecimalPlaces(this INumeric thisNumber,
-            INumeric places)
+            Numeric places)
         {
             if (thisNumber == null)
                 throw new ArgumentNullException("thisNumber");

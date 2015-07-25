@@ -141,7 +141,7 @@ namespace Arith.Domain.Numbers.Decorations
         /// <param name="thisNumber"></param>
         /// <param name="numShifts"></param>
         /// <returns></returns>
-        public static IHasShift ShiftLeft(this IHasShift thisNumber, IHasAddition numShifts)
+        public static INumeric ShiftLeft(this INumeric thisNumber, INumeric numShifts)
         {
             if (thisNumber == null)
                 throw new ArgumentNullException("thisNumber");
@@ -151,7 +151,7 @@ namespace Arith.Domain.Numbers.Decorations
 
             numShifts.PerformThisManyTimes(c =>
             {
-                thisNumber.ShiftLeft();
+                thisNumber.HasShift().ShiftLeft();
             });
             return thisNumber;
         }
@@ -161,7 +161,7 @@ namespace Arith.Domain.Numbers.Decorations
         /// <param name="thisNumber"></param>
         /// <param name="numShifts"></param>
         /// <returns></returns>
-        public static IHasShift ShiftRight(this IHasShift thisNumber, IHasAddition numShifts)
+        public static INumeric ShiftRight(this INumeric thisNumber, INumeric numShifts)
         {
             if (thisNumber == null)
                 throw new ArgumentNullException("thisNumber");
@@ -171,7 +171,7 @@ namespace Arith.Domain.Numbers.Decorations
 
             numShifts.PerformThisManyTimes(c =>
             {
-                thisNumber.ShiftRight();
+                thisNumber.HasShift().ShiftRight();
             });
             return thisNumber;
         }
@@ -181,7 +181,7 @@ namespace Arith.Domain.Numbers.Decorations
         /// </summary>
         /// <param name="thisNumber"></param>
         /// <returns></returns>
-        public static IHasAddition ShiftToZero(this IHasShift thisNumber)
+        public static Numeric ShiftToZero(this INumeric thisNumber)
         {
             if (thisNumber == null)
                 throw new ArgumentNullException("thisNumber");
@@ -189,10 +189,10 @@ namespace Arith.Domain.Numbers.Decorations
             var counter = thisNumber.GetCompatibleZero().HasAddition();
             while (thisNumber.ZerothDigit.HasPreviousDigit())
             {
-                thisNumber.ShiftRight();
+                thisNumber.HasShift().ShiftRight();
                 counter.AddOne();
             }
-            return counter;
+            return counter.InnerNumeric;
         }
 
     }
