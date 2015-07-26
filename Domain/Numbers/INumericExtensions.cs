@@ -14,6 +14,13 @@ namespace Arith.Domain.Numbers
     public static class INumericExtensions
     {
         #region Compatibility Stuff
+        public static Numeric GetCompatibleEmpty(this INumeric thisNumber)
+        {
+            if (thisNumber == null)
+                throw new ArgumentNullException("thisNumber");
+
+            return new Numeric(thisNumber.NumberSystem, null);
+        }
         /// <summary>
         /// returns a symbolic number with a value of 0 in thisNumber's number system
         /// </summary>

@@ -106,14 +106,14 @@ namespace Arith.Domain.Numbers.Decorations
              toNumberOfDecimalPlaces.SymbolsText);
 
             //build sum
-            var product = dividend.GetCompatibleZero().HasAddition();
+            var product = dividend.GetCompatibleEmpty().HasAddition();
             product.InnerNumeric.IsPositive = dividend.IsPositive;
 
             //shift dividend and divisor to zero, to eliminate clarity with decimal shift handling
             //we'll shift back at the end.  this way we're only dividing whole numbers.
             //also makes the code cleaner
-            var dividendShifts = dividend.HasHooks<IDigit>().HasShift().ShiftToZero();
-            var divisorShifts = divisor.HasHooks<IDigit>().HasShift().ShiftToZero();
+            var dividendShifts = dividend.ShiftToZero();
+            var divisorShifts = divisor.ShiftToZero();
 
             //we use a cloned value of the dividend because it will be subtracted from at each step
             //and we don't want to change the passed in reference object - treat it as if it were a value type
@@ -231,7 +231,7 @@ namespace Arith.Domain.Numbers.Decorations
             //this value to subtract should be less than or equal to the dividend segment shifted by order of mag
             //record the num of times in the product - append lsd
             //change the dividend to be the remainder and recurse
-            subtracted.HasShift().ShiftRight(orderOfMag.HasAddition());
+            subtracted.ShiftRight(orderOfMag);
             var oldDividend = dividend.SymbolsText;
             dividend.HasAddition().Subtract(subtracted);
             product.AddLeastSignificantDigit(count.FirstDigit.Symbol);
@@ -269,10 +269,10 @@ namespace Arith.Domain.Numbers.Decorations
             if (divisor.IsLessThanOrEqual(dividend))
                 return false;
 
-            while (!divisor.IsGreaterThanOrEqual(dividend))
+            while (divisor.IsGreaterThan(dividend))
             {
-                dividend.HasHooks<IDigit>().HasShift().ShiftRight();
-                product.HasHooks<IDigit>().HasShift().ShiftRight();//apply same shift to the product
+                dividend.HasShift().ShiftRight();
+                product.HasShift().ShiftRight();//apply same shift to the product
             }
 
             return true;

@@ -171,6 +171,19 @@ namespace Arith.Domain.Numbers
         #endregion
 
         #region Overrides
+        public override ILinkedListNode<IDigit> InsertNode(ILinkedListNode<IDigit> node, ILinkedListNode<IDigit> before, ILinkedListNode<IDigit> after)
+        {
+            ILinkedListNode<IDigit> rv = null;
+
+            lock (this._stateLock)
+            {
+                rv = base.InsertNode(node, before, after);
+
+                if (this._zerothDigit == null)
+                    this._zerothDigit = this._firstNode as DigitNode;
+            }
+            return rv;
+        }
         public override ILinkedList<IDigit> Remove(ILinkedListNode<IDigit> item)
         {
             if (item == null)

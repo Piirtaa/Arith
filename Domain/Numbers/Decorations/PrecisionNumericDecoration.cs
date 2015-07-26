@@ -104,6 +104,9 @@ namespace Arith.Domain.Numbers.Decorations
             if (thisNumber == null)
                 throw new ArgumentNullException("thisNumber");
 
+            if (thisNumber.IsEmpty())
+                return thisNumber.GetCompatibleZero();
+
             var shifty = thisNumber.Clone().HasShift();
             var places = shifty.ShiftToZero();
 

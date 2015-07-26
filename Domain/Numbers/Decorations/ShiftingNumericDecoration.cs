@@ -83,6 +83,10 @@ namespace Arith.Domain.Numbers.Decorations
         {
             lock (this._stateLock)
             {
+                //inject a zero if we are Empty 
+                if (this.ZerothDigit == null)
+                    this.InnerNumeric.AddLeastSignificantZeroDigit();
+
                 var node = this.ZerothDigit.PreviousNode as DigitNode;
                 if (node == null)
                 {
@@ -105,6 +109,10 @@ namespace Arith.Domain.Numbers.Decorations
         {
             lock (this._stateLock)
             {
+                //inject a zero if we are Empty 
+                if (this.ZerothDigit == null)
+                    this.InnerNumeric.AddLeastSignificantZeroDigit();
+
                 var node = this.ZerothDigit.NextNode as DigitNode;
                 if (node == null)
                 {
@@ -149,10 +157,13 @@ namespace Arith.Domain.Numbers.Decorations
             if (numShifts == null)
                 throw new ArgumentNullException("numShifts");
 
-            numShifts.PerformThisManyTimes(c =>
+            if (!thisNumber.IsEmpty())
             {
-                thisNumber.HasShift().ShiftLeft();
-            });
+                numShifts.PerformThisManyTimes(c =>
+                {
+                    thisNumber.HasShift().ShiftLeft();
+                });
+            }
             return thisNumber;
         }
         /// <summary>
@@ -169,10 +180,13 @@ namespace Arith.Domain.Numbers.Decorations
             if (numShifts == null)
                 throw new ArgumentNullException("numShifts");
 
-            numShifts.PerformThisManyTimes(c =>
+            if (!thisNumber.IsEmpty())
             {
-                thisNumber.HasShift().ShiftRight();
-            });
+                numShifts.PerformThisManyTimes(c =>
+                {
+                    thisNumber.HasShift().ShiftRight();
+                });
+            }
             return thisNumber;
         }
         /// <summary>
@@ -187,10 +201,13 @@ namespace Arith.Domain.Numbers.Decorations
                 throw new ArgumentNullException("thisNumber");
 
             var counter = thisNumber.GetCompatibleZero().HasAddition();
-            while (thisNumber.ZerothDigit.HasPreviousDigit())
+            if (!thisNumber.IsEmpty())
             {
-                thisNumber.HasShift().ShiftRight();
-                counter.AddOne();
+                while (thisNumber.ZerothDigit.HasPreviousDigit())
+                {
+                    thisNumber.HasShift().ShiftRight();
+                    counter.AddOne();
+                }
             }
             return counter.InnerNumeric;
         }
