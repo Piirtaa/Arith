@@ -43,7 +43,8 @@ namespace Arith.Domain.Numbers
         /// </summary>
         /// <param name="thisNumber"></param>
         /// <returns></returns>
-        public static Numeric GetCompatibleNumber(this INumeric thisNumber, string number)
+        public static Numeric GetCompatibleNumber(this INumeric thisNumber,
+            string number)
         {
             if (thisNumber == null)
                 throw new ArgumentNullException("thisNumber");
@@ -56,7 +57,8 @@ namespace Arith.Domain.Numbers
         /// <param name="thisNumber"></param>
         /// <param name="number"></param>
         /// <returns></returns>
-        public static bool HasCompatibleNumberSystem(this INumeric thisNumber, INumeric number)
+        public static bool HasCompatibleNumberSystem(this INumeric thisNumber,
+            INumeric number)
         {
             if (thisNumber == null)
                 throw new ArgumentNullException("thisNumber");
@@ -69,6 +71,11 @@ namespace Arith.Domain.Numbers
         #endregion
 
         #region Inner Numeric
+        /// <summary>
+        /// finds the inner Numeric instance
+        /// </summary>
+        /// <param name="thisNumber"></param>
+        /// <returns></returns>
         public static Numeric GetInnerNumeric(this INumeric thisNumber)
         {
             if (thisNumber == null)
@@ -280,7 +287,7 @@ namespace Arith.Domain.Numbers
         /// <param name="digit"></param>
         /// <param name="toMSD"></param>
         /// <returns></returns>
-        public static Numeric Trim(this Numeric numeric,
+        public static Numeric Trim(this INumeric numeric,
             DigitNode digit, bool toMSD)
         {
             var rv = Numeric.New(numeric.NumberSystem, null);

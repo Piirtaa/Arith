@@ -88,8 +88,8 @@ namespace Arith.Domain.Numbers.Decorations
         /// <param name="divisor"></param>
         /// <param name="toNumberOfDecimalPlaces"></param>
         /// <returns></returns>
-        public static Numeric DivideWithPrecision(Numeric dividend, Numeric divisor,
-            Numeric toNumberOfDecimalPlaces)
+        public static Numeric DivideWithPrecision(INumeric dividend, INumeric divisor,
+            INumeric toNumberOfDecimalPlaces)
         {
             if (dividend == null)
                 throw new ArgumentNullException("dividend");
@@ -119,9 +119,9 @@ namespace Arith.Domain.Numbers.Decorations
             //and we don't want to change the passed in reference object - treat it as if it were a value type
             recursiveDivideStep(
                 dividend.Clone() as Numeric,
-                divisor,
+                divisor.GetInnerNumeric(),
                 product.InnerNumeric,
-                toNumberOfDecimalPlaces);
+                toNumberOfDecimalPlaces.GetInnerNumeric());
 
             //shift back
             product.HasShift().ShiftLeft(dividendShifts).ShiftLeft(divisorShifts);
@@ -346,7 +346,7 @@ namespace Arith.Domain.Numbers.Decorations
 
     public static class DividingNumberDecorationExtensions
     {
-        public static DividingNumericDecoration HasDivision(this object number, INumeric decimalPlaces)
+        public static DividingNumericDecoration HasDivision(this object number, Numeric decimalPlaces)
         {
             var decoration = number.ApplyDecorationIfNotPresent<DividingNumericDecoration>(x =>
             {
@@ -370,7 +370,7 @@ namespace Arith.Domain.Numbers.Decorations
         /// </summary>
         /// <param name="numeric"></param>
         /// <param name="filter"></param>
-        public static void IterateMSDs(this Numeric numeric,
+        public static void IterateMSDs(this INumeric numeric,
             Func<Numeric, Numeric, bool> filter)
         {
             numeric.Filter(node =>

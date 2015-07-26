@@ -13,7 +13,7 @@ namespace Arith.Domain.Numbers.Decorations
 {
     public interface IHasPrecision : INumericDecoration
     {
-        INumeric DecimalPlaces { get; set; }
+        Numeric DecimalPlaces { get; set; }
     }
 
     public class PrecisionNumericDecoration : NumericDecorationBase, 
@@ -30,13 +30,13 @@ namespace Arith.Domain.Numbers.Decorations
             if (decimalPlaces == null)
                 throw new ArgumentNullException("decimalPlaces");
 
-            this.DecimalPlaces = decimalPlaces;
+            this.DecimalPlaces = decimalPlaces.GetInnerNumeric();
 
             var hookDecoration = this.AsBelow<HookedLinkedListDecoration<IDigit>>(false);
             hookDecoration.AppendPostMutateStrategy((x) =>
             {
                 //now ensure we don't have more than the specified decimal places
-                this.InnerNumeric.TruncateToDecimalPlaces(this.DecimalPlaces);
+                this.TruncateToDecimalPlaces(this.DecimalPlaces);
             });
 
 
@@ -77,7 +77,7 @@ namespace Arith.Domain.Numbers.Decorations
         #endregion
 
         #region Properties
-        public INumeric DecimalPlaces { get; set; }
+        public Numeric DecimalPlaces { get; set; }
         #endregion
     }
 
@@ -94,7 +94,7 @@ namespace Arith.Domain.Numbers.Decorations
             });
 
             //update precision with passed in value
-            decoration.DecimalPlaces = decimalPlaces;
+            decoration.DecimalPlaces = decimalPlaces.GetInnerNumeric();
 
             return decoration;
         }

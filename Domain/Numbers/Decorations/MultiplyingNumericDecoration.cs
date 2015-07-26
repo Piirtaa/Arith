@@ -161,7 +161,7 @@ namespace Arith.Domain.Numbers.Decorations
                 var argShifts = arg.ShiftToZero();
                 var thisNumShifts = thisNum.ShiftToZero();
 
-                this.InnerNumeric.ZoneIterateWithIndex((thisDigit, thisIdx) =>
+                this.ZoneIterateWithIndex((thisDigit, thisIdx) =>
                 {
                     arg.ZoneIterateWithIndex((argDigit, argIdx) =>
                     {

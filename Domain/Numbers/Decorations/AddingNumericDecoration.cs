@@ -306,7 +306,8 @@ namespace Arith.Domain.Numbers.Decorations
         /// </summary>
         /// <param name="number"></param>
         /// <param name="action"></param>
-        public static void PerformThisManyTimes(this INumeric number, Action<INumeric> action)
+        public static void PerformThisManyTimes(this INumeric number,
+            Action<INumeric> action)
         {
             if (number == null) return;
             if (action == null) throw new ArgumentNullException("action");
@@ -323,7 +324,15 @@ namespace Arith.Domain.Numbers.Decorations
                 num.SubtractOne();
             }
         }
-        public static void GetNumericSize(this INumeric thisNumber, out Numeric wholeNumberLength,
+
+        /// <summary>
+        /// returns the lengths of the number
+        /// </summary>
+        /// <param name="thisNumber"></param>
+        /// <param name="wholeNumberLength"></param>
+        /// <param name="decimalLength"></param>
+        public static void GetNumericSize(this INumeric thisNumber, 
+            out Numeric wholeNumberLength,
             out Numeric decimalLength)
         {
             if (thisNumber == null)
@@ -349,7 +358,8 @@ namespace Arith.Domain.Numbers.Decorations
         /// <param name="numeric"></param>
         /// <param name="node"></param>
         /// <returns></returns>
-        public static Numeric GetDigitPosition(this Numeric numeric, DigitNode digit)
+        public static Numeric GetDigitPosition(this INumeric numeric, 
+            DigitNode digit)
         {
             var pos = numeric.GetCompatibleZero().HasAddition();
 
@@ -371,7 +381,8 @@ namespace Arith.Domain.Numbers.Decorations
         /// <param name="numeric"></param>
         /// <param name="digit"></param>
         /// <returns></returns>
-        public static Numeric GetDigitMagnitude(this Numeric numeric, DigitNode digit)
+        public static Numeric GetDigitMagnitude(this INumeric numeric,
+            DigitNode digit)
         {
             Numeric digitIdx = null;
             numeric.ZoneIterateWithIndex((node, idx) =>
