@@ -182,7 +182,7 @@ namespace Arith.Domain.Numbers.Decorations
                 var shifty = sum.AsBelow<IHasShift>(false);
                 shifty.ShiftLeft(argShifts).ShiftLeft(thisNumShifts);
 
-                this.InnerNumeric.SetValue(sum);
+                this.DecoratedOf.SetValue(sum);
             }
         }
         #endregion

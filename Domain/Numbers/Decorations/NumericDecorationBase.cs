@@ -12,9 +12,13 @@ namespace Arith.Domain.Numbers.Decorations
 {
     /// <summary>
     /// defines numeric decoration as NOT constraining decorated to being INumeric,
-    /// only that decorated has INumeric somewhere in its cake
+    /// only that decorated has INumeric somewhere in its cake.  Also, the innermost
+    /// decorated MUST be an instance of Numeric - it's to enforce "naturalness" aka
+    /// its nature is known and understood - has an anti-corruption quality.
     /// </summary>
-    public interface INumericDecoration : INumeric, IDecoration { }
+    public interface INumericDecoration : INumeric, IDecoration,
+        IDecorationOf<INumeric>
+    { }
 
     public abstract class NumericDecorationBase : DecorationBase,
         INumericDecoration
@@ -41,6 +45,13 @@ namespace Arith.Domain.Numbers.Decorations
         }
         #endregion
 
+        #region IDecoratedOf
+        public INumeric DecoratedOf
+        {
+            get { return this.Decorated.AsBelow<INumeric>(false); }
+        }
+        #endregion
+
         #region INumeric
         /// <summary>
         /// Returns the inner, undecorated numeric
@@ -49,6 +60,16 @@ namespace Arith.Domain.Numbers.Decorations
         {
             get { return this.Inner as Numeric; }
         }
+
+        /*Note: the INumeric members that are "immutable of implementation" are those
+         * that reflect the underlying Numeric structure, and are NOT marked as 
+         * virtual, nor do they operate on the DecoratedOf (next INumeric down the
+         * cake).
+         * 
+         * Those behavioural members that we want the cake to interact with, we
+         * mark virtual and operate on DecoratedOf
+         */ 
+
         public NumeralSet NumberSystem { get { return this.InnerNumeric.NumberSystem; } }
         public bool IsPositive { get { return this.InnerNumeric.IsPositive; } }
         public string SymbolsText { get { return this.InnerNumeric.SymbolsText; } }
@@ -57,9 +78,15 @@ namespace Arith.Domain.Numbers.Decorations
             if (!this.IsDecorationEnabled)
                 throw new InvalidOperationException("decoration disabled");
 
-            this.InnerNumeric.SetValue(number); 
+            this.DecoratedOf.SetValue(number); 
         }
+        public virtual void SetValue(INumeric number)
+        {
+            if (!this.IsDecorationEnabled)
+                throw new InvalidOperationException("decoration disabled");
 
+            this.DecoratedOf.SetValue(number);
+        }
         public IDigitNode ZerothDigit { get { return this.InnerNumeric.ZerothDigit; } }
         /// <summary>
         /// false = this is less, true= this is greater, null = equal

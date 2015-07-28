@@ -76,7 +76,7 @@ namespace Arith.Domain.Numbers.Decorations
         private void FireMutateStrategy(MutationMode mode, string oldValue)
         {
             if (this.PostMutateStrategy != null)
-                this.PostMutateStrategy(this.InnerDigitNode, oldValue, mode);
+                this.PostMutateStrategy(this.DecoratedOf, oldValue, mode);
         }
 
         #endregion
@@ -84,73 +84,37 @@ namespace Arith.Domain.Numbers.Decorations
         #region IDigitNodeDecoration
         public override void SetValue(string symbol)
         {
-            string oldValue = this.InnerDigitNode.Symbol;
+            string oldValue = this.DecoratedOf.Value.Symbol;
             base.SetValue(symbol);
             this.FireMutateStrategy(MutationMode.Set, oldValue);
         }
         public override bool Add(string symbol)
         {
-            string oldValue = this.InnerDigitNode.Symbol;
+            string oldValue = this.DecoratedOf.Value.Symbol;
             var rv = base.Add(symbol);
             this.FireMutateStrategy(MutationMode.Set, oldValue);
             return rv;
         }
         public override bool Subtract(string symbol)
         {
-            string oldValue = this.InnerDigitNode.Symbol;
+            string oldValue = this.DecoratedOf.Value.Symbol;
             var rv = base.Subtract(symbol);
             this.FireMutateStrategy(MutationMode.Set, oldValue);
             return rv;
         }
         public override bool AddOne()
         {
-            string oldValue = this.InnerDigitNode.Symbol;
+            string oldValue = this.DecoratedOf.Value.Symbol;
             var rv = base.AddOne();
             this.FireMutateStrategy(MutationMode.Set, oldValue);
             return rv;
         }
         public override bool SubtractOne()
         {
-            string oldValue = this.InnerDigitNode.Symbol;
+            string oldValue = this.DecoratedOf.Value.Symbol;
             var rv = base.SubtractOne();
             this.FireMutateStrategy(MutationMode.Set, oldValue);
             return rv;
-        }
-        #endregion
-
-        #region ILinkedListNode
-        public IDigit Value
-        {
-            get { return this.InnerDigitNode.Value; }
-        }
-
-        public ILinkedListNode<IDigit> NextNode
-        {
-            get
-            {
-                return this.InnerDigitNode.NextNode;
-            }
-            set
-            {
-                this.InnerDigitNode.NextNode = value;
-            }
-        }
-
-        public ILinkedListNode<IDigit> PreviousNode
-        {
-            get
-            {
-                return this.InnerDigitNode.PreviousNode;
-            }
-            set
-            {
-                this.InnerDigitNode.PreviousNode = value;
-            }
-        }
-
-        public ILinkedList<IDigit> ParentList
-        {
-            get { return this.InnerDigitNode.ParentList; }
         }
         #endregion
     }
@@ -166,6 +130,5 @@ namespace Arith.Domain.Numbers.Decorations
 
             return decoration;
         }
-
     }
  }

@@ -76,7 +76,7 @@ namespace Arith.Domain.Numbers.Decorations
                     this.GetCompatibleNumber(number),
                     this.As<IHasPrecision>(false).DecimalPlaces as Numeric);
 
-                this.InnerNumeric.SetValue(rv);
+                this.DecoratedOf.SetValue(rv);
             }
         }
         #endregion

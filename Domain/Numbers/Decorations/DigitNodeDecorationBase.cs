@@ -10,7 +10,9 @@ using Arith.Domain.Digits;
 
 namespace Arith.Domain.Numbers.Decorations
 {
-    public interface IDigitNodeDecoration : IDigitNode, IDecoration { }
+    public interface IDigitNodeDecoration : IDigitNode, IDecoration,
+        IDecorationOf<IDigitNode>
+    { }
 
     public abstract class DigitNodeDecorationBase : DecorationBase,
         IDigitNodeDecoration
@@ -19,9 +21,6 @@ namespace Arith.Domain.Numbers.Decorations
         public DigitNodeDecorationBase(object decorated)
             : base(decorated)
         {
-            var inner = decorated.GetInnerDecorated();
-            if(!(inner is DigitNode))
-                throw new InvalidOperationException("decorated does not have inner DigitNode");
 
         }
         #endregion
@@ -37,27 +36,30 @@ namespace Arith.Domain.Numbers.Decorations
         }
         #endregion
 
-        #region IDigitNode
+        #region IDecoratedOf
         /// <summary>
-        /// Returns the inner, undecorated digit node
+        /// gets the first linked list below this
         /// </summary>
-        public DigitNode InnerDigitNode
+        public IDigitNode DecoratedOf
         {
-            get { return this.Inner as DigitNode; }
+            get { return this.Decorated.AsBelow<IDigitNode>(false); }
         }
+        #endregion
+
+        #region IDigitNode
         public virtual void SetValue(string symbol)
         {
             if (!this.IsDecorationEnabled)
                 throw new InvalidOperationException("decoration disabled");
 
-            this.InnerDigitNode.SetValue(symbol); 
+            this.DecoratedOf.SetValue(symbol);
         }
         public virtual bool Add(string symbol)
         {
             if (!this.IsDecorationEnabled)
                 throw new InvalidOperationException("decoration disabled");
 
-            var rv = this.InnerDigitNode.Add(symbol);
+            var rv = this.DecoratedOf.Add(symbol);
             return rv;
         }
         public virtual bool Subtract(string symbol)
@@ -65,7 +67,7 @@ namespace Arith.Domain.Numbers.Decorations
             if (!this.IsDecorationEnabled)
                 throw new InvalidOperationException("decoration disabled");
 
-            var rv = this.InnerDigitNode.Subtract(symbol);
+            var rv = this.DecoratedOf.Subtract(symbol);
             return rv;
         }
         public virtual bool AddOne()
@@ -73,7 +75,7 @@ namespace Arith.Domain.Numbers.Decorations
             if (!this.IsDecorationEnabled)
                 throw new InvalidOperationException("decoration disabled");
 
-            var rv = this.InnerDigitNode.AddOne();
+            var rv = this.DecoratedOf.AddOne();
             return rv;
         }
         public virtual bool SubtractOne()
@@ -81,11 +83,46 @@ namespace Arith.Domain.Numbers.Decorations
             if (!this.IsDecorationEnabled)
                 throw new InvalidOperationException("decoration disabled");
 
-            var rv = this.InnerDigitNode.SubtractOne();
+            var rv = this.DecoratedOf.SubtractOne();
             return rv;
         }
         #endregion
 
-       
+
+        #region ILinkedListNode
+        public virtual IDigit Value
+        {
+            get { return this.DecoratedOf.Value; }
+        }
+
+        public virtual ILinkedListNode<IDigit> NextNode
+        {
+            get
+            {
+                return this.DecoratedOf.NextNode;
+            }
+            set
+            {
+                this.DecoratedOf.NextNode = value;
+            }
+        }
+
+        public virtual ILinkedListNode<IDigit> PreviousNode
+        {
+            get
+            {
+                return this.DecoratedOf.PreviousNode;
+            }
+            set
+            {
+                this.DecoratedOf.PreviousNode = value;
+            }
+        }
+
+        public virtual ILinkedList<IDigit> ParentList
+        {
+            get { return this.DecoratedOf.ParentList; }
+        }
+        #endregion
     }
 }

@@ -18,8 +18,17 @@ namespace Arith.Domain.Numbers
         /// the number in symbolic form
         /// </summary>
         string SymbolsText { get; }
+        /// <summary>
+        /// sets the value from a string
+        /// </summary>
+        /// <param name="number"></param>
         void SetValue(string number);
-
+        /// <summary>
+        /// sets the value from a numeric.  Note: in any decorations that mutate numeric state
+        /// this method should be called last - this will ensure interception of mutation
+        /// </summary>
+        /// <param name="number"></param>
+        void SetValue(INumeric number);
         IDigitNode ZerothDigit { get; }
 
         /// <summary>

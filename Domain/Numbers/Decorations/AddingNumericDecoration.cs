@@ -81,12 +81,10 @@ namespace Arith.Domain.Numbers.Decorations
 
             //if (!this.HasCompatibleNumberSystem(numeric))
             //    throw new InvalidOperationException("incompatible number system");
-
-            bool isClone = false;
-            var val = Add(this, numeric, out isClone);
-
-            if (isClone)
-                this.As<Numeric>().SetValue(val);
+            var num2 = numeric.GetInnerNumeric().Clone();
+            var num1 = this.GetInnerNumeric().Clone();
+            var val = Add(num1, num2);
+            this.DecoratedOf.SetValue(val);
         }
         public void Subtract(INumeric numeric)
         {
@@ -95,15 +93,11 @@ namespace Arith.Domain.Numbers.Decorations
 
             //if (!this.HasCompatibleNumberSystem(numeric))
             //    throw new InvalidOperationException("incompatible number system");
-
-
-            numeric.As<Numeric>().SwitchSign();
-            bool isClone = false;
-            var val = Add(this, numeric, out isClone);
-            numeric.As<Numeric>().SwitchSign(); //we don't want to return a modified arg
-
-            if (isClone)
-                this.As<Numeric>().SetValue(val);
+            var num2 = numeric.GetInnerNumeric().Clone() as Numeric;
+            num2.SwitchSign();
+            var num1 = this.GetInnerNumeric().Clone();
+            var val = Add(num1, num2);
+            this.DecoratedOf.SetValue(val);
         }
         #endregion
 
@@ -116,14 +110,10 @@ namespace Arith.Domain.Numbers.Decorations
         /// <param name="setValueIndicated">this is true if the return value is a clone and not the 
         /// same instance as number1</param>
         /// <returns></returns>
-        private static INumeric Add(INumeric number1, INumeric number2, out bool isReplace)
+        private static INumeric Add(INumeric number1, INumeric number2)
         {
-            //the default value is false, as most cases don't need a clone operation
-            isReplace = false;
-
             if (number1 == null)
             {
-                isReplace = true;
                 return number2;
             }
             if (number2 == null)
@@ -132,8 +122,8 @@ namespace Arith.Domain.Numbers.Decorations
             INumeric rv = null;
 
             //determine the longer number
-            bool? num1IsLonger = Numeric.AbsoluteValueCompare(number1.As<Numeric>(),
-                number2.As<Numeric>());
+            bool? num1IsLonger = Numeric.AbsoluteValueCompare(number1.GetInnerNumeric(),
+                number2.GetInnerNumeric());
 
             //note: below we clone the 2nd arg if it is being modified as part of the operation
             //we don't clone the 1st arg as it is 
@@ -152,10 +142,8 @@ namespace Arith.Domain.Numbers.Decorations
                         rv = Decrement(number1, number2);
                         break;
                     case false:
-                        isReplace = true;
-                        var cloneNum2 = number2.Clone();
-                        rv = Decrement(cloneNum2, number1);
-                        rv.As<Numeric>().IsPositive = false;
+                        rv = Decrement(number2, number1);
+                        rv.GetInnerNumeric().IsPositive = false;
                         break;
                 }
             }
@@ -170,16 +158,15 @@ namespace Arith.Domain.Numbers.Decorations
                         rv = Decrement(number1, number2);
                         break;
                     case false:
-                        isReplace = true;
-                        rv = Decrement(number2.Clone(), number1);
-                        rv.As<Numeric>().IsPositive = true;
+                        rv = Decrement(number2, number1);
+                        rv.GetInnerNumeric().IsPositive = true;
                         break;
                 }
             }
             else if (number1.IsPositive == false && number2.IsPositive == false)
             {
                 rv = Increment(number1, number2);
-                rv.As<Numeric>().IsPositive = false;
+                rv.GetInnerNumeric().IsPositive = false;
             }
 
             return rv;
@@ -508,7 +495,7 @@ namespace Arith.Domain.Numbers.Decorations
                         rv = rv.PreviousDigit();
                 });
             }
-          
+
             return rv;
         }
 

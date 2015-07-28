@@ -27,7 +27,6 @@ namespace Arith.Domain.Numbers.Decorations
     }
 
     public class ShiftNumericDecoration : NumericDecorationBase, IHasShift
-        , IIsA<HookedLinkedListDecoration<IDigit>>
     {
         #region Declarations
         private readonly object _stateLock = new object();
@@ -83,22 +82,22 @@ namespace Arith.Domain.Numbers.Decorations
         {
             lock (this._stateLock)
             {
-                //inject a zero if we are Empty 
-                if (this.ZerothDigit == null)
-                    this.InnerNumeric.AddLeastSignificantZeroDigit();
+                var clone = this.GetInnerNumeric().Clone() as Numeric;
 
-                var node = this.ZerothDigit.PreviousDigit();
+                //inject a zero if we are Empty 
+                if (clone.ZerothDigit == null)
+                    clone.AddLeastSignificantZeroDigit();
+
+                var node = clone.ZerothDigit.PreviousDigit();
                 if (node == null)
                 {
-                    node = this.InnerNumeric.AddLeastSignificantZeroDigit();
+                    node = clone.AddLeastSignificantZeroDigit();
                 }
 
                 //move the decimal
-                this.InnerNumeric.ZerothDigit = node;
+                clone.ZerothDigit = node;
 
-                //run hooks
-                var hookDecoration = this.AsBelow<HookedLinkedListDecoration<IDigit>>(false);
-                hookDecoration.RunPostMutateHook();
+                this.DecoratedOf.SetValue(clone);
             }
         }
         /// <summary>
@@ -109,22 +108,22 @@ namespace Arith.Domain.Numbers.Decorations
         {
             lock (this._stateLock)
             {
-                //inject a zero if we are Empty 
-                if (this.ZerothDigit == null)
-                    this.InnerNumeric.AddLeastSignificantZeroDigit();
+                var clone = this.GetInnerNumeric().Clone() as Numeric;
 
-                var node = this.ZerothDigit.NextDigit();
+                //inject a zero if we are Empty 
+                if (clone.ZerothDigit == null)
+                    clone.AddLeastSignificantZeroDigit();
+
+                var node = clone.ZerothDigit.NextDigit();
                 if (node == null)
                 {
-                    node = this.InnerNumeric.AddMostSignificantZeroDigit();
+                    node = clone.AddMostSignificantZeroDigit();
                 }
 
                 //move the decimal
-                this.InnerNumeric.ZerothDigit = node;
+                clone.ZerothDigit = node;
 
-                //run hooks
-                var hookDecoration = this.AsBelow<HookedLinkedListDecoration<IDigit>>(false);
-                hookDecoration.RunPostMutateHook();
+                this.DecoratedOf.SetValue(clone);
             }
         }
         #endregion
@@ -137,7 +136,7 @@ namespace Arith.Domain.Numbers.Decorations
             var decoration = number.ApplyDecorationIfNotPresent<ShiftNumericDecoration>(x =>
             {
                 //note the hooking injection
-                return ShiftNumericDecoration.New(number.HasHooks<IDigit>().Outer);
+                return ShiftNumericDecoration.New(number);
             });
 
             return decoration;

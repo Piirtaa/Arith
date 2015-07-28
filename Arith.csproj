@@ -54,6 +54,15 @@
     <Compile Include="DataStructures\Interfaces.cs" />
     <Compile Include="DataStructures\Decorations\LinkedListDecorationBase.cs" />
     <Compile Include="Domain\Digits\Interfaces.cs" />
+    <Compile Include="Domain\Numbers\Decorations\DigitNodeDecorationBase.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Domain\Numbers\Decorations\HookingDigitNodeDecoration.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Domain\Numbers\Decorations\HookingDigitNumericDecoration.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Domain\Numbers\DigitNodeDecoration.cs" />
     <Compile Include="Domain\Numbers\Decorations\AddingNumericDecoration.cs" />
     <Compile Include="Domain\Numbers\Decorations\DividingNumericDecoration.cs">

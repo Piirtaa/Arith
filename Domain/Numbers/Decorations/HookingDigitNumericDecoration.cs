@@ -106,7 +106,7 @@ namespace Arith.Domain.Numbers.Decorations
             var numA = Numeric.New(set, "1234567890.246").HasHookingDigits();
             numA.PostMutateStrategy = (digit, oldSymbol, mode) =>
             {
-                var orderOfMag = numA.GetDigitMagnitude(digit as DigitNode);
+                var orderOfMag = numA.GetDigitMagnitude(digit);
                 Debug.WriteLine("in number {0}, digit @ pos {1} changed from {2} to {3} via {4}",
                     numA.SymbolsText,
                     orderOfMag.SymbolsText,
