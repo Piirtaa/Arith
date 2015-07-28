@@ -34,10 +34,15 @@ namespace Arith.Domain.Numbers
     }
 
     /// <summary>
-    /// extends node interface, upon which some extensions can work
+    /// extends node interface, applying a digit behaviour
     /// </summary>
     public interface IDigitNode : ILinkedListNode<IDigit>
     {
+        void SetValue(string symbol);
+        bool Add(string symbol);
+        bool Subtract(string symbol);
+        bool AddOne();
+        bool SubtractOne();
     }
 
 

@@ -7,6 +7,7 @@ using System.Text;
 using Arith.DataStructures;
 using Arith.Decorating;
 using Arith.Domain.Digits;
+using Arith.Extensions;
 
 namespace Arith.Domain.Numbers.Decorations
 {
@@ -197,32 +198,32 @@ namespace Arith.Domain.Numbers.Decorations
                 throw new ArgumentNullException("number2");
 
             //the add process
-            var addNode1 = number1.ZerothDigit as DigitNode;
-            var addNode2 = number2.ZerothDigit as DigitNode;
+            var addNode1 = number1.ZerothDigit;
+            var addNode2 = number2.ZerothDigit;
 
             //add after the decimal
             while (addNode2 != null)
             {
                 addNode1.Add(addNode2.Value.Symbol);
 
-                addNode2 = addNode2.NextNode as DigitNode;
+                addNode2 = addNode2.NextNode as IDigitNode;
                 if (addNode2 != null)
-                    addNode1 = addNode1.LoadNextDigit;
+                    addNode1 = addNode1.LoadNextDigit();
             }
 
             //add before the decimal
-            addNode2 = number2.ZerothDigit.PreviousNode as DigitNode;
+            addNode2 = number2.ZerothDigit.PreviousDigit();
 
             if (addNode2 != null)
-                addNode1 = (number1.ZerothDigit as DigitNode).LoadPreviousDigit;
+                addNode1 = (number1.ZerothDigit).LoadPreviousDigit();
 
             while (addNode2 != null)
             {
-                addNode1.Value.Add(addNode2.Symbol);
+                addNode1.Value.Add(addNode2.Value.Symbol);
 
-                addNode2 = addNode2.PreviousNode as DigitNode;
+                addNode2 = addNode2.PreviousDigit();
                 if (addNode2 != null)
-                    addNode1 = addNode1.LoadPreviousDigit;
+                    addNode1 = addNode1.LoadPreviousDigit();
             }
             return number1;
         }
@@ -241,32 +242,32 @@ namespace Arith.Domain.Numbers.Decorations
                 throw new ArgumentNullException("number2");
 
             //the add process
-            var addNode1 = number1.ZerothDigit as DigitNode;
-            var addNode2 = number2.ZerothDigit as DigitNode;
+            var addNode1 = number1.ZerothDigit;
+            var addNode2 = number2.ZerothDigit;
 
             //add after the decimal
             while (addNode2 != null)
             {
-                addNode1.Subtract(addNode2.Symbol);
+                addNode1.Subtract(addNode2.Value.Symbol);
 
-                addNode2 = addNode2.NextNode as DigitNode;
+                addNode2 = addNode2.NextDigit();
                 if (addNode2 != null)
-                    addNode1 = addNode1.LoadNextDigit;
+                    addNode1 = addNode1.LoadNextDigit();
             }
 
             //add before the decimal
-            addNode2 = number2.ZerothDigit.PreviousNode as DigitNode;
+            addNode2 = number2.ZerothDigit.PreviousDigit();
 
             if (addNode2 != null)
-                addNode1 = (number1.ZerothDigit as DigitNode).LoadPreviousDigit;
+                addNode1 = number1.ZerothDigit.LoadPreviousDigit();
 
             while (addNode2 != null)
             {
-                addNode1.Value.Subtract(addNode2.Symbol);
+                addNode1.Value.Subtract(addNode2.Value.Symbol);
 
-                addNode2 = addNode2.PreviousNode as DigitNode;
+                addNode2 = addNode2.PreviousDigit();
                 if (addNode2 != null)
-                    addNode1 = addNode1.LoadPreviousDigit;
+                    addNode1 = addNode1.LoadPreviousDigit();
             }
             return number1;
         }
@@ -331,7 +332,7 @@ namespace Arith.Domain.Numbers.Decorations
         /// <param name="thisNumber"></param>
         /// <param name="wholeNumberLength"></param>
         /// <param name="decimalLength"></param>
-        public static void GetNumericSize(this INumeric thisNumber, 
+        public static void GetNumericLengths(this INumeric thisNumber,
             out Numeric wholeNumberLength,
             out Numeric decimalLength)
         {
@@ -351,19 +352,23 @@ namespace Arith.Domain.Numbers.Decorations
             wholeNumberLength = counter1.InnerNumeric;
             decimalLength = counter2.InnerNumeric;
         }
+
         /// <summary>
         /// returns the position of the node.  zero is the first node.  irrespective of
         /// zeroth node/decimal place
         /// </summary>
-        /// <param name="numeric"></param>
+        /// <param name="thisNumber"></param>
         /// <param name="node"></param>
         /// <returns></returns>
-        public static Numeric GetDigitPosition(this INumeric numeric, 
-            DigitNode digit)
+        public static Numeric GetDigitPosition(this INumeric thisNumber,
+            IDigitNode digit)
         {
-            var pos = numeric.GetCompatibleZero().HasAddition();
+            if (thisNumber == null)
+                throw new ArgumentNullException("thisNumber");
 
-            numeric.Filter((node) =>
+            var pos = thisNumber.GetCompatibleZero().HasAddition();
+
+            thisNumber.Filter((node) =>
             {
                 if (object.ReferenceEquals(digit, node))
                     return true;
@@ -374,18 +379,22 @@ namespace Arith.Domain.Numbers.Decorations
 
             return pos.InnerNumeric;
         }
+
         /// <summary>
         /// 0 is Zeroth, positive values are post-decimal digits, negative values are
         /// pre-decimal digits
         /// </summary>
-        /// <param name="numeric"></param>
+        /// <param name="thisNumber"></param>
         /// <param name="digit"></param>
         /// <returns></returns>
-        public static Numeric GetDigitMagnitude(this INumeric numeric,
-            DigitNode digit)
+        public static Numeric GetDigitMagnitude(this INumeric thisNumber,
+            IDigitNode digit)
         {
+            if (thisNumber == null)
+                throw new ArgumentNullException("thisNumber");
+
             Numeric digitIdx = null;
-            numeric.ZoneIterateWithIndex((node, idx) =>
+            thisNumber.ZoneIterateWithIndex((node, idx) =>
             {
                 if (object.ReferenceEquals(digit, node))
                     digitIdx = idx;
@@ -398,28 +407,29 @@ namespace Arith.Domain.Numbers.Decorations
 
             return digitIdx;
         }
+
         /// <summary>
         /// zone iterates but includes the index as an additional strategy argument.
         /// 0 is Zeroth, positive values are post-decimal digits, negative values are
         /// pre-decimal digits
         /// </summary>
-        /// <param name="numeric"></param>
+        /// <param name="thisNumber"></param>
         /// <param name="postZeroAction"></param>
         /// <param name="preZeroAction"></param>
         /// <param name="towardsZero"></param>
-        public static void ZoneIterateWithIndex(this INumeric numeric,
+        public static void ZoneIterateWithIndex(this INumeric thisNumber,
                 Action<IDigitNode, Numeric> postZeroAction,
                 Action<IDigitNode, Numeric> preZeroAction)
         {
-            if (numeric == null)
-                throw new ArgumentNullException("numeric");
+            if (thisNumber == null)
+                throw new ArgumentNullException("thisNumber");
 
-            var counter1 = numeric.GetCompatibleZero().HasAddition();
-            var counter2 = numeric.GetCompatibleOne().HasAddition();
+            var counter1 = thisNumber.GetCompatibleZero().HasAddition();
+            var counter2 = thisNumber.GetCompatibleOne().HasAddition();
             counter2.InnerNumeric.SwitchSign();
 
             //note we iterate from zeroth outwards to msd to facilitate counting the index 
-            numeric.ZoneIterate((node) =>
+            thisNumber.ZoneIterate((node) =>
             {
                 postZeroAction(node, counter1.InnerNumeric.Clone() as Numeric);
                 counter1.AddOne();
@@ -428,6 +438,86 @@ namespace Arith.Domain.Numbers.Decorations
                 preZeroAction(node, counter2.InnerNumeric.Clone() as Numeric);
                 counter2.SubtractOne();
             }, false);
+        }
+
+        /// <summary>
+        /// creates a number using a digit and an order of magnitude
+        /// </summary>
+        /// <param name="orderOfMag"></param>
+        /// <param name="digit"></param>
+        /// <returns></returns>
+        public static Numeric GetNumberAtMagnitude(this Numeric orderOfMag, string digit)
+        {
+            if (orderOfMag == null)
+                throw new ArgumentNullException("orderOfMag");
+
+            Numeric rv = orderOfMag.GetCompatibleNumber(digit);
+
+            if (orderOfMag.IsEqualTo(orderOfMag.GetCompatibleZero()))
+                return rv;
+
+            if (orderOfMag.IsPositive)
+            {
+                rv.ShiftRight(orderOfMag);
+            }
+            else
+            {
+                var o = orderOfMag.Clone() as Numeric;
+                o.SwitchSign();
+                rv.ShiftLeft(o);
+            }
+
+            return rv;
+        }
+
+        /// <summary>
+        /// creates a number using a digit and an order of magnitude
+        /// </summary>
+        /// <param name="orderOfMag"></param>
+        /// <param name="digit"></param>
+        /// <returns></returns>
+        public static IDigitNode GetDigitAtMagnitude(this INumeric thisNumber,
+            Numeric orderOfMag)
+        {
+            if (thisNumber == null)
+                throw new ArgumentNullException("thisNumber");
+
+            if (orderOfMag == null)
+                throw new ArgumentNullException("orderOfMag");
+
+            if (orderOfMag.IsEqualTo(orderOfMag.GetCompatibleZero()))
+                return thisNumber.ZerothDigit;
+
+            IDigitNode rv = null;
+
+            if (orderOfMag.IsPositive)
+            {
+                rv = thisNumber.ZerothDigit;
+                orderOfMag.PerformThisManyTimes(x =>
+                {
+                    if (rv != null)
+                        rv = rv.NextDigit();
+                });
+            }
+            else
+            {
+                rv = thisNumber.ZerothDigit;
+                orderOfMag.GetNegativeOf().PerformThisManyTimes(x =>
+                {
+                    if (rv != null)
+                        rv = rv.PreviousDigit();
+                });
+            }
+          
+            return rv;
+        }
+
+
+        public static void SetDigitAtMagnitude(this INumeric thisNumber,
+     Numeric orderOfMag, string digit)
+        {
+            var dig = thisNumber.GetDigitAtMagnitude(orderOfMag);
+            dig.SetValue(digit);
         }
     }
 
@@ -449,20 +539,20 @@ namespace Arith.Domain.Numbers.Decorations
                 Debug.WriteLine("on number {0} digit {1} idx {2}", numA.SymbolsText,
                     node.Value.Symbol, idx.SymbolsText);
 
-                var mag = numA.GetDigitMagnitude(node as DigitNode);
+                var mag = numA.GetDigitMagnitude(node);
                 Debug.WriteLine("digit order of mag " + mag.SymbolsText);
 
-                var pos = numA.GetDigitPosition(node as DigitNode);
+                var pos = numA.GetDigitPosition(node);
                 Debug.WriteLine("digit pos " + pos.SymbolsText);
             }, (node, idx) =>
             {
                 Debug.WriteLine("on number {0} digit {1} idx {2}", numA.SymbolsText,
     node.Value.Symbol, idx.SymbolsText);
 
-                var mag = numA.GetDigitMagnitude(node as DigitNode);
+                var mag = numA.GetDigitMagnitude(node);
                 Debug.WriteLine("digit order of mag " + mag.SymbolsText);
 
-                var pos = numA.GetDigitPosition(node as DigitNode);
+                var pos = numA.GetDigitPosition(node);
                 Debug.WriteLine("digit pos " + pos.SymbolsText);
             });
 

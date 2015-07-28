@@ -234,7 +234,7 @@ namespace Arith.Domain.Numbers.Decorations
             subtracted.ShiftRight(orderOfMag);
             var oldDividend = dividend.SymbolsText;
             dividend.HasAddition().Subtract(subtracted);
-            product.AddLeastSignificantDigit(count.FirstDigit.Symbol);
+            product.AddLeastSignificantDigit(count.FirstDigit.Value.Symbol);
 
             Debug.WriteLine("dividend subtraction step. {0} - {1} = {2}, dividing {3} times",
        oldDividend,
@@ -376,7 +376,7 @@ namespace Arith.Domain.Numbers.Decorations
             numeric.Filter(node =>
             {
                 //first get the number portion
-                DigitNode dNode = node as DigitNode;
+                IDigitNode dNode = node as IDigitNode;
                 var trimNum = numeric.Trim(dNode, true);
 
                 //then get the number order of magnitude

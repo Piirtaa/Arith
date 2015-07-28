@@ -137,72 +137,24 @@ namespace Arith.Domain.Numbers
         }
         #endregion
 
-
+        #region Switch Signs
         /// <summary>
-        /// formats the numeric as a string
+        /// gets the negative number of something
         /// </summary>
         /// <param name="numeric"></param>
         /// <returns></returns>
-        public static string GetSimpleFormat(this INumeric numeric)
+        public static Numeric GetNegativeOf(this INumeric numeric)
         {
             if (numeric == null)
                 throw new ArgumentNullException("numeric");
 
-            StringBuilder sb = new StringBuilder();
+            var clone = numeric.GetInnerNumeric().Clone() as Numeric;
+            clone.SwitchSign();
 
-            if (!numeric.IsPositive)
-                sb.Append(numeric.NumberSystem.NegativeSymbol);
-
-            string decimals = string.Empty;
-
-            bool hasLeadingZero = true;
-            bool hasTrailingZero = true;
-            numeric.ZoneIterate((dig) =>
-            {
-                IDigitNode node = dig as IDigitNode;
-
-                if (node.IsZerothDigit())
-                {
-                    //always include the zeroth digit
-                    sb.Append(node.Value.Symbol);
-                }
-                else
-                {
-                    if (hasLeadingZero && dig.IsZero())
-                    {
-                        //skip
-                    }
-                    else
-                    {
-                        hasLeadingZero = false;
-                        sb.Append(node.Value.Symbol);
-                    }
-                }
-            },
-            (dig) =>
-            {
-                IDigitNode node = dig as IDigitNode;
-
-                if (hasTrailingZero && dig.IsZero())
-                {
-                    //skip
-                }
-                else
-                {
-                    hasTrailingZero = false;
-                    decimals = node.Value.Symbol + decimals;
-                }
-
-            }, true);
-
-            if (!hasTrailingZero)
-            {
-                sb.Append(numeric.NumberSystem.DecimalSymbol);
-                sb.Append(decimals);
-            }
-            var rv = sb.ToString();
-            return rv;
+            return clone;
         }
+        #endregion
+
         public static IDigitNode LeastSignificantDigit(this INumeric numeric)
         {
             if (numeric == null)
@@ -295,7 +247,7 @@ namespace Arith.Domain.Numbers
         /// <param name="toMSD"></param>
         /// <returns></returns>
         public static Numeric Trim(this INumeric numeric,
-            DigitNode digit, bool toMSD)
+            IDigitNode digit, bool toMSD)
         {
             var rv = Numeric.New(numeric.NumberSystem, null);
             bool nodeFound = false;
@@ -309,7 +261,7 @@ namespace Arith.Domain.Numbers
 
                 if (nodeFound)
                 {
-                    DigitNode newNode = null;
+                    IDigitNode newNode = null;
                     if (toMSD)
                     {
                         newNode = rv.AddMostSignificantDigit(node.Value.Symbol);
@@ -318,7 +270,7 @@ namespace Arith.Domain.Numbers
                     {
                         newNode = rv.AddLeastSignificantDigit(node.Value.Symbol);
                     }
-                    DigitNode dNode = node as DigitNode;
+                    IDigitNode dNode = node as IDigitNode;
                     if (dNode.IsZerothDigit())
                         rv.ZerothDigit = newNode;
                 }
@@ -329,11 +281,11 @@ namespace Arith.Domain.Numbers
             if (rv.ZerothDigit == null)
                 rv.ZerothDigit = rv.FirstDigit;
 
-            Debug.WriteLine("trimming number={0} on digit={1} to msd={2} result={3}",
-                numeric.SymbolsText,
-                digit.Value.Symbol,
-                toMSD.ToString(),
-                rv.SymbolsText);
+            //Debug.WriteLine("trimming number={0} on digit={1} to msd={2} result={3}",
+            //    numeric.SymbolsText,
+            //    digit.Value.Symbol,
+            //    toMSD.ToString(),
+            //    rv.SymbolsText);
 
             return rv;
         }

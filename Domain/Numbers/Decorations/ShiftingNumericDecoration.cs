@@ -87,7 +87,7 @@ namespace Arith.Domain.Numbers.Decorations
                 if (this.ZerothDigit == null)
                     this.InnerNumeric.AddLeastSignificantZeroDigit();
 
-                var node = this.ZerothDigit.PreviousNode as DigitNode;
+                var node = this.ZerothDigit.PreviousDigit();
                 if (node == null)
                 {
                     node = this.InnerNumeric.AddLeastSignificantZeroDigit();
@@ -113,7 +113,7 @@ namespace Arith.Domain.Numbers.Decorations
                 if (this.ZerothDigit == null)
                     this.InnerNumeric.AddLeastSignificantZeroDigit();
 
-                var node = this.ZerothDigit.NextNode as DigitNode;
+                var node = this.ZerothDigit.NextDigit();
                 if (node == null)
                 {
                     node = this.InnerNumeric.AddMostSignificantZeroDigit();

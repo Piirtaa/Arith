@@ -36,7 +36,8 @@ namespace Arith.Domain.Numbers
             //define builder strategy
             this.NodeBuildingStrategy = (x) =>
             {
-                return new DigitNode(x, this);
+                return LinkedListNode<IDigit>.New(x, this).HasDigits();
+                //alternately could do this new DigitNode(x, this);
             };
 
             this.SetValue(digits);
@@ -52,8 +53,8 @@ namespace Arith.Domain.Numbers
 
         #region Properties
         public IDigitNode ZerothDigit { get { return this._zerothDigit; } set { this._zerothDigit = value; } }
-        public DigitNode LastDigit { get { return this._lastNode as DigitNode; } }
-        public DigitNode FirstDigit { get { return this._firstNode as DigitNode; } }
+        public IDigitNode LastDigit { get { return this._lastNode as IDigitNode; } }
+        public IDigitNode FirstDigit { get { return this._firstNode as IDigitNode; } }
         #endregion
 
         #region IIsNumeric
@@ -96,7 +97,7 @@ namespace Arith.Domain.Numbers
                     if (symbols[0].Equals(this.NumberSystem.NegativeSymbol))
                         this._isPositive = false;
 
-                    DigitNode currentNode = null;
+                    IDigitNode currentNode = null;
 
                     foreach (var each in symbols)
                     {
@@ -115,7 +116,7 @@ namespace Arith.Domain.Numbers
                     }
 
                     if (!isZeroSet)
-                        this._zerothDigit = this._firstNode as DigitNode;
+                        this._zerothDigit = this._firstNode as IDigitNode;
 
                     this.ScrubLeadingAndTrailingZeroes();
                 }
@@ -158,8 +159,8 @@ namespace Arith.Domain.Numbers
 
             this.Iterate((node) =>
             {
-                DigitNode dNode = node as DigitNode;
-                var newNode = rv.AddLeastSignificantDigit(dNode.Symbol);
+                IDigitNode dNode = node as IDigitNode;
+                var newNode = rv.AddLeastSignificantDigit(dNode.Value.Symbol);
                 if (dNode.IsZerothDigit())
                 {
                     rv._zerothDigit = newNode;
@@ -180,7 +181,7 @@ namespace Arith.Domain.Numbers
                 rv = base.InsertNode(node, before, after);
 
                 if (this._zerothDigit == null)
-                    this._zerothDigit = this._firstNode as DigitNode;
+                    this._zerothDigit = this._firstNode as IDigitNode;
             }
             return rv;
         }
@@ -189,15 +190,15 @@ namespace Arith.Domain.Numbers
             if (item == null)
                 throw new ArgumentNullException("item");
 
-            DigitNode node = item as DigitNode;
-            DigitNode newZero = null;
+            IDigitNode node = item as IDigitNode;
+            IDigitNode newZero = null;
             if (node.IsZerothDigit())
             {
                 //reset zeroth to next
                 if (node.NextNode == null)
                     throw new InvalidOperationException("cannot remove zeroth digit");
 
-                newZero = node.NextNode as DigitNode;
+                newZero = node.NextNode as IDigitNode;
             }
             var rv = base.Remove(item);
             
@@ -238,12 +239,12 @@ namespace Arith.Domain.Numbers
         /// </summary>
         /// <param name="symbol"></param>
         /// <returns></returns>
-        public DigitNode AddMostSignificantDigit(string symbol)
+        public IDigitNode AddMostSignificantDigit(string symbol)
         {
             var digit = this.NumberSystem.GetMatrixDigit(symbol);
             lock (this._stateLock)
             {
-                var rv = this.AddLast(digit) as DigitNode;
+                var rv = this.AddLast(digit) as IDigitNode;
                 return rv;
             }
         }
@@ -251,13 +252,13 @@ namespace Arith.Domain.Numbers
         /// adds a Zero digit at the end of the list
         /// </summary>
         /// <returns></returns>
-        public DigitNode AddMostSignificantZeroDigit()
+        public IDigitNode AddMostSignificantZeroDigit()
         {
             var digit = this.NumberSystem.GetMatrixDigit(this.NumberSystem.ZeroSymbol);
 
             lock (this._stateLock)
             {
-                var rv = this.AddLast(digit) as DigitNode;
+                var rv = this.AddLast(digit) as IDigitNode;
                 return rv;
             }
         }
@@ -265,12 +266,12 @@ namespace Arith.Domain.Numbers
         /// adds a Zero digit at the start of the list
         /// </summary>
         /// <returns></returns>
-        public DigitNode AddLeastSignificantZeroDigit()
+        public IDigitNode AddLeastSignificantZeroDigit()
         {
             var digit = this.NumberSystem.GetMatrixDigit(this.NumberSystem.ZeroSymbol);
             lock (this._stateLock)
             {
-                var rv = this.AddFirst(digit) as DigitNode;
+                var rv = this.AddFirst(digit) as IDigitNode;
                 return rv;
             }
         }
@@ -279,12 +280,12 @@ namespace Arith.Domain.Numbers
         /// </summary>
         /// <param name="symbol"></param>
         /// <returns></returns>
-        public DigitNode AddLeastSignificantDigit(string symbol)
+        public IDigitNode AddLeastSignificantDigit(string symbol)
         {
             var digit = this.NumberSystem.GetMatrixDigit(symbol);
             lock (this._stateLock)
             {
-                var rv = this.AddFirst(digit) as DigitNode;
+                var rv = this.AddFirst(digit) as IDigitNode;
                 return rv;
             }
         }
@@ -308,8 +309,8 @@ namespace Arith.Domain.Numbers
 
                 number.Iterate((node) =>
                 {
-                    DigitNode dNode = node as DigitNode;
-                    var newNode = this.AddLeastSignificantDigit(dNode.Symbol);
+                    IDigitNode dNode = node as IDigitNode;
+                    var newNode = this.AddLeastSignificantDigit(dNode.Value.Symbol);
                     if (dNode.IsZerothDigit())
                     {
                         this._zerothDigit = newNode;

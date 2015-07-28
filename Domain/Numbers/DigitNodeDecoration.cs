@@ -4,62 +4,41 @@ using System.Text;
 using System.Diagnostics;
 using Arith.Domain.Digits;
 using Arith.DataStructures;
+using Arith.DataStructures.Decorations;
+using Arith.Decorating;
 
 namespace Arith.Domain.Numbers
 {
     /// <summary>
-    /// digit node extends linkedlistnode, adding numeric semantics and behaviour
+    /// digit node decorates linkedlistnode, adding numeric semantics and behaviour
     /// towards a parent numeric
     /// </summary>
     [DebuggerDisplay("{Symbol}")]
-    public class DigitNode : LinkedListNode<IDigit>, IDigitNode
+    public class DigitNodeDecoration : LinkedListNodeDecorationBase<IDigit>, IDigitNode
     {
         #region Ctor
-        public DigitNode(IDigit value, ILinkedList<IDigit> parentList)
-            : base(value, parentList)
+        public DigitNodeDecoration(object decorated)
+            : base(decorated)
         {
+        }
+        #endregion
+
+        #region Static Builders
+        public static DigitNodeDecoration New(object decorated)
+        {
+            return new DigitNodeDecoration(decorated);
         }
         #endregion
 
         #region Parent Number-related Calculated Properties
         private NumeralSet NumberSystem { get { return this.ParentNumeric().NumberSystem; } }
-
-        /// <summary>
-        /// when queried will perform a lazy load of the next digit (ie. expand the registers)
-        /// </summary>
-        internal DigitNode LoadNextDigit
-        {
-            get
-            {
-                if (this.NextNode == null)
-                {
-                    return this.ParentNumeric().AddMostSignificantZeroDigit() as DigitNode;
-                }
-                return this.NextNode as DigitNode;
-            }
-        }
-
-        /// <summary>
-        /// when queried will perform a lazy load of the previous digit (ie. expand the registers)
-        /// </summary>
-        internal DigitNode LoadPreviousDigit
-        {
-            get
-            {
-                if (this.PreviousNode == null)
-                {
-                    return this.ParentNumeric().AddLeastSignificantZeroDigit() as DigitNode;
-                }
-                return this.PreviousNode as DigitNode;
-            }
-        }
         #endregion
 
         #region Calculated Properties
         public string Symbol { get { return this.Value.Symbol; } }
         #endregion
 
-        #region Methods
+        #region IDigitNode
         public void SetValue(string symbol)
         {
             this.Value.SetValue(symbol);
@@ -75,7 +54,7 @@ namespace Arith.Domain.Numbers
             var rv = this.Value.Add(symbol);
             if (rv)
             {
-                this.LoadNextDigit.AddOne();
+                this.LoadNextDigit().AddOne();
             }
             return rv;
         }
@@ -96,7 +75,7 @@ namespace Arith.Domain.Numbers
                 if (!this.HasNextDigit())
                     throw new InvalidOperationException("unexpected sign change");
 
-                this.LoadNextDigit.SubtractOne();
+                this.LoadNextDigit().SubtractOne();
             }
             return rv;
         }
@@ -111,7 +90,7 @@ namespace Arith.Domain.Numbers
             var rv = this.Value.AddOne();
             if (rv)
             {
-                this.LoadNextDigit.AddOne();
+                this.LoadNextDigit().AddOne();
             }
             return rv;
         }
@@ -132,10 +111,30 @@ namespace Arith.Domain.Numbers
                 if (!this.HasNextDigit())
                     throw new InvalidOperationException("unexpected sign change");
 
-                this.LoadNextDigit.SubtractOne();
+                this.LoadNextDigit().SubtractOne();
             }
             return rv;
         }
         #endregion
+
+        #region Overrides
+        public override IDecoration ApplyThisDecorationTo(object thing)
+        {
+            return new DigitNodeDecoration(thing);
+        }
+        #endregion
+    }
+
+    public static class DigitNodeDecorationExtensions
+    {
+        public static DigitNodeDecoration HasDigits(this object number)
+        {
+            var decoration = number.ApplyDecorationIfNotPresent<DigitNodeDecoration>(x =>
+            {
+                return DigitNodeDecoration.New(number);
+            });
+
+            return decoration;
+        }
     }
 }
