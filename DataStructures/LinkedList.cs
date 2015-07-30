@@ -30,9 +30,9 @@ namespace Arith.DataStructures
                 return;
 
             //define the default node building strategy
-            this.NodeBuildingStrategy = (x) =>
+            this.NodeBuildingStrategy = (x, list) =>
             {
-                return new LinkedListNode<T>(x, this);
+                return new LinkedListNode<T>(x, list);
             };
 
             foreach (var each in items)
@@ -57,7 +57,7 @@ namespace Arith.DataStructures
 
                 while (node != null)
                 {
-                    list.Add(node.Value);
+                    list.Add(node.NodeValue);
 
                     if (node.IsLast())
                         break;
@@ -116,7 +116,7 @@ namespace Arith.DataStructures
         /// <summary>
         /// override/replace this strategy if we want anything other than a new LinkedListNode 
         /// </summary>
-        public Func<T, ILinkedListNode<T>> NodeBuildingStrategy { get; set; }
+        public Func<T, ILinkedList<T>, ILinkedListNode<T>> NodeBuildingStrategy { get; set; }
         public ILinkedListNode<T> FirstNode { get { return _firstNode; } }
         public ILinkedListNode<T> LastNode { get { return _lastNode; } }
         /// <summary>
@@ -128,7 +128,7 @@ namespace Arith.DataStructures
         {
             var match = this.Filter((x) =>
             {
-                return x.Value.Equals(val);
+                return x.NodeValue.Equals(val);
             }, true);
 
             return match != null;
@@ -304,7 +304,7 @@ namespace Arith.DataStructures
     /// a linked list node
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    [DebuggerDisplay("{Value}")]
+    [DebuggerDisplay("{NodeValue}")]
     public class LinkedListNode<T> : ILinkedListNode<T>
     {
         #region Declarations
@@ -317,7 +317,7 @@ namespace Arith.DataStructures
             if (value == null)
                 throw new ArgumentNullException("value");
 
-            this.Value = value;
+            this.NodeValue = value;
             this.NextNode = null;
             this.PreviousNode = null;
 
@@ -337,7 +337,7 @@ namespace Arith.DataStructures
         #endregion
 
         #region Properties
-        public T Value { get; protected set; }
+        public T NodeValue { get; protected set; }
         public ILinkedListNode<T> NextNode { get; set; }
         public ILinkedListNode<T> PreviousNode { get; set; }
         public ILinkedList<T> ParentList { get; protected set; }
@@ -354,12 +354,12 @@ namespace Arith.DataStructures
             {
                 listOfInt.AddLast(i);
                 Debug.Assert(listOfInt.Contains(i));
-                Debug.Assert(listOfInt.LastNode.Value == i);
-                Debug.Assert(listOfInt.FirstNode.Value == 0);
+                Debug.Assert(listOfInt.LastNode.NodeValue == i);
+                Debug.Assert(listOfInt.FirstNode.NodeValue == 0);
                 var vals = listOfInt.Values;
                 if (vals != null && vals.Length > 1)
                 {
-                    Debug.Assert(listOfInt.LastNode.PreviousNode.Value == i - 1);
+                    Debug.Assert(listOfInt.LastNode.PreviousNode.NodeValue == i - 1);
                     Debug.Assert(listOfInt.LastNode.PreviousNode.IsPreceding(listOfInt.LastNode));
                     Debug.Assert(listOfInt.LastNode.NextNode == null);
                 }
@@ -368,7 +368,7 @@ namespace Arith.DataStructures
             for (int i = 0; i > -100; i--)
             {
                 var node = listOfInt.AddFirst(i);
-                Debug.Assert(listOfInt.FirstNode.Value == i);
+                Debug.Assert(listOfInt.FirstNode.NodeValue == i);
                 Debug.Assert(listOfInt.FirstNode.IsPreceding(node.NextNode));
             }
 

@@ -24,8 +24,10 @@ namespace Arith.Domain.Numbers.Decorations
         #endregion
 
         #region Ctor
-        public PrecisionNumericDecoration(object decorated, INumeric decimalPlaces)
-            : base(decorated)
+        public PrecisionNumericDecoration(object decorated, 
+            INumeric decimalPlaces, 
+            string decorationName = null)
+            : base(decorated, decorationName)
         {
             if (decimalPlaces == null)
                 throw new ArgumentNullException("decimalPlaces");
@@ -35,9 +37,11 @@ namespace Arith.Domain.Numbers.Decorations
         #endregion
 
         #region Static
-        public static PrecisionNumericDecoration New(object decorated, INumeric decimalPlaces)
+        public static PrecisionNumericDecoration New(object decorated,
+            INumeric decimalPlaces,
+            string decorationName = null)
         {
-            return new PrecisionNumericDecoration(decorated, decimalPlaces);
+            return new PrecisionNumericDecoration(decorated, decimalPlaces, decorationName);
         }
         #endregion
 
@@ -63,7 +67,7 @@ namespace Arith.Domain.Numbers.Decorations
         #region Overrides
         public override IDecoration ApplyThisDecorationTo(object thing)
         {
-            return new PrecisionNumericDecoration(thing, this.DecimalPlaces);
+            return new PrecisionNumericDecoration(thing, this.DecimalPlaces, this.DecorationName);
         }
         #endregion
 
@@ -82,14 +86,15 @@ namespace Arith.Domain.Numbers.Decorations
 
     public static class PrecisionNumberDecorationExtensions
     {
-        public static PrecisionNumericDecoration HasPrecision(this object decorated, 
-            INumeric decimalPlaces)
+        public static PrecisionNumericDecoration HasPrecision(this object decorated,
+            INumeric decimalPlaces, 
+            string decorationName = null)
         {
             var decoration = decorated.ApplyDecorationIfNotPresent<PrecisionNumericDecoration>(x =>
             {
                 //note the hooking injection
                 //When decorating inline, return the outermost
-                return PrecisionNumericDecoration.New(decorated, decimalPlaces);
+                return PrecisionNumericDecoration.New(decorated, decimalPlaces, decorationName);
             });
 
             //update precision with passed in value

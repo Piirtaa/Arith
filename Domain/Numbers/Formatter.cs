@@ -39,7 +39,7 @@ namespace Arith.Domain.Numbers
                 if (node.IsZerothDigit())
                 {
                     //always include the zeroth digit
-                    sb.Append(node.Value.Symbol);
+                    sb.Append(node.NodeValue.Symbol);
                 }
                 else
                 {
@@ -50,7 +50,7 @@ namespace Arith.Domain.Numbers
                     else
                     {
                         hasLeadingZero = false;
-                        sb.Append(node.Value.Symbol);
+                        sb.Append(node.NodeValue.Symbol);
                     }
                 }
             },
@@ -65,7 +65,7 @@ namespace Arith.Domain.Numbers
                 else
                 {
                     hasTrailingZero = false;
-                    decimals = node.Value.Symbol + decimals;
+                    decimals = node.NodeValue.Symbol + decimals;
                 }
 
             }, true);
@@ -104,13 +104,13 @@ namespace Arith.Domain.Numbers
 
                 if (node.IsZerothDigit())
                 {
-                    if (node.Value.Symbol.Equals(numeric.NumberSystem.ZeroSymbol))
+                    if (node.NodeValue.Symbol.Equals(numeric.NumberSystem.ZeroSymbol))
                     {
                         sb.Append(" ");
                     }
                     else
                     {
-                        sb.Append(node.Value.Symbol);
+                        sb.Append(node.NodeValue.Symbol);
                     }
                 }
                 else
@@ -122,13 +122,13 @@ namespace Arith.Domain.Numbers
                     else
                     {
                         hasLeadingZero = false;
-                        if (node.Value.Symbol.Equals(numeric.NumberSystem.ZeroSymbol))
+                        if (node.NodeValue.Symbol.Equals(numeric.NumberSystem.ZeroSymbol))
                         {
                             sb.Append(" ");
                         }
                         else
                         {
-                            sb.Append(node.Value.Symbol);
+                            sb.Append(node.NodeValue.Symbol);
                         }
                     }
                 }
@@ -144,13 +144,13 @@ namespace Arith.Domain.Numbers
                 else
                 {
                     hasTrailingZero = false;
-                    if (node.Value.Symbol.Equals(numeric.NumberSystem.ZeroSymbol))
+                    if (node.NodeValue.Symbol.Equals(numeric.NumberSystem.ZeroSymbol))
                     {
                         decimals = " " + decimals;
                     }
                     else
                     {
-                        decimals = node.Value.Symbol + decimals;
+                        decimals = node.NodeValue.Symbol + decimals;
                     }
 
                 }

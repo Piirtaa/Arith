@@ -26,24 +26,26 @@ namespace Arith.Domain.Numbers.Decorations
         #endregion
 
         #region Ctor
-        public HookingDigitNumericDecoration(object decorated)
-            : base(decorated)
+        public HookingDigitNumericDecoration(object decorated, 
+            string decorationName = null)
+            : base(decorated, decorationName)
         {
             //inject node decoration with this strategy
             var builder = this.InnerNumeric.NodeBuildingStrategy;
-            this.InnerNumeric.NodeBuildingStrategy = (x) =>
+            this.InnerNumeric.NodeBuildingStrategy = (x, list) =>
             {
-                var rv = builder(x).HasHookingDigitNode();
-                rv.PostMutateStrategy = this.PostMutateStrategy;
+                var rv = builder(x, list).HasHookingDigitNode();
+                var hooker = list.As<HookingDigitNumericDecoration>(false);
+                rv.PostMutateStrategy = hooker.PostMutateStrategy;
                 return rv;
             };
         }
         #endregion
 
         #region Static
-        public static HookingDigitNumericDecoration New(object decorated)
+        public static HookingDigitNumericDecoration New(object decorated, string decorationName = null)
         {
-            return new HookingDigitNumericDecoration(decorated);
+            return new HookingDigitNumericDecoration(decorated, decorationName);
         }
         #endregion
 
@@ -69,7 +71,7 @@ namespace Arith.Domain.Numbers.Decorations
         #region Overrides
         public override IDecoration ApplyThisDecorationTo(object thing)
         {
-            return new HookingDigitNumericDecoration(thing);
+            return new HookingDigitNumericDecoration(thing, this.DecorationName);
         }
         #endregion
 
@@ -80,11 +82,12 @@ namespace Arith.Domain.Numbers.Decorations
 
     public static class HookingDigitNumericDecorationExtensions
     {
-        public static HookingDigitNumericDecoration HasHookingDigits(this object number)
+        public static HookingDigitNumericDecoration HasHookingDigits(this object number,
+            string decorationName = null)
         {
             var decoration = number.ApplyDecorationIfNotPresent<HookingDigitNumericDecoration>(x =>
             {
-                return HookingDigitNumericDecoration.New(number);
+                return HookingDigitNumericDecoration.New(number, decorationName);
             });
 
             return decoration;
@@ -103,18 +106,19 @@ namespace Arith.Domain.Numbers.Decorations
                 set.AddSymbolToSet(i.ToString());
             }
 
-            var numA = Numeric.New(set, "1234567890.246").HasHookingDigits();
+            var numA = Numeric.New(set, null).HasHookingDigits();
+
             numA.PostMutateStrategy = (digit, oldSymbol, mode) =>
             {
-                var orderOfMag = numA.GetDigitMagnitude(digit);
+                var orderOfMag = digit.GetDigitMagnitude();
                 Debug.WriteLine("in number {0}, digit @ pos {1} changed from {2} to {3} via {4}",
                     numA.SymbolsText,
                     orderOfMag.SymbolsText,
                     oldSymbol,
-                    digit.Value.Symbol,
+                    digit.NodeValue.Symbol,
                     mode.ToString());
             };
-
+            numA.SetValue("1234567890.246");
             int topLimit = 100;
             for (int x = 0; x < topLimit; x++)
             {

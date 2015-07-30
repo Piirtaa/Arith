@@ -59,13 +59,14 @@ namespace Arith.DataStructures.Decorations
         #endregion
 
         #region Ctor
-        public CircularLinkedListDecoration(object decorated)
-            : base(decorated)
+        public CircularLinkedListDecoration(object decorated, string decorationName = null)
+            : base(decorated, decorationName)
         {
              //define the default node building strategy
-            this.NodeBuildingStrategy = (x) =>
+            this.NodeBuildingStrategy = (x, list) =>
             {
-                return new CircularLinkedListNode<T>(x, this);
+                ICircularLinkedList<T> clist = list as ICircularLinkedList<T>;
+                return new CircularLinkedListNode<T>(x, clist);
             };
 
             //notice i'm chaining with whatever existing strategy (+= operator instead of =)
@@ -82,9 +83,9 @@ namespace Arith.DataStructures.Decorations
         #endregion
 
         #region Static
-        public static CircularLinkedListDecoration<T> New(object decorated)
+        public static CircularLinkedListDecoration<T> New(object decorated, string decorationName = null)
         {
-            return new CircularLinkedListDecoration<T>(decorated);
+            return new CircularLinkedListDecoration<T>(decorated, decorationName);
         }
         #endregion
 
@@ -110,7 +111,7 @@ namespace Arith.DataStructures.Decorations
         #region Overrides
         public override IDecoration ApplyThisDecorationTo(object thing)
         {
-            return new CircularLinkedListDecoration<T>(thing);
+            return new CircularLinkedListDecoration<T>(thing, this.DecorationName);
         }
         #endregion
 
@@ -150,12 +151,14 @@ namespace Arith.DataStructures.Decorations
 
     public static class CircularLinkedListDecorationExtensions
     {
-        public static CircularLinkedListDecoration<T> HasCircularity<T>(this object thing)
+        public static CircularLinkedListDecoration<T> HasCircularity<T>(this object thing,
+            string decorationName = null)
         {
             var decoration = thing.ApplyDecorationIfNotPresent<CircularLinkedListDecoration<T>>(x =>
             {
                 //note injection of hooks
-                return CircularLinkedListDecoration<T>.New(thing.HasHooks<T>().Outer);
+                return CircularLinkedListDecoration<T>.New(thing.HasHooks<T>().Outer,
+                    decorationName);
             });
 
             return decoration;
@@ -208,7 +211,7 @@ namespace Arith.DataStructures.Decorations
             ICircularLinkedListNode<T> rv = this.ParentList.FirstNode as ICircularLinkedListNode<T>;
             ICircularLinkedListNode<T> counterNode = this.ParentList.FirstNode as ICircularLinkedListNode<T>;
 
-            while (!counterNode.Value.Equals(this.Value))
+            while (!counterNode.NodeValue.Equals(this.NodeValue))
             {
                 //if we've iterated thru the whole list and not found the value then it's a bad value
                 //rather than validate the value at the start of the method, which would do a list scan also
@@ -232,7 +235,7 @@ namespace Arith.DataStructures.Decorations
             ICircularLinkedListNode<T> nextOUT = this;
             bool rollover = false;
 
-            while (!counterNode.Value.Equals(val))
+            while (!counterNode.NodeValue.Equals(val))
             {
                 //if we've iterated thru the whole list and not found the value then it's a bad value
                 //rather than validate the value at the start of the method, which would do a list scan also
@@ -260,7 +263,7 @@ namespace Arith.DataStructures.Decorations
             ICircularLinkedListNode<T> nextOUT = this;
             bool rollover = false;
 
-            while (!counterNode.Value.Equals(val))
+            while (!counterNode.NodeValue.Equals(val))
             {
                 //if we've iterated thru the whole list and not found the value then it's a bad value
                 //rather than validate the value at the start of the method, which would do a list scan also
@@ -283,7 +286,7 @@ namespace Arith.DataStructures.Decorations
         {
             ICircularLinkedListNode<T> counterNode = this.ParentList.FirstNode as ICircularLinkedListNode<T>;
 
-            while (!counterNode.Value.Equals(val))
+            while (!counterNode.NodeValue.Equals(val))
             {
                 //if we've iterated thru the whole list and not found the value then it's a bad value
                 //rather than validate the value at the start of the method, which would do a list scan also
@@ -307,12 +310,12 @@ namespace Arith.DataStructures.Decorations
             {
                 var node = listOfInt.AddLast(i);
                 Debug.Assert(listOfInt.Contains(i));
-                Debug.Assert(listOfInt.LastNode.Value == i);
-                Debug.Assert(listOfInt.FirstNode.Value == 0);
+                Debug.Assert(listOfInt.LastNode.NodeValue == i);
+                Debug.Assert(listOfInt.FirstNode.NodeValue == 0);
                 var vals = (listOfInt.Inner as LinkedList<int>).Values;
                 if (vals != null && vals.Length > 1)
                 {
-                    Debug.Assert(listOfInt.LastNode.PreviousNode.Value == i - 1);
+                    Debug.Assert(listOfInt.LastNode.PreviousNode.NodeValue == i - 1);
                     Debug.Assert(listOfInt.LastNode.PreviousNode.IsPreceding(listOfInt.LastNode));
                     Debug.Assert(listOfInt.LastNode.IsPreceding(listOfInt.FirstNode));
                 }
@@ -320,32 +323,32 @@ namespace Arith.DataStructures.Decorations
                 var cnode = node as ICircularLinkedListNode<int>;
                 //move cursor back
                 if (!cnode.MoveBack(out cnode))
-                    Debug.Assert(cnode.Value == i - 1);
+                    Debug.Assert(cnode.NodeValue == i - 1);
                 else
-                    Debug.Assert(cnode.Value == 0);
+                    Debug.Assert(cnode.NodeValue == 0);
 
                 //move it forward
                 if (!cnode.MoveForward(out cnode))
-                    Debug.Assert(cnode.Value == i);
+                    Debug.Assert(cnode.NodeValue == i);
                 else
-                    Debug.Assert(cnode.Value == 0);
+                    Debug.Assert(cnode.NodeValue == 0);
 
                 if (!cnode.IsFirst())
                 {
                     //move it all the way back
                     if (!cnode.MoveBackBy(i, out cnode))
-                        Debug.Assert(cnode.Value == 0);
+                        Debug.Assert(cnode.NodeValue == 0);
 
                     //move it all the way forward
                     if (!cnode.MoveForwardBy(i, out cnode))
-                        Debug.Assert(cnode.Value == i);
+                        Debug.Assert(cnode.NodeValue == i);
                 }
             }
 
             for (int i = 0; i > -100; i--)
             {
                 var node = listOfInt.AddFirst(i);
-                Debug.Assert(listOfInt.FirstNode.Value == i);
+                Debug.Assert(listOfInt.FirstNode.NodeValue == i);
                 Debug.Assert(listOfInt.FirstNode.IsPreceding(node.NextNode));
             }
 
@@ -376,14 +379,14 @@ namespace Arith.DataStructures.Decorations
             Debug.WriteLine("forward sequence");
             for (int i = 0; i < 21; i++)
             {
-                Debug.Write(node.Value + ",");
+                Debug.Write(node.NodeValue + ",");
                 node.MoveForward(out node);
             }
             Debug.WriteLine("");
             Debug.WriteLine("backward sequence");
             for (int i = 0; i < 21; i++)
             {
-                Debug.Write(node.Value + ",");
+                Debug.Write(node.NodeValue + ",");
                 node.MoveBack(out node);
             }
 

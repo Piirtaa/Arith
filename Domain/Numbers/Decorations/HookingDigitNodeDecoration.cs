@@ -32,16 +32,18 @@ namespace Arith.Domain.Numbers.Decorations
         #endregion
 
         #region Ctor
-        public HookingDigitNodeDecoration(object decorated)
-            : base(decorated)
+        public HookingDigitNodeDecoration(object decorated, 
+            string decorationName = null)
+            : base(decorated, decorationName)
         {
         }
         #endregion
 
         #region Static
-        public static HookingDigitNodeDecoration New(object decorated)
+        public static HookingDigitNodeDecoration New(object decorated,
+            string decorationName = null)
         {
-            return new HookingDigitNodeDecoration(decorated);
+            return new HookingDigitNodeDecoration(decorated, decorationName);
         }
         #endregion
 
@@ -67,7 +69,7 @@ namespace Arith.Domain.Numbers.Decorations
         #region Overrides
         public override IDecoration ApplyThisDecorationTo(object thing)
         {
-            return new HookingDigitNodeDecoration(thing);
+            return new HookingDigitNodeDecoration(thing, this.DecorationName);
         }
         #endregion
 
@@ -76,7 +78,10 @@ namespace Arith.Domain.Numbers.Decorations
         private void FireMutateStrategy(MutationMode mode, string oldValue)
         {
             if (this.PostMutateStrategy != null)
-                this.PostMutateStrategy(this.DecoratedOf, oldValue, mode);
+            {
+                var node = this.As<IDigitNode>(false);
+                this.PostMutateStrategy(node, oldValue, mode);
+            }
         }
 
         #endregion
@@ -84,34 +89,34 @@ namespace Arith.Domain.Numbers.Decorations
         #region IDigitNodeDecoration
         public override void SetValue(string symbol)
         {
-            string oldValue = this.DecoratedOf.Value.Symbol;
+            string oldValue = this.DecoratedOf.NodeValue.Symbol;
             base.SetValue(symbol);
             this.FireMutateStrategy(MutationMode.Set, oldValue);
         }
         public override bool Add(string symbol)
         {
-            string oldValue = this.DecoratedOf.Value.Symbol;
+            string oldValue = this.DecoratedOf.NodeValue.Symbol;
             var rv = base.Add(symbol);
             this.FireMutateStrategy(MutationMode.Set, oldValue);
             return rv;
         }
         public override bool Subtract(string symbol)
         {
-            string oldValue = this.DecoratedOf.Value.Symbol;
+            string oldValue = this.DecoratedOf.NodeValue.Symbol;
             var rv = base.Subtract(symbol);
             this.FireMutateStrategy(MutationMode.Set, oldValue);
             return rv;
         }
         public override bool AddOne()
         {
-            string oldValue = this.DecoratedOf.Value.Symbol;
+            string oldValue = this.DecoratedOf.NodeValue.Symbol;
             var rv = base.AddOne();
             this.FireMutateStrategy(MutationMode.Set, oldValue);
             return rv;
         }
         public override bool SubtractOne()
         {
-            string oldValue = this.DecoratedOf.Value.Symbol;
+            string oldValue = this.DecoratedOf.NodeValue.Symbol;
             var rv = base.SubtractOne();
             this.FireMutateStrategy(MutationMode.Set, oldValue);
             return rv;
@@ -121,11 +126,13 @@ namespace Arith.Domain.Numbers.Decorations
 
     public static class HookingDigitNodeDecorationBaseExtensions
     {
-        public static HookingDigitNodeDecoration HasHookingDigitNode(this object obj)
+        public static HookingDigitNodeDecoration HasHookingDigitNode(this object obj,
+            string decorationName = null)
         {
             var decoration = obj.ApplyDecorationIfNotPresent<HookingDigitNodeDecoration>(x =>
             {
-                return HookingDigitNodeDecoration.New(obj);
+                return HookingDigitNodeDecoration.New(obj,
+                    decorationName);
             });
 
             return decoration;

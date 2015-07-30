@@ -34,9 +34,9 @@ namespace Arith.Domain.Numbers
             this._numberSystem = numberSystem;
 
             //define builder strategy
-            this.NodeBuildingStrategy = (x) =>
+            this.NodeBuildingStrategy = (x, list) =>
             {
-                return LinkedListNode<IDigit>.New(x, this).HasDigits();
+                return LinkedListNode<IDigit>.New(x, list).HasDigits();
                 //alternately could do this new DigitNode(x, this);
             };
 
@@ -156,11 +156,12 @@ namespace Arith.Domain.Numbers
         {
             Numeric rv = new Numeric(this.NumberSystem, null);
             rv._isPositive = this._isPositive;
+            rv.NodeBuildingStrategy = this.NodeBuildingStrategy;
 
             this.Iterate((node) =>
             {
                 IDigitNode dNode = node as IDigitNode;
-                var newNode = rv.AddLeastSignificantDigit(dNode.Value.Symbol);
+                var newNode = rv.AddLeastSignificantDigit(dNode.NodeValue.Symbol);
                 if (dNode.IsZerothDigit())
                 {
                     rv._zerothDigit = newNode;
@@ -299,6 +300,12 @@ namespace Arith.Domain.Numbers
             if (number == null)
                 throw new ArgumentNullException("number");
 
+            if (object.ReferenceEquals(this, number))
+                throw new InvalidOperationException();
+
+            if (object.ReferenceEquals(this, number.GetInnerNumeric()))
+                throw new InvalidOperationException(); 
+
             lock (this._stateLock)
             {
                 this._firstNode = null;
@@ -310,7 +317,7 @@ namespace Arith.Domain.Numbers
                 number.Iterate((node) =>
                 {
                     IDigitNode dNode = node as IDigitNode;
-                    var newNode = this.AddLeastSignificantDigit(dNode.Value.Symbol);
+                    var newNode = this.AddLeastSignificantDigit(dNode.NodeValue.Symbol);
                     if (dNode.IsZerothDigit())
                     {
                         this._zerothDigit = newNode;
@@ -337,6 +344,8 @@ namespace Arith.Domain.Numbers
             if (number == null)
                 throw new ArgumentNullException("number");
 
+            //Debug.WriteLine("absolute value compare {0} {1}", thisNumber.SymbolsText,
+            //    number.SymbolsText);
             ////validate the same number systems
             //if (!thisNumber.NumberSystem.IsCompatible(number.NumberSystem))
             //    throw new InvalidOperationException("incompatible number systems");
@@ -398,7 +407,7 @@ namespace Arith.Domain.Numbers
                     thisIsLarger = null;
                     break;
                 }
-                var comp = d1.Value.Compare(d2.Value.Symbol);
+                var comp = d1.NodeValue.Compare(d2.NodeValue.Symbol);
                 if (comp != null)
                 {
                     thisIsLarger = comp;
@@ -481,11 +490,11 @@ namespace Arith.Domain.Numbers
             //test parallel iteration
             numA.ParallelIterate(numB, (diga, digb) =>
             {
-                Debug.Assert(diga.Value.Symbol.Equals(digb.Value.Symbol));
+                Debug.Assert(diga.NodeValue.Symbol.Equals(digb.NodeValue.Symbol));
             }, true);
             numA.ParallelIterate(numB, (diga, digb) =>
             {
-                Debug.Assert(diga.Value.Symbol.Equals(digb.Value.Symbol));
+                Debug.Assert(diga.NodeValue.Symbol.Equals(digb.NodeValue.Symbol));
             }, false);
         }
 
@@ -495,19 +504,19 @@ namespace Arith.Domain.Numbers
             Debug.WriteLine("zone iteration towards zero");
             num.ZoneIterate(digit =>
             {
-                Debug.WriteLine("post dec zone iterating {0} on digit {1}", num.SymbolsText, digit.Value.Symbol);
+                Debug.WriteLine("post dec zone iterating {0} on digit {1}", num.SymbolsText, digit.NodeValue.Symbol);
             }, digit =>
             {
-                Debug.WriteLine("pre dec zone iterating {0} on digit {1}", num.SymbolsText, digit.Value.Symbol);
+                Debug.WriteLine("pre dec zone iterating {0} on digit {1}", num.SymbolsText, digit.NodeValue.Symbol);
             }, true);
 
             Debug.WriteLine("zone iteration away from zero");
             num.ZoneIterate(digit =>
             {
-                Debug.WriteLine("post dec zone iterating {0} on digit {1}", num.SymbolsText, digit.Value.Symbol);
+                Debug.WriteLine("post dec zone iterating {0} on digit {1}", num.SymbolsText, digit.NodeValue.Symbol);
             }, digit =>
             {
-                Debug.WriteLine("pre dec zone iterating {0} on digit {1}", num.SymbolsText, digit.Value.Symbol);
+                Debug.WriteLine("pre dec zone iterating {0} on digit {1}", num.SymbolsText, digit.NodeValue.Symbol);
             }, false);
         }
     }

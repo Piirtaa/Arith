@@ -23,17 +23,19 @@ namespace Arith.Domain.Numbers.Decorations
         #endregion
 
         #region Ctor
-        public MultiplyingNumericDecoration(object decorated)
-            : base(decorated)
+        public MultiplyingNumericDecoration(object decorated,
+            string decorationName = null)
+            : base(decorated, decorationName)
         {
             this.InitMap();
         }
         #endregion
 
         #region Static
-        public static MultiplyingNumericDecoration New(object decorated)
+        public static MultiplyingNumericDecoration New(object decorated,
+            string decorationName = null)
         {
-            return new MultiplyingNumericDecoration(decorated);
+            return new MultiplyingNumericDecoration(decorated, decorationName);
         }
         #endregion
 
@@ -59,7 +61,7 @@ namespace Arith.Domain.Numbers.Decorations
         #region Overrides
         public override IDecoration ApplyThisDecorationTo(object thing)
         {
-            return new MultiplyingNumericDecoration(thing);
+            return new MultiplyingNumericDecoration(thing, this.DecorationName);
         }
         #endregion
 
@@ -165,8 +167,8 @@ namespace Arith.Domain.Numbers.Decorations
                 {
                     arg.ZoneIterateWithIndex((argDigit, argIdx) =>
                     {
-                        var digitProduct = this.MultiplyDigits(argDigit.Value.Symbol,
-                            thisDigit.Value.Symbol, argIdx, thisIdx);
+                        var digitProduct = this.MultiplyDigits(argDigit.NodeValue.Symbol,
+                            thisDigit.NodeValue.Symbol, argIdx, thisIdx);
 
                         sum.Add(digitProduct);
                     }, (argDigit, argIdx) =>
@@ -182,7 +184,7 @@ namespace Arith.Domain.Numbers.Decorations
                 var shifty = sum.AsBelow<IHasShift>(false);
                 shifty.ShiftLeft(argShifts).ShiftLeft(thisNumShifts);
 
-                this.DecoratedOf.SetValue(sum);
+                this.SetValue(sum);
             }
         }
         #endregion
@@ -190,11 +192,12 @@ namespace Arith.Domain.Numbers.Decorations
 
     public static class MultiplyingNumberDecorationExtensions
     {
-        public static MultiplyingNumericDecoration HasMultiplication(this object number)
+        public static MultiplyingNumericDecoration HasMultiplication(this object number, 
+            string decorationName = null)
         {
             var decoration = number.ApplyDecorationIfNotPresent<MultiplyingNumericDecoration>(x =>
             {
-                return MultiplyingNumericDecoration.New(number);
+                return MultiplyingNumericDecoration.New(number, decorationName);
             });
 
             return decoration;

@@ -34,16 +34,18 @@ namespace Arith.Domain.Numbers.Decorations
         #endregion
 
         #region Ctor
-        public AddingNumericDecoration(object decorated)
-            : base(decorated)
+        public AddingNumericDecoration(object decorated, 
+            string decorationName = null)
+            : base(decorated, decorationName)
         {
         }
         #endregion
 
         #region Static
-        public static AddingNumericDecoration New(object decorated)
+        public static AddingNumericDecoration New(object decorated, 
+            string decorationName = null)
         {
-            return new AddingNumericDecoration(decorated);
+            return new AddingNumericDecoration(decorated, decorationName);
         }
         #endregion
 
@@ -69,7 +71,7 @@ namespace Arith.Domain.Numbers.Decorations
         #region Overrides
         public override IDecoration ApplyThisDecorationTo(object thing)
         {
-            return new AddingNumericDecoration(thing);
+            return new AddingNumericDecoration(thing, this.DecorationName);
         }
         #endregion
 
@@ -81,10 +83,17 @@ namespace Arith.Domain.Numbers.Decorations
 
             //if (!this.HasCompatibleNumberSystem(numeric))
             //    throw new InvalidOperationException("incompatible number system");
-            var num2 = numeric.GetInnerNumeric().Clone();
-            var num1 = this.GetInnerNumeric().Clone();
+
+            var numeric1 = this.GetInnerNumeric().Clone() as Numeric;
+            var numeric2 = numeric.GetInnerNumeric().Clone() as Numeric;
+
+            //apply whatever decorations this cake has to the clones
+            //we do this so that node hooks can be applied, for instance
+            var num2 = this.CloneDecorationCake(numeric2) as INumeric;
+            var num1 = this.CloneDecorationCake(numeric1) as INumeric;
             var val = Add(num1, num2);
-            this.DecoratedOf.SetValue(val);
+
+            this.SetValue(val);
         }
         public void Subtract(INumeric numeric)
         {
@@ -93,11 +102,18 @@ namespace Arith.Domain.Numbers.Decorations
 
             //if (!this.HasCompatibleNumberSystem(numeric))
             //    throw new InvalidOperationException("incompatible number system");
-            var num2 = numeric.GetInnerNumeric().Clone() as Numeric;
-            num2.SwitchSign();
-            var num1 = this.GetInnerNumeric().Clone();
+
+            var numeric1 = this.GetInnerNumeric().Clone() as Numeric;
+            var numeric2 = numeric.GetInnerNumeric().Clone() as Numeric;
+            numeric2.SwitchSign();
+
+            //apply whatever decorations this cake has to the clones
+            //we do this so that node hooks can be applied, for instance
+            var num2 = this.CloneDecorationCake(numeric2) as INumeric;
+            var num1 = this.CloneDecorationCake(numeric1) as INumeric;
+            
             var val = Add(num1, num2);
-            this.DecoratedOf.SetValue(val);
+            this.SetValue(val);
         }
         #endregion
 
@@ -118,6 +134,9 @@ namespace Arith.Domain.Numbers.Decorations
             }
             if (number2 == null)
                 return number1;
+
+       //     Debug.WriteLine("adding {0} {1}", number1.SymbolsText,
+       //number2.SymbolsText);
 
             INumeric rv = null;
 
@@ -191,7 +210,7 @@ namespace Arith.Domain.Numbers.Decorations
             //add after the decimal
             while (addNode2 != null)
             {
-                addNode1.Add(addNode2.Value.Symbol);
+                addNode1.Add(addNode2.NodeValue.Symbol);
 
                 addNode2 = addNode2.NextNode as IDigitNode;
                 if (addNode2 != null)
@@ -206,7 +225,7 @@ namespace Arith.Domain.Numbers.Decorations
 
             while (addNode2 != null)
             {
-                addNode1.Value.Add(addNode2.Value.Symbol);
+                addNode1.NodeValue.Add(addNode2.NodeValue.Symbol);
 
                 addNode2 = addNode2.PreviousDigit();
                 if (addNode2 != null)
@@ -235,7 +254,7 @@ namespace Arith.Domain.Numbers.Decorations
             //add after the decimal
             while (addNode2 != null)
             {
-                addNode1.Subtract(addNode2.Value.Symbol);
+                addNode1.Subtract(addNode2.NodeValue.Symbol);
 
                 addNode2 = addNode2.NextDigit();
                 if (addNode2 != null)
@@ -250,7 +269,7 @@ namespace Arith.Domain.Numbers.Decorations
 
             while (addNode2 != null)
             {
-                addNode1.Value.Subtract(addNode2.Value.Symbol);
+                addNode1.NodeValue.Subtract(addNode2.NodeValue.Symbol);
 
                 addNode2 = addNode2.PreviousDigit();
                 if (addNode2 != null)
@@ -264,11 +283,12 @@ namespace Arith.Domain.Numbers.Decorations
 
     public static class AddingNumericDecorationExtensions
     {
-        public static AddingNumericDecoration HasAddition(this object number)
+        public static AddingNumericDecoration HasAddition(this object number,
+            string decorationName = null)
         {
             var decoration = number.ApplyDecorationIfNotPresent<AddingNumericDecoration>(x =>
             {
-                return AddingNumericDecoration.New(number);
+                return AddingNumericDecoration.New(number, decorationName);
             });
 
             return decoration;
@@ -347,12 +367,12 @@ namespace Arith.Domain.Numbers.Decorations
         /// <param name="thisNumber"></param>
         /// <param name="node"></param>
         /// <returns></returns>
-        public static Numeric GetDigitPosition(this INumeric thisNumber,
-            IDigitNode digit)
+        public static Numeric GetDigitPosition(this IDigitNode digit)
         {
-            if (thisNumber == null)
-                throw new ArgumentNullException("thisNumber");
+            if (digit == null)
+                throw new ArgumentNullException("digit");
 
+            var thisNumber = digit.ParentNumeric();
             var pos = thisNumber.GetCompatibleZero().HasAddition();
 
             thisNumber.Filter((node) =>
@@ -374,13 +394,17 @@ namespace Arith.Domain.Numbers.Decorations
         /// <param name="thisNumber"></param>
         /// <param name="digit"></param>
         /// <returns></returns>
-        public static Numeric GetDigitMagnitude(this INumeric thisNumber,
-            IDigitNode digit)
+        public static Numeric GetDigitMagnitude(this IDigitNode digit)
         {
-            if (thisNumber == null)
-                throw new ArgumentNullException("thisNumber");
+            if (digit == null)
+                throw new ArgumentNullException("digit");
+
+            //Debug.WriteLine("geting digit magnitude {0} {1}",
+            //    thisNumber.GetSimpleFormat(),
+            //    digit.Value.Symbol);
 
             Numeric digitIdx = null;
+            var thisNumber = digit.ParentNumeric();
             thisNumber.ZoneIterateWithIndex((node, idx) =>
             {
                 if (object.ReferenceEquals(digit, node))
@@ -524,22 +548,22 @@ namespace Arith.Domain.Numbers.Decorations
             numA.ZoneIterateWithIndex((node, idx) =>
             {
                 Debug.WriteLine("on number {0} digit {1} idx {2}", numA.SymbolsText,
-                    node.Value.Symbol, idx.SymbolsText);
+                    node.NodeValue.Symbol, idx.SymbolsText);
 
-                var mag = numA.GetDigitMagnitude(node);
+                var mag = node.GetDigitMagnitude();
                 Debug.WriteLine("digit order of mag " + mag.SymbolsText);
 
-                var pos = numA.GetDigitPosition(node);
+                var pos = node.GetDigitPosition();
                 Debug.WriteLine("digit pos " + pos.SymbolsText);
             }, (node, idx) =>
             {
                 Debug.WriteLine("on number {0} digit {1} idx {2}", numA.SymbolsText,
-    node.Value.Symbol, idx.SymbolsText);
+    node.NodeValue.Symbol, idx.SymbolsText);
 
-                var mag = numA.GetDigitMagnitude(node);
+                var mag = node.GetDigitMagnitude();
                 Debug.WriteLine("digit order of mag " + mag.SymbolsText);
 
-                var pos = numA.GetDigitPosition(node);
+                var pos = node.GetDigitPosition();
                 Debug.WriteLine("digit pos " + pos.SymbolsText);
             });
 

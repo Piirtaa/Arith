@@ -19,8 +19,8 @@ namespace Arith.DataStructures.Decorations
         IDecorationOf<ILinkedListNode<T>>
     {
         #region Ctor
-        public LinkedListNodeDecorationBase(object decorated)
-            : base(decorated)
+        public LinkedListNodeDecorationBase(object decorated, string decorationName = null)
+            : base(decorated, decorationName)
         {
         }
         #endregion
@@ -47,7 +47,7 @@ namespace Arith.DataStructures.Decorations
         #endregion
 
         #region Decorated Methods
-        public virtual T Value { get { return this.DecoratedOf.Value; } }
+        public virtual T NodeValue { get { return this.DecoratedOf.NodeValue; } }
         public virtual ILinkedListNode<T> NextNode { get { return this.DecoratedOf.NextNode; } set { this.DecoratedOf.NextNode = value; } }
         public virtual ILinkedListNode<T> PreviousNode { get { return this.DecoratedOf.PreviousNode; } set { this.DecoratedOf.PreviousNode = value; } }
         public virtual ILinkedList<T> ParentList { get { return this.DecoratedOf.ParentList; } }

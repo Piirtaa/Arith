@@ -24,11 +24,12 @@ namespace Arith.Domain.Numbers.Decorations
         INumericDecoration
     {
         #region Ctor
-        public NumericDecorationBase(object decorated)
-            : base(decorated)
+        public NumericDecorationBase(object decorated, 
+            string decorationName = null)
+            : base(decorated, decorationName)
         {
             var inner = decorated.GetInnerDecorated();
-            if(!(inner is Numeric))
+            if (!(inner is Numeric))
                 throw new InvalidOperationException("decorated does not have inner Numeric");
 
         }
@@ -48,7 +49,11 @@ namespace Arith.Domain.Numbers.Decorations
         #region IDecoratedOf
         public INumeric DecoratedOf
         {
-            get { return this.Decorated.AsBelow<INumeric>(false); }
+            get
+            {
+                var rv = this.Decorated.AsBelow<INumeric>(false);
+                return rv;
+            }
         }
         #endregion
 
@@ -68,17 +73,17 @@ namespace Arith.Domain.Numbers.Decorations
          * 
          * Those behavioural members that we want the cake to interact with, we
          * mark virtual and operate on DecoratedOf
-         */ 
+         */
 
         public NumeralSet NumberSystem { get { return this.InnerNumeric.NumberSystem; } }
         public bool IsPositive { get { return this.InnerNumeric.IsPositive; } }
         public string SymbolsText { get { return this.InnerNumeric.SymbolsText; } }
-        public virtual void SetValue(string number) 
+        public virtual void SetValue(string number)
         {
             if (!this.IsDecorationEnabled)
                 throw new InvalidOperationException("decoration disabled");
 
-            this.DecoratedOf.SetValue(number); 
+            this.DecoratedOf.SetValue(number);
         }
         public virtual void SetValue(INumeric number)
         {
@@ -107,7 +112,7 @@ namespace Arith.Domain.Numbers.Decorations
         #endregion
 
         #region ILinkedList
-        public Func<IDigit, ILinkedListNode<IDigit>> NodeBuildingStrategy
+        public Func<IDigit,ILinkedList<IDigit>, ILinkedListNode<IDigit>> NodeBuildingStrategy
         {
             get
             {
@@ -121,12 +126,12 @@ namespace Arith.Domain.Numbers.Decorations
 
         public ILinkedListNode<IDigit> FirstNode
         {
-            get {return this.InnerNumeric.FirstNode; }
+            get { return this.InnerNumeric.FirstNode; }
         }
 
         public ILinkedListNode<IDigit> LastNode
         {
-            get { return this.InnerNumeric.LastNode ; }
+            get { return this.InnerNumeric.LastNode; }
         }
 
         public bool Contains(IDigit val)

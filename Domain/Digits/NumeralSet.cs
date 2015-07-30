@@ -70,7 +70,7 @@ namespace Arith.Domain.Digits
                 if (this.SymbolSet.FirstNode == null)
                     return null;
 
-                return this.SymbolSet.FirstNode.Value;
+                return this.SymbolSet.FirstNode.NodeValue;
             }
         }
         public string OneSymbol
@@ -80,7 +80,7 @@ namespace Arith.Domain.Digits
                 if (this.SymbolSet.FirstNode == null || this.SymbolSet.FirstNode.NextNode == null)
                     return null;
 
-                return this.SymbolSet.FirstNode.NextNode.Value;
+                return this.SymbolSet.FirstNode.NextNode.NodeValue;
             }
         }
         #endregion
@@ -101,7 +101,7 @@ namespace Arith.Domain.Digits
             var setNode = set.SymbolSet.FirstNode;
             while (thisNode != null && setNode != null)
             {
-                if (!thisNode.Value.Equals(setNode.Value))
+                if (!thisNode.NodeValue.Equals(setNode.NodeValue))
                     return false;
 
                 thisNode = thisNode.NextNode;
@@ -118,7 +118,7 @@ namespace Arith.Domain.Digits
         }
         public SymbolicDigit GetSymbolicDigit(string symbol)
         {
-            var node = this.SymbolSet.Filter((i) => { return i.Value.Equals(symbol); }, true) as ICircularLinkedListNode<string>;
+            var node = this.SymbolSet.Filter((i) => { return i.NodeValue.Equals(symbol); }, true) as ICircularLinkedListNode<string>;
             return new SymbolicDigit(node);
         }
         public MatrixDigit GetMatrixDigit(string symbol)
@@ -160,8 +160,8 @@ namespace Arith.Domain.Digits
             //validate other reservations
             var match = this._symbols.Filter((x) =>
             {
-                if (symbol.Contains(x.Value) ||
-                x.Value.Contains(symbol))
+                if (symbol.Contains(x.NodeValue) ||
+                x.NodeValue.Contains(symbol))
                 {
                     return true;
                 }

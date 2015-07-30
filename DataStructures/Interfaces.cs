@@ -8,7 +8,7 @@ namespace Arith.DataStructures
 
     public interface ILinkedListNode<T>
     {
-        T Value { get; }
+        T NodeValue { get; }
         ILinkedListNode<T> NextNode { get; set; }
         ILinkedListNode<T> PreviousNode { get; set; }
         ILinkedList<T> ParentList { get; }
@@ -16,7 +16,7 @@ namespace Arith.DataStructures
 
     public interface ILinkedList<T>
     {
-        Func<T, ILinkedListNode<T>> NodeBuildingStrategy { get; set; }
+        Func<T, ILinkedList<T>, ILinkedListNode<T>> NodeBuildingStrategy { get; set; }
         ILinkedListNode<T> FirstNode { get; }
         ILinkedListNode<T> LastNode { get; }
 
@@ -132,7 +132,7 @@ namespace Arith.DataStructures
             ILinkedListNode<T> node = null;
             if (obj.NodeBuildingStrategy != null)
             {
-                node = obj.NodeBuildingStrategy(val);
+                node = obj.NodeBuildingStrategy(val, obj);
             }
             else
             {
@@ -258,6 +258,12 @@ namespace Arith.DataStructures
                 }
             }
         }
+
+        //public static void ValidateListNodesAreNotShared<T>(this ILinkedList<T> obj,
+        //    ILinkedList<T> list2)
+        //{
+
+        //}
         /// <summary>
         /// iterates from first to last and returns item from a positive filter.
         /// demonstrates good practice for iterating the list

@@ -28,16 +28,18 @@ namespace Arith.DataStructures.Decorations
         #endregion
 
         #region Ctor
-        public TweakableLinkedListDecoration(object decorated)
-            : base(decorated)
+        public TweakableLinkedListDecoration(object decorated, 
+            string decorationName = null)
+            : base(decorated, decorationName)
         {
         }
         #endregion
 
         #region Static
-        public static TweakableLinkedListDecoration<T> New(object decorated)
+        public static TweakableLinkedListDecoration<T> New(object decorated, 
+            string decorationName = null)
         {
-            return new TweakableLinkedListDecoration<T>(decorated);
+            return new TweakableLinkedListDecoration<T>(decorated, decorationName);
         }
         #endregion
 
@@ -63,7 +65,7 @@ namespace Arith.DataStructures.Decorations
         #region Overrides
         public override IDecoration ApplyThisDecorationTo(object thing)
         {
-            return new TweakableLinkedListDecoration<T>(thing);
+            return new TweakableLinkedListDecoration<T>(thing, this.DecorationName);
         }
         #endregion
 
@@ -95,11 +97,13 @@ namespace Arith.DataStructures.Decorations
 
     public static class TweakableLinkedListDecorationExtensions
     {
-        public static TweakableLinkedListDecoration<T> HasTweaks<T>(this object thing)
+        public static TweakableLinkedListDecoration<T> HasTweaks<T>(this object thing, 
+            string decorationName = null)
         {
             var decoration = thing.ApplyDecorationIfNotPresent<TweakableLinkedListDecoration<T>>(x =>
             {
-                return TweakableLinkedListDecoration<T>.New(thing.HasHooks<T>().Outer);
+                return TweakableLinkedListDecoration<T>.New(thing.HasHooks<T>().Outer,
+                    decorationName);
             });
 
             return decoration;
@@ -121,9 +125,9 @@ namespace Arith.DataStructures.Decorations
             }
 
             list.SetLastNode(list.LastNode.PreviousNode);
-            Debug.Assert(list.LastNode.Value.Equals(998));
+            Debug.Assert(list.LastNode.NodeValue.Equals(998));
             list.SetFirstNode(list.FirstNode.NextNode);
-            Debug.Assert(list.FirstNode.Value.Equals(2));
+            Debug.Assert(list.FirstNode.NodeValue.Equals(2));
 
         }
 

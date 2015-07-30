@@ -12,6 +12,11 @@ namespace Arith.Decorating
     public interface IDecoration
     {
         /// <summary>
+        /// provides discriminator to group layers together
+        /// </summary>
+        string DecorationName { get; }
+
+        /// <summary>
         /// the immediate thing we are decorating
         /// </summary>
         object Decorated { get; }

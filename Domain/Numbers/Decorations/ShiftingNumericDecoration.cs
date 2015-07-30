@@ -33,17 +33,17 @@ namespace Arith.Domain.Numbers.Decorations
         #endregion
 
         #region Ctor
-        public ShiftNumericDecoration(object decorated)
-            : base(decorated)
+        public ShiftNumericDecoration(object decorated, string decorationName = null)
+            : base(decorated, decorationName)
         {
            
         }
         #endregion
 
         #region Static
-        public static ShiftNumericDecoration New(object decorated)
+        public static ShiftNumericDecoration New(object decorated, string decorationName = null)
         {
-            return new ShiftNumericDecoration(decorated);
+            return new ShiftNumericDecoration(decorated, decorationName);
         }
         #endregion
 
@@ -69,7 +69,7 @@ namespace Arith.Domain.Numbers.Decorations
         #region Overrides
         public override IDecoration ApplyThisDecorationTo(object thing)
         {
-            return new ShiftNumericDecoration(thing);
+            return new ShiftNumericDecoration(thing, this.DecorationName);
         }
         #endregion
 
@@ -97,7 +97,7 @@ namespace Arith.Domain.Numbers.Decorations
                 //move the decimal
                 clone.ZerothDigit = node;
 
-                this.DecoratedOf.SetValue(clone);
+                this.SetValue(clone);
             }
         }
         /// <summary>
@@ -123,7 +123,7 @@ namespace Arith.Domain.Numbers.Decorations
                 //move the decimal
                 clone.ZerothDigit = node;
 
-                this.DecoratedOf.SetValue(clone);
+                this.SetValue(clone);
             }
         }
         #endregion
@@ -131,12 +131,13 @@ namespace Arith.Domain.Numbers.Decorations
 
     public static class ShiftNumberDecorationExtensions
     {
-        public static ShiftNumericDecoration HasShift(this object number)
+        public static ShiftNumericDecoration HasShift(this object number,
+            string decorationName = null)
         {
             var decoration = number.ApplyDecorationIfNotPresent<ShiftNumericDecoration>(x =>
             {
                 //note the hooking injection
-                return ShiftNumericDecoration.New(number);
+                return ShiftNumericDecoration.New(number, decorationName);
             });
 
             return decoration;

@@ -17,16 +17,18 @@ namespace Arith.Domain.Numbers
     public class DigitNodeDecoration : LinkedListNodeDecorationBase<IDigit>, IDigitNode
     {
         #region Ctor
-        public DigitNodeDecoration(object decorated)
-            : base(decorated)
+        public DigitNodeDecoration(object decorated, 
+            string decorationName = null)
+            : base(decorated, decorationName)
         {
         }
         #endregion
 
         #region Static Builders
-        public static DigitNodeDecoration New(object decorated)
+        public static DigitNodeDecoration New(object decorated,
+            string decorationName = null)
         {
-            return new DigitNodeDecoration(decorated);
+            return new DigitNodeDecoration(decorated, decorationName);
         }
         #endregion
 
@@ -35,13 +37,13 @@ namespace Arith.Domain.Numbers
         #endregion
 
         #region Calculated Properties
-        public string Symbol { get { return this.Value.Symbol; } }
+        public string Symbol { get { return this.NodeValue.Symbol; } }
         #endregion
 
         #region IDigitNode
         public void SetValue(string symbol)
         {
-            this.Value.SetValue(symbol);
+            this.NodeValue.SetValue(symbol);
         }
         /// <summary>
         /// this will add the symbol to the digits position, and handles rollover by 
@@ -51,7 +53,7 @@ namespace Arith.Domain.Numbers
         /// <returns></returns>
         public bool Add(string symbol)
         {
-            var rv = this.Value.Add(symbol);
+            var rv = this.NodeValue.Add(symbol);
             if (rv)
             {
                 this.LoadNextDigit().AddOne();
@@ -66,7 +68,7 @@ namespace Arith.Domain.Numbers
         /// <returns></returns>
         public bool Subtract(string symbol)
         {
-            var rv = this.Value.Subtract(symbol);
+            var rv = this.NodeValue.Subtract(symbol);
             if (rv)
             {
                 //if we are in a position where NextDigit does not exist, then we throw 
@@ -87,7 +89,7 @@ namespace Arith.Domain.Numbers
         /// <returns></returns>
         public bool AddOne()
         {
-            var rv = this.Value.AddOne();
+            var rv = this.NodeValue.AddOne();
             if (rv)
             {
                 this.LoadNextDigit().AddOne();
@@ -102,7 +104,7 @@ namespace Arith.Domain.Numbers
         /// <returns></returns>
         public bool SubtractOne()
         {
-            var rv = this.Value.SubtractOne();
+            var rv = this.NodeValue.SubtractOne();
             if (rv)
             {
                 //if we are in a position where NextDigit does not exist, then we throw 
@@ -120,18 +122,19 @@ namespace Arith.Domain.Numbers
         #region Overrides
         public override IDecoration ApplyThisDecorationTo(object thing)
         {
-            return new DigitNodeDecoration(thing);
+            return new DigitNodeDecoration(thing, this.DecorationName);
         }
         #endregion
     }
 
     public static class DigitNodeDecorationExtensions
     {
-        public static DigitNodeDecoration HasDigits(this object number)
+        public static DigitNodeDecoration HasDigits(this object number, 
+            string decorationName = null)
         {
             var decoration = number.ApplyDecorationIfNotPresent<DigitNodeDecoration>(x =>
             {
-                return DigitNodeDecoration.New(number);
+                return DigitNodeDecoration.New(number, decorationName);
             });
 
             return decoration;

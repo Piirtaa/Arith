@@ -31,7 +31,7 @@ namespace Arith.Domain.Numbers
             if (digitNode == null)
                 throw new ArgumentNullException("digitNode");
 
-            return digitNode.Value.IsEqualTo(digitNode.ParentNumeric().NumberSystem.ZeroSymbol);
+            return digitNode.NodeValue.IsEqualTo(digitNode.ParentNumeric().NumberSystem.ZeroSymbol);
         }
 
         /// <summary>
@@ -44,7 +44,7 @@ namespace Arith.Domain.Numbers
             if (digitNode == null)
                 throw new ArgumentNullException("digitNode");
 
-            return digitNode.Value.IsEqualTo(digitNode.ParentNumeric().NumberSystem.OneSymbol);
+            return digitNode.NodeValue.IsEqualTo(digitNode.ParentNumeric().NumberSystem.OneSymbol);
         }
 
         /// <summary>

@@ -19,8 +19,8 @@ namespace Arith.DataStructures.Decorations
         IDecorationOf<ILinkedList<T>>
     {
         #region Ctor
-        public LinkedListDecorationBase(object decorated)
-            : base(decorated)
+        public LinkedListDecorationBase(object decorated, string decorationName = null)
+            : base(decorated, decorationName)
         {
         }
         #endregion
@@ -47,7 +47,7 @@ namespace Arith.DataStructures.Decorations
         #endregion
 
         #region Decorated Methods
-        public Func<T, ILinkedListNode<T>> NodeBuildingStrategy
+        public Func<T,ILinkedList<T>, ILinkedListNode<T>> NodeBuildingStrategy
         {
             get { return DecoratedOf.NodeBuildingStrategy; }
             set { DecoratedOf.NodeBuildingStrategy = value; }

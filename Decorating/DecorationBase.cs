@@ -16,7 +16,7 @@ namespace Arith.Decorating
     /// Implements ISerializable so that derivations from this class will have hooks to implement
     /// native serialization
     /// </remarks>
-    public abstract class DecorationBase : DisposableBase, 
+    public abstract class DecorationBase : DisposableBase,
         IDecoration, ISerializable,
         IDecoratorAwareDecoration, ITogglingDecoration
     {
@@ -32,10 +32,13 @@ namespace Arith.Decorating
         /// the base ctor for a decoration.  it MUST decorate something!!  
         /// </summary>
         /// <param name="decorated">kacks on null</param>
-        public DecorationBase(object decorated)
+        public DecorationBase(object decorated, string decorationName = null)
         {
             this.IsDecorationEnabled = true;
+
             this.SetDecorated(decorated);
+            if (decorationName != null)
+                this.DecorationName = decorationName;
         }
         #endregion
 
@@ -44,6 +47,7 @@ namespace Arith.Decorating
         {
             Type type = info.GetValue("_type", typeof(Type)) as Type;
             this._Decorated = info.GetValue("_Decorated", type);
+            this.DecorationName = info.GetString("DecorationName");
         }
         void ISerializable.GetObjectData(SerializationInfo info, StreamingContext context)
         {
@@ -59,12 +63,18 @@ namespace Arith.Decorating
         /// <param name="context"></param>
         protected virtual void ISerializable_GetObjectData(SerializationInfo info, StreamingContext context)
         {
+            info.AddValue("DecorationName", this.DecorationName);
             info.AddValue("_Decorated", this._Decorated);
             info.AddValue("_type", this.Decorated.GetType());
         }
         #endregion
 
         #region IDecoration
+        /// <summary>
+        /// provides discriminator to group layers together
+        /// </summary>
+        public string DecorationName { get; protected set; }
+
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public object Decorated { get { return this._Decorated; } }
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
@@ -137,6 +147,8 @@ namespace Arith.Decorating
             {
                 IDecoration dec = decorated as IDecoration;
                 this._Inner = dec.Inner;
+
+                this.DecorationName = dec.DecorationName;
             }
             else
             {
@@ -148,9 +160,11 @@ namespace Arith.Decorating
             {
                 (decorated as IDecoratorAwareDecoration).Decorator = this;
             }
-            
+
             //validate IIsA declarations exist
             this.ValidateIIsAConstraints();
+
+
         }
         #endregion
 

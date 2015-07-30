@@ -45,7 +45,7 @@ namespace Arith.Decorating
 
             return (obj as IDecoration).Decorated;
         }
-       
+
         /// <summary>
         /// walking Decorated chain, gets the inner most decoration's core 
         /// </summary>
@@ -240,6 +240,16 @@ namespace Arith.Decorating
     /// </summary>
     public static class AsExtensions
     {
+        public static object AsBelow(this object obj,
+    Type decorationType,
+    bool exactTypeMatch = true)
+        {
+            string decorationName = null;
+            if (obj.IsADecoration())
+                decorationName = (obj as IDecoration).DecorationName;
+
+            return AsBelow(obj, decorationType, decorationName, exactTypeMatch);
+        }
         /// <summary>
         /// looks for the "As face" by walking down the decorations 
         /// </summary>
@@ -247,7 +257,11 @@ namespace Arith.Decorating
         /// <param name="decorationType"></param>
         /// <param name="exactTypeMatch"></param>
         /// <returns></returns>
-        public static object AsBelow(this object obj, Type decorationType, bool exactTypeMatch = true)
+        public static object AsBelow(this object obj,
+            Type decorationType,
+            string decorationName,
+            bool exactTypeMatch = true
+            )
         {
             if (obj == null)
                 return null;
@@ -256,6 +270,14 @@ namespace Arith.Decorating
             {
                 var layerType = dec.GetType();
 
+                //check same name
+                string layerDecorationName = null;
+                if (dec.IsADecoration())
+                    layerDecorationName = (dec as IDecoration).DecorationName;
+
+                if (!string.Equals(decorationName, layerDecorationName))
+                    return false;
+
                 //if we're exact matching, the decoration has to be the same type
                 if (exactTypeMatch && decorationType.Equals(layerType) == false)
                     return false;
@@ -263,6 +285,7 @@ namespace Arith.Decorating
                 //if we're not exact matching, the decoration has to be Of the same type
                 if (exactTypeMatch == false && (!(decorationType.IsAssignableFrom(layerType))))
                     return false;
+
 
                 return true;
 
@@ -273,13 +296,24 @@ namespace Arith.Decorating
         /// <summary>
         /// looks for the "As face" by walking down the decorations 
         /// </summary>
-        public static T AsBelow<T>(this object obj, bool exactTypeMatch = true)
+        public static T AsBelow<T>(this object obj,
+            bool exactTypeMatch = true)
         {
             var rv = obj.AsBelow(typeof(T), exactTypeMatch);
             if (rv == null)
                 return default(T);
 
             return (T)rv;
+        }
+        public static object AsAbove(this object obj,
+      Type decorationType,
+      bool exactTypeMatch = true)
+        {
+            string decorationName = null;
+            if (obj.IsADecoration())
+                decorationName = (obj as IDecoration).DecorationName;
+
+            return AsAbove(obj, decorationType, decorationName, exactTypeMatch);
         }
         /// <summary>
         /// looks for the "As face" by walking up the decorators
@@ -288,13 +322,24 @@ namespace Arith.Decorating
         /// <param name="decorationType"></param>
         /// <param name="exactTypeMatch"></param>
         /// <returns></returns>
-        public static object AsAbove(this object obj, Type decorationType, bool exactTypeMatch = true)
+        public static object AsAbove(this object obj,
+            Type decorationType,
+            string decorationName,
+            bool exactTypeMatch = true)
         {
             if (obj == null)
                 return null;
 
             var match = obj.WalkDecoratorsToOuter((dec) =>
             {
+                //check same name
+                string layerDecorationName = null;
+                if (dec.IsADecoration())
+                    layerDecorationName = (dec as IDecoration).DecorationName;
+
+                if (!string.Equals(decorationName, layerDecorationName))
+                    return false;
+
                 //if we're exact matching, the decoration has to be the same type
                 if (exactTypeMatch && decorationType.Equals(dec.GetType()) == false)
                     return false;
@@ -312,7 +357,8 @@ namespace Arith.Decorating
         /// <summary>
         /// looks for the "As face" by walking up the decorators
         /// </summary>
-        public static T AsAbove<T>(this object obj, bool exactTypeMatch = true)
+        public static T AsAbove<T>(this object obj,
+            bool exactTypeMatch = true)
         {
             var rv = obj.AsAbove(typeof(T), exactTypeMatch);
             if (rv == null)
@@ -320,7 +366,16 @@ namespace Arith.Decorating
 
             return (T)rv;
         }
+        public static object As(this object obj,
+    Type decorationType,
+    bool exactTypeMatch)
+        {
+            string decorationName = null;
+            if (obj.IsADecoration())
+                decorationName = (obj as IDecoration).DecorationName;
 
+            return As(obj, decorationType, decorationName, exactTypeMatch);
+        }
         /// <summary>
         /// looks for the "As face" by walking ALL the decorations.  If DecoratorAware, walks down from Outer.  If not
         /// DecoratorAware, walks down from Self 
@@ -329,7 +384,10 @@ namespace Arith.Decorating
         /// <param name="decorationType"></param>
         /// <param name="exactTypeMatch"></param>
         /// <returns></returns>
-        public static object As(this object obj, Type decorationType, bool exactTypeMatch)
+        public static object As(this object obj,
+            Type decorationType,
+            string decorationName,
+            bool exactTypeMatch)
         {
             if (obj == null)
                 return null;
@@ -342,13 +400,14 @@ namespace Arith.Decorating
                 topMost = obj.GetOuterDecorator();
             }
 
-            return topMost.AsBelow(decorationType, exactTypeMatch);
+            return topMost.AsBelow(decorationType, decorationName, exactTypeMatch);
         }
         /// <summary>
         /// looks for the "As face" by walking ALL the decorations.  If DecoratorAware, walks down from Outer.  If not
         /// DecoratorAware, walks down from Self 
         /// </summary>
-        public static T As<T>(this object obj, bool exactTypeMatch = true)
+        public static T As<T>(this object obj,
+            bool exactTypeMatch = true)
         {
             var rv = obj.As(typeof(T), exactTypeMatch);
             if (rv == null)
@@ -385,7 +444,9 @@ namespace Arith.Decorating
         /// <param name="obj"></param>
         /// <param name="typeToImplement"></param>
         /// <returns></returns>
-        public static List<object> GetAllImplementingDecorations(this object obj, Type typeToImplement)
+        public static List<object> GetAllImplementingDecorations(this object obj,
+            Type typeToImplement,
+            string decorationName = null)
         {
             List<object> rv = new List<object>();
 
@@ -398,11 +459,12 @@ namespace Arith.Decorating
 
             return rv;
         }
-        
+
         /// <summary>
         /// find all decorations of a given type
         /// </summary>
-        public static List<T> GetAllImplementingDecorations<T>(this object obj)
+        public static List<T> GetAllImplementingDecorations<T>(this object obj,
+            string decorationName = null)
         {
             Type type = typeof(T);
             var list = obj.GetAllImplementingDecorations(type);
@@ -502,7 +564,11 @@ namespace Arith.Decorating
 
     public static class DecorationExtensions
     {
-        public static bool ToggleDecoration(this object obj, bool isEnabled, Type decType, bool exactTypeMatch = true)
+        public static bool ToggleDecoration(this object obj,
+            bool isEnabled,
+            Type decType,
+            bool exactTypeMatch = true,
+            string decorationName = null)
         {
             if (obj == null)
                 return false;
@@ -519,7 +585,10 @@ namespace Arith.Decorating
             }
             return false;
         }
-        public static bool ToggleDecoration<T>(this object obj, bool isEnabled, bool exactTypeMatch = true)
+        public static bool ToggleDecoration<T>(this object obj,
+            bool isEnabled,
+            bool exactTypeMatch = true,
+            string decorationName = null)
         {
             return obj.ToggleDecoration(isEnabled, typeof(T), exactTypeMatch);
         }
@@ -535,7 +604,9 @@ namespace Arith.Decorating
         /// <param name="obj"></param>
         /// <param name="factory"></param>
         /// <returns></returns>
-        public static T ApplyDecorationIfNotPresent<T>(this object obj, Func<object, T> factory)
+        public static T ApplyDecorationIfNotPresent<T>(this object obj,
+            Func<object, T> factory,
+            string decorationName = null)
         {
             if (obj == null)
                 throw new ArgumentNullException("obj");

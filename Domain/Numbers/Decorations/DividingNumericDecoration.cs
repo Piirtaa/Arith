@@ -27,16 +27,18 @@ namespace Arith.Domain.Numbers.Decorations
         #endregion
 
         #region Ctor
-        public DividingNumericDecoration(object decorated)
-            : base(decorated)
+        public DividingNumericDecoration(object decorated,
+            string decorationName = null)
+            : base(decorated, decorationName)
         {
         }
         #endregion
 
         #region Static
-        public static DividingNumericDecoration New(object decorated)
+        public static DividingNumericDecoration New(object decorated, 
+            string decorationName = null)
         {
-            return new DividingNumericDecoration(decorated);
+            return new DividingNumericDecoration(decorated, decorationName);
         }
         #endregion
 
@@ -62,7 +64,7 @@ namespace Arith.Domain.Numbers.Decorations
         #region Overrides
         public override IDecoration ApplyThisDecorationTo(object thing)
         {
-            return new DividingNumericDecoration(thing);
+            return new DividingNumericDecoration(thing, this.DecorationName);
         }
         #endregion
 
@@ -76,7 +78,7 @@ namespace Arith.Domain.Numbers.Decorations
                     this.GetCompatibleNumber(number),
                     this.As<IHasPrecision>(false).DecimalPlaces as Numeric);
 
-                this.DecoratedOf.SetValue(rv);
+                this.SetValue(rv);
             }
         }
         #endregion
@@ -234,7 +236,7 @@ namespace Arith.Domain.Numbers.Decorations
             subtracted.ShiftRight(orderOfMag);
             var oldDividend = dividend.SymbolsText;
             dividend.HasAddition().Subtract(subtracted);
-            product.AddLeastSignificantDigit(count.FirstDigit.Value.Symbol);
+            product.AddLeastSignificantDigit(count.FirstDigit.NodeValue.Symbol);
 
             Debug.WriteLine("dividend subtraction step. {0} - {1} = {2}, dividing {3} times",
        oldDividend,
@@ -346,12 +348,15 @@ namespace Arith.Domain.Numbers.Decorations
 
     public static class DividingNumberDecorationExtensions
     {
-        public static DividingNumericDecoration HasDivision(this object number, Numeric decimalPlaces)
+        public static DividingNumericDecoration HasDivision(this object number,
+            Numeric decimalPlaces,
+            string decorationName = null)
         {
             var decoration = number.ApplyDecorationIfNotPresent<DividingNumericDecoration>(x =>
             {
                 //note the precision decoration injection
-                return DividingNumericDecoration.New(number.HasPrecision(decimalPlaces).Outer);
+                return DividingNumericDecoration.New(number.HasPrecision(decimalPlaces).Outer,
+                    decorationName);
             });
             //update the precision to passed arg
             decoration.AsBelow<PrecisionNumericDecoration>(true).DecimalPlaces = decimalPlaces;
@@ -380,7 +385,7 @@ namespace Arith.Domain.Numbers.Decorations
                 var trimNum = numeric.Trim(dNode, true);
 
                 //then get the number order of magnitude
-                var mag = numeric.GetDigitMagnitude(dNode);
+                var mag = dNode.GetDigitMagnitude();
 
                 return filter(trimNum, mag);
             }, false);

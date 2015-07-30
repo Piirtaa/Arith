@@ -59,7 +59,7 @@ namespace Arith.Domain.Digits
         /// <summary>
         /// the current numeral symbol
         /// </summary>
-        public string Symbol { get { return this._numeral.Value; } }
+        public string Symbol { get { return this._numeral.NodeValue; } }
         /// <summary>
         /// false = this is less, true= this is greater, null = equal
         /// </summary>
@@ -78,10 +78,10 @@ namespace Arith.Domain.Digits
             //find which digit comes first thru simple iteration.  this is the smaller digit
             while (numeral != null)
             {
-                if (numeral.Value.Equals(this.Symbol))
+                if (numeral.NodeValue.Equals(this.Symbol))
                     return false;
 
-                if (numeral.Value.Equals(symbol))
+                if (numeral.NodeValue.Equals(symbol))
                     return true;
 
                 if (numeral.IsLast())

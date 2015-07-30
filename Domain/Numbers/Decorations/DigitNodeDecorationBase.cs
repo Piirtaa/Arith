@@ -18,8 +18,9 @@ namespace Arith.Domain.Numbers.Decorations
         IDigitNodeDecoration
     {
         #region Ctor
-        public DigitNodeDecorationBase(object decorated)
-            : base(decorated)
+        public DigitNodeDecorationBase(object decorated,
+            string decorationName = null)
+            : base(decorated, decorationName)
         {
 
         }
@@ -90,9 +91,9 @@ namespace Arith.Domain.Numbers.Decorations
 
 
         #region ILinkedListNode
-        public virtual IDigit Value
+        public virtual IDigit NodeValue
         {
-            get { return this.DecoratedOf.Value; }
+            get { return this.DecoratedOf.NodeValue; }
         }
 
         public virtual ILinkedListNode<IDigit> NextNode

@@ -37,8 +37,9 @@ namespace Arith.DataStructures.Decorations
         #region Ctor
         public HookedLinkedListDecoration(object decorated,
             Action<ILinkedListNode<T>> postNodeInsertionStrategy = null,
-            Action<ILinkedList<T>> postMutateStrategy = null)
-            : base(decorated)
+            Action<ILinkedList<T>> postMutateStrategy = null, 
+            string decorationName = null)
+            : base(decorated, decorationName)
         {
             this.PostMutateStrategy = postMutateStrategy;
             this.PostNodeInsertionStrategy = postNodeInsertionStrategy;
@@ -48,9 +49,13 @@ namespace Arith.DataStructures.Decorations
         #region Static
         public static HookedLinkedListDecoration<T> New(object decorated,
             Action<ILinkedListNode<T>> postNodeInsertionStrategy = null,
-            Action<ILinkedList<T>> postMutateStrategy = null)
+            Action<ILinkedList<T>> postMutateStrategy = null, 
+            string decorationName = null)
         {
-            return new HookedLinkedListDecoration<T>(decorated, postNodeInsertionStrategy, postMutateStrategy);
+            return new HookedLinkedListDecoration<T>(decorated, 
+                postNodeInsertionStrategy, 
+                postMutateStrategy,
+                decorationName);
         }
         #endregion
 
@@ -76,7 +81,10 @@ namespace Arith.DataStructures.Decorations
         #region Overrides
         public override IDecoration ApplyThisDecorationTo(object thing)
         {
-            return new HookedLinkedListDecoration<T>(thing);
+            return new HookedLinkedListDecoration<T>(thing,
+                this.PostNodeInsertionStrategy,
+                this.PostMutateStrategy,
+                this.DecorationName);
         }
         #endregion
 
@@ -191,11 +199,17 @@ namespace Arith.DataStructures.Decorations
     {
         public static HookedLinkedListDecoration<T> HasHooks<T>(this object thing,
             Action<ILinkedListNode<T>> postNodeInsertionStrategy = null,
-            Action<ILinkedList<T>> postMutateStrategy = null)
+            Action<ILinkedList<T>> postMutateStrategy = null, 
+            string decorationName = null)
         {
-            var decoration = thing.ApplyDecorationIfNotPresent<HookedLinkedListDecoration<T>>(x =>
+            var decoration = thing.ApplyDecorationIfNotPresent
+                <HookedLinkedListDecoration<T>>
+                (x =>
             {
-                return HookedLinkedListDecoration<T>.New(thing, postNodeInsertionStrategy, postMutateStrategy);
+                return HookedLinkedListDecoration<T>.New(thing, 
+                    postNodeInsertionStrategy,
+                    postMutateStrategy,
+                    decorationName);
             });
 
             return decoration;
@@ -238,14 +252,14 @@ namespace Arith.DataStructures.Decorations
 
             list.PostMutateStrategy = (l) =>
             {
-                Debug.WriteLine("mutating to " + l.LastNode.Value);
-                Debug.Assert(counter == l.LastNode.Value);
+                Debug.WriteLine("mutating to " + l.LastNode.NodeValue);
+                Debug.Assert(counter == l.LastNode.NodeValue);
             };
 
             list.PostNodeInsertionStrategy = (item) =>
             {
                 //this hook happens first, so the counter should lag the item
-                Debug.Assert(counter == item.Value - 1);
+                Debug.Assert(counter == item.NodeValue - 1);
                 counter++;
             };
 
@@ -259,9 +273,9 @@ namespace Arith.DataStructures.Decorations
             {
                 if (!l.IsEmpty())
                 {
-                    Debug.WriteLine("mutating to " + l.LastNode.Value);
+                    Debug.WriteLine("mutating to " + l.LastNode.NodeValue);
                     counter--;
-                    Debug.Assert(counter == l.LastNode.Value);
+                    Debug.Assert(counter == l.LastNode.NodeValue);
                 }
             };
 

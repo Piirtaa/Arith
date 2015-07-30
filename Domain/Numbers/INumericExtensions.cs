@@ -264,11 +264,11 @@ namespace Arith.Domain.Numbers
                     IDigitNode newNode = null;
                     if (toMSD)
                     {
-                        newNode = rv.AddMostSignificantDigit(node.Value.Symbol);
+                        newNode = rv.AddMostSignificantDigit(node.NodeValue.Symbol);
                     }
                     else
                     {
-                        newNode = rv.AddLeastSignificantDigit(node.Value.Symbol);
+                        newNode = rv.AddLeastSignificantDigit(node.NodeValue.Symbol);
                     }
                     IDigitNode dNode = node as IDigitNode;
                     if (dNode.IsZerothDigit())
