@@ -83,7 +83,7 @@ namespace Arith.Domain.Numbers
         /// </summary>
         /// <param name="thisNumber"></param>
         /// <returns></returns>
-        public static Numeric GetInnerNumeric(this INumeric thisNumber)
+        public static Numeric GetInnermostNumeric(this INumeric thisNumber)
         {
             if (thisNumber == null)
                 throw new ArgumentNullException("thisNumber");
@@ -92,7 +92,7 @@ namespace Arith.Domain.Numbers
                 return thisNumber as Numeric;
 
             if (thisNumber is NumericDecorationBase)
-                return (thisNumber as NumericDecorationBase).InnerNumeric;
+                return (thisNumber as NumericDecorationBase).InnermostNumeric;
 
             throw new InvalidOperationException("cannot find inner numeric");
         }
@@ -148,7 +148,7 @@ namespace Arith.Domain.Numbers
             if (numeric == null)
                 throw new ArgumentNullException("numeric");
 
-            var clone = numeric.GetInnerNumeric().Clone() as Numeric;
+            var clone = numeric.GetInnermostNumeric().Clone() as Numeric;
             clone.SwitchSign();
 
             return clone;

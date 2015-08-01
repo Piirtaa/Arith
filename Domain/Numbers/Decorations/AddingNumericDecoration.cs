@@ -34,7 +34,7 @@ namespace Arith.Domain.Numbers.Decorations
         #endregion
 
         #region Ctor
-        public AddingNumericDecoration(object decorated, 
+        public AddingNumericDecoration(object decorated,
             string decorationName = null)
             : base(decorated, decorationName)
         {
@@ -42,7 +42,7 @@ namespace Arith.Domain.Numbers.Decorations
         #endregion
 
         #region Static
-        public static AddingNumericDecoration New(object decorated, 
+        public static AddingNumericDecoration New(object decorated,
             string decorationName = null)
         {
             return new AddingNumericDecoration(decorated, decorationName);
@@ -84,8 +84,8 @@ namespace Arith.Domain.Numbers.Decorations
             //if (!this.HasCompatibleNumberSystem(numeric))
             //    throw new InvalidOperationException("incompatible number system");
 
-            var numeric1 = this.GetInnerNumeric().Clone() as Numeric;
-            var numeric2 = numeric.GetInnerNumeric().Clone() as Numeric;
+            var numeric1 = this.GetInnermostNumeric().Clone() as Numeric;
+            var numeric2 = numeric.GetInnermostNumeric().Clone() as Numeric;
 
             //apply whatever decorations this cake has to the clones
             //we do this so that node hooks can be applied, for instance
@@ -103,15 +103,15 @@ namespace Arith.Domain.Numbers.Decorations
             //if (!this.HasCompatibleNumberSystem(numeric))
             //    throw new InvalidOperationException("incompatible number system");
 
-            var numeric1 = this.GetInnerNumeric().Clone() as Numeric;
-            var numeric2 = numeric.GetInnerNumeric().Clone() as Numeric;
+            var numeric1 = this.GetInnermostNumeric().Clone() as Numeric;
+            var numeric2 = numeric.GetInnermostNumeric().Clone() as Numeric;
             numeric2.SwitchSign();
 
             //apply whatever decorations this cake has to the clones
             //we do this so that node hooks can be applied, for instance
             var num2 = this.CloneDecorationCake(numeric2) as INumeric;
             var num1 = this.CloneDecorationCake(numeric1) as INumeric;
-            
+
             var val = Add(num1, num2);
             this.SetValue(val);
         }
@@ -135,14 +135,14 @@ namespace Arith.Domain.Numbers.Decorations
             if (number2 == null)
                 return number1;
 
-       //     Debug.WriteLine("adding {0} {1}", number1.SymbolsText,
-       //number2.SymbolsText);
+            //     Debug.WriteLine("adding {0} {1}", number1.SymbolsText,
+            //number2.SymbolsText);
 
             INumeric rv = null;
 
             //determine the longer number
-            bool? num1IsLonger = Numeric.AbsoluteValueCompare(number1.GetInnerNumeric(),
-                number2.GetInnerNumeric());
+            bool? num1IsLonger = Numeric.AbsoluteValueCompare(number1.GetInnermostNumeric(),
+                number2.GetInnermostNumeric());
 
             //note: below we clone the 2nd arg if it is being modified as part of the operation
             //we don't clone the 1st arg as it is 
@@ -162,7 +162,7 @@ namespace Arith.Domain.Numbers.Decorations
                         break;
                     case false:
                         rv = Decrement(number2, number1);
-                        rv.GetInnerNumeric().IsPositive = false;
+                        rv.GetInnermostNumeric().IsPositive = false;
                         break;
                 }
             }
@@ -178,14 +178,14 @@ namespace Arith.Domain.Numbers.Decorations
                         break;
                     case false:
                         rv = Decrement(number2, number1);
-                        rv.GetInnerNumeric().IsPositive = true;
+                        rv.GetInnermostNumeric().IsPositive = true;
                         break;
                 }
             }
             else if (number1.IsPositive == false && number2.IsPositive == false)
             {
                 rv = Increment(number1, number2);
-                rv.GetInnerNumeric().IsPositive = false;
+                rv.GetInnermostNumeric().IsPositive = false;
             }
 
             return rv;
@@ -286,12 +286,7 @@ namespace Arith.Domain.Numbers.Decorations
         public static AddingNumericDecoration HasAddition(this object number,
             string decorationName = null)
         {
-            var decoration = number.ApplyDecorationIfNotPresent<AddingNumericDecoration>(x =>
-            {
-                return AddingNumericDecoration.New(number, decorationName);
-            });
-
-            return decoration;
+            return AddingNumericDecoration.New(number, decorationName);
         }
 
         public static void AddOne(this INumeric thisNumber)
@@ -325,7 +320,7 @@ namespace Arith.Domain.Numbers.Decorations
 
             var zero = number.GetCompatibleZero();
 
-            AddingNumericDecoration num = number.GetInnerNumeric().Clone().HasAddition();
+            AddingNumericDecoration num = number.GetInnermostNumeric().Clone().HasAddition();
             while (num.IsGreaterThan(zero))
             {
                 action(num);
@@ -356,8 +351,8 @@ namespace Arith.Domain.Numbers.Decorations
                 counter2.AddOne();
             }, false);
 
-            wholeNumberLength = counter1.InnerNumeric;
-            decimalLength = counter2.InnerNumeric;
+            wholeNumberLength = counter1.InnermostNumeric;
+            decimalLength = counter2.InnermostNumeric;
         }
 
         /// <summary>
@@ -384,7 +379,7 @@ namespace Arith.Domain.Numbers.Decorations
                 return false;
             }, true);
 
-            return pos.InnerNumeric;
+            return pos.InnermostNumeric;
         }
 
         /// <summary>
@@ -437,16 +432,16 @@ namespace Arith.Domain.Numbers.Decorations
 
             var counter1 = thisNumber.GetCompatibleZero().HasAddition();
             var counter2 = thisNumber.GetCompatibleOne().HasAddition();
-            counter2.InnerNumeric.SwitchSign();
+            counter2.InnermostNumeric.SwitchSign();
 
             //note we iterate from zeroth outwards to msd to facilitate counting the index 
             thisNumber.ZoneIterate((node) =>
             {
-                postZeroAction(node, counter1.InnerNumeric.Clone() as Numeric);
+                postZeroAction(node, counter1.InnermostNumeric.Clone() as Numeric);
                 counter1.AddOne();
             }, (node) =>
             {
-                preZeroAction(node, counter2.InnerNumeric.Clone() as Numeric);
+                preZeroAction(node, counter2.InnermostNumeric.Clone() as Numeric);
                 counter2.SubtractOne();
             }, false);
         }

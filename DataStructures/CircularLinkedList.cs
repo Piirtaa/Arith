@@ -21,7 +21,7 @@ namespace Arith.DataStructures
             //which implements IHasDecoration<IHasHooks<T>>, or it will 
             //fail runtime validation.  so we decorate with hooks in the ctor.
 
-            this.NodeBuildingList.AddNodes(items);
+            this.OuterNodeBuildingList.AddNodes(items);
         }
         #endregion
     }

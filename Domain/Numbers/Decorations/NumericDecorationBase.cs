@@ -59,11 +59,11 @@ namespace Arith.Domain.Numbers.Decorations
 
         #region INumeric
         /// <summary>
-        /// Returns the inner, undecorated numeric
+        /// Returns the lower numeric
         /// </summary>
-        public Numeric InnerNumeric
+        public Numeric InnermostNumeric
         {
-            get { return this.Inner as Numeric; }
+            get { return this.AsInnermost<Numeric>(false); }
         }
 
         /*Note: the INumeric members that are "immutable of implementation" are those
@@ -75,9 +75,9 @@ namespace Arith.Domain.Numbers.Decorations
          * mark virtual and operate on DecoratedOf
          */
 
-        public NumeralSet NumberSystem { get { return this.InnerNumeric.NumberSystem; } }
-        public bool IsPositive { get { return this.InnerNumeric.IsPositive; } }
-        public string SymbolsText { get { return this.InnerNumeric.SymbolsText; } }
+        public NumeralSet NumberSystem { get { return this.InnermostNumeric.NumberSystem; } }
+        public bool IsPositive { get { return this.InnermostNumeric.IsPositive; } }
+        public string SymbolsText { get { return this.InnermostNumeric.SymbolsText; } }
         public virtual void SetValue(string number)
         {
             if (!this.IsDecorationEnabled)
@@ -92,11 +92,11 @@ namespace Arith.Domain.Numbers.Decorations
 
             this.DecoratedOf.SetValue(number);
         }
-        public IDigitNode ZerothDigit { get { return this.InnerNumeric.ZerothDigit; } }
+        public IDigitNode ZerothDigit { get { return this.InnermostNumeric.ZerothDigit; } }
         /// <summary>
         /// false = this is less, true= this is greater, null = equal
         /// </summary>
-        public bool? Compare(INumeric number) { return this.InnerNumeric.Compare(number); }
+        public bool? Compare(INumeric number) { return this.InnermostNumeric.Compare(number); }
         /// <summary>
         /// duplicates the entire decoration chain
         /// </summary>
@@ -104,7 +104,7 @@ namespace Arith.Domain.Numbers.Decorations
         public INumeric Clone()
         {
             //get the Numeric and clone it
-            var clone = this.InnerNumeric.Clone();
+            var clone = this.InnermostNumeric.Clone();
 
             var rv = this.CloneDecorationCake(clone);
             return rv as INumeric;
@@ -112,61 +112,61 @@ namespace Arith.Domain.Numbers.Decorations
         #endregion
 
         #region ILinkedList
-        public Func<IDigit,ILinkedList<IDigit>, ILinkedListNode<IDigit>> NodeBuildingStrategy
-        {
-            get
-            {
-                return this.InnerNumeric.NodeBuildingStrategy;
-            }
-            set
-            {
-                this.InnerNumeric.NodeBuildingStrategy = value;
-            }
-        }
+        //public Func<IDigit,ILinkedList<IDigit>, ILinkedListNode<IDigit>> NodeBuildingStrategy
+        //{
+        //    get
+        //    {
+        //        return this.InnermostNumeric.NodeBuildingStrategy;
+        //    }
+        //    set
+        //    {
+        //        this.InnermostNumeric.NodeBuildingStrategy = value;
+        //    }
+        //}
 
         public ILinkedListNode<IDigit> FirstNode
         {
-            get { return this.InnerNumeric.FirstNode; }
+            get { return this.InnermostNumeric.FirstNode; }
         }
 
         public ILinkedListNode<IDigit> LastNode
         {
-            get { return this.InnerNumeric.LastNode; }
+            get { return this.InnermostNumeric.LastNode; }
         }
 
         public bool Contains(IDigit val)
         {
-            return this.InnerNumeric.Contains(val);
+            return this.InnermostNumeric.Contains(val);
         }
 
         public bool Contains(ILinkedListNode<IDigit> item)
         {
-            return this.InnerNumeric.Contains(item);
+            return this.InnermostNumeric.Contains(item);
         }
 
         public ILinkedListNode<IDigit> AddFirst(IDigit val)
         {
-            return this.InnerNumeric.AddFirst(val);
+            return this.InnermostNumeric.AddFirst(val);
         }
 
         public ILinkedListNode<IDigit> AddLast(IDigit val)
         {
-            return this.InnerNumeric.AddLast(val);
+            return this.InnermostNumeric.AddLast(val);
         }
 
         public ILinkedListNode<IDigit> Insert(IDigit val, ILinkedListNode<IDigit> before, ILinkedListNode<IDigit> after)
         {
-            return this.InnerNumeric.Insert(val, before, after);
+            return this.InnermostNumeric.Insert(val, before, after);
         }
 
         public ILinkedListNode<IDigit> InsertNode(ILinkedListNode<IDigit> node, ILinkedListNode<IDigit> before, ILinkedListNode<IDigit> after)
         {
-            return this.InnerNumeric.InsertNode(node, before, after);
+            return this.InnermostNumeric.InsertNode(node, before, after);
         }
 
         public ILinkedList<IDigit> Remove(ILinkedListNode<IDigit> item)
         {
-            return this.InnerNumeric.Remove(item);
+            return this.InnermostNumeric.Remove(item);
         }
         #endregion
     }

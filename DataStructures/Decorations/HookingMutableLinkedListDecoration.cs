@@ -93,7 +93,7 @@ namespace Arith.DataStructures.Decorations
         #endregion
 
         #region Properties
-        public IHasLinkedListMutability<T> MutableDecoratedOf
+        public IHasLinkedListMutability<T> BelowMutableList
         {
             get { return this.Decorated.AsBelow<IHasLinkedListMutability<T>>(false); }
         }
@@ -185,7 +185,7 @@ namespace Arith.DataStructures.Decorations
 
         public virtual ILinkedList<T> Remove(ILinkedListNode<T> item)
         {
-            var rv = this.MutableDecoratedOf.Remove(item);
+            var rv = this.BelowMutableList.Remove(item);
 
             this.RunPostMutateHook();
 
@@ -195,7 +195,7 @@ namespace Arith.DataStructures.Decorations
             ILinkedListNode<T> before, 
             ILinkedListNode<T> after)
         {
-            var rv = this.MutableDecoratedOf.InsertNode(node, before, after);
+            var rv = this.BelowMutableList.InsertNode(node, before, after);
 
             this.RunPostInsertHook(rv);
 

@@ -89,7 +89,7 @@ namespace Arith.Domain.Numbers.Decorations
                     });
 
                     //register it
-                    this._multMap.Add(each, each2, total.InnerNumeric);
+                    this._multMap.Add(each, each2, total.InnermostNumeric);
                     //Debug.WriteLine("creating entry for {0} x {1} = {2}", each, each2, total.InnerNumeric.SymbolsText);
                 }
             }
@@ -126,7 +126,7 @@ namespace Arith.Domain.Numbers.Decorations
 
             Debug.WriteLine("equivalent to {0} * {1} = {2}",
                     number1.SymbolsText, number2.SymbolsText, rv.SymbolsText);
-            return rv.InnerNumeric;
+            return rv.InnermostNumeric;
         }
         #endregion
 
@@ -153,7 +153,7 @@ namespace Arith.Domain.Numbers.Decorations
             lock (this._stateLock)
             {
                 var arg = Numeric.New(this.NumberSystem, number).HasShift();
-                var thisNum = this.InnerNumeric.Clone().HasShift();
+                var thisNum = this.InnermostNumeric.Clone().HasShift();
                 var sum = Numeric.New(this.NumberSystem, this.NumberSystem.ZeroSymbol).HasShift().HasAddition();
 
                 //shift both arg and thisnum to zero, to eliminate clarity with decimal shift handling
@@ -192,15 +192,12 @@ namespace Arith.Domain.Numbers.Decorations
 
     public static class MultiplyingNumberDecorationExtensions
     {
-        public static MultiplyingNumericDecoration HasMultiplication(this object number, 
+        public static MultiplyingNumericDecoration HasMultiplication(this object number,
             string decorationName = null)
         {
-            var decoration = number.ApplyDecorationIfNotPresent<MultiplyingNumericDecoration>(x =>
-            {
-                return MultiplyingNumericDecoration.New(number, decorationName);
-            });
 
-            return decoration;
+            return MultiplyingNumericDecoration.New(number, decorationName);
+
         }
     }
 

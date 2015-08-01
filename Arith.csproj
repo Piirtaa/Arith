@@ -60,6 +60,27 @@
     <Compile Include="Decorating\DecorationBase.cs" />
     <Compile Include="Decorating\DecorationExtensions.cs" />
     <Compile Include="Decorating\Interfaces.cs" />
+    <Compile Include="Domain\Digits\ArithmeticMatrix.cs" />
+    <Compile Include="Domain\Digits\Interfaces.cs" />
+    <Compile Include="Domain\Digits\MatrixDigit.cs" />
+    <Compile Include="Domain\Digits\NumeralSet.cs" />
+    <Compile Include="Domain\Digits\SymbolicDigit.cs" />
+    <Compile Include="Domain\Numbers\Decorations\AddingNumericDecoration.cs" />
+    <Compile Include="Domain\Numbers\Decorations\DigitNodeDecorationBase.cs" />
+    <Compile Include="Domain\Numbers\Decorations\DividingNumericDecoration.cs" />
+    <Compile Include="Domain\Numbers\Decorations\HookingDigitNodeDecoration.cs" />
+    <Compile Include="Domain\Numbers\Decorations\HookingDigitNumericDecoration.cs" />
+    <Compile Include="Domain\Numbers\Decorations\MultiplyingNumericDecoration.cs" />
+    <Compile Include="Domain\Numbers\Decorations\NumericDecorationBase.cs" />
+    <Compile Include="Domain\Numbers\Decorations\PrecisionNumericDecoration.cs" />
+    <Compile Include="Domain\Numbers\Decorations\ShiftingNumericDecoration.cs" />
+    <Compile Include="Domain\Numbers\DigitNode.cs" />
+    <Compile Include="Domain\Numbers\DigitNodeDecoration.cs" />
+    <Compile Include="Domain\Numbers\Formatter.cs" />
+    <Compile Include="Domain\Numbers\IDigitNodeExtensions.cs" />
+    <Compile Include="Domain\Numbers\Interfaces.cs" />
+    <Compile Include="Domain\Numbers\INumericExtensions.cs" />
+    <Compile Include="Domain\Numbers\Numeric.cs" />
     <Compile Include="Extensions\ConversionExtensions.cs" />
     <Compile Include="Extensions\EnumerableExtensions.cs" />
     <Compile Include="Extensions\EventExtensions.cs" />
@@ -73,7 +94,9 @@
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Content Include="Decorating\Jargon.txt" />
+  </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
   </ItemGroup>

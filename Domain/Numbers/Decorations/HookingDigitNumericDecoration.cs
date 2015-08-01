@@ -26,13 +26,13 @@ namespace Arith.Domain.Numbers.Decorations
         #endregion
 
         #region Ctor
-        public HookingDigitNumericDecoration(object decorated, 
+        public HookingDigitNumericDecoration(object decorated,
             string decorationName = null)
             : base(decorated, decorationName)
         {
             //inject node decoration with this strategy
-            var builder = this.InnerNumeric.NodeBuildingStrategy;
-            this.InnerNumeric.NodeBuildingStrategy = (x, list) =>
+            var builder = this.InnermostNumeric.NodeBuildingStrategy;
+            this.InnermostNumeric.NodeBuildingStrategy = (x, list) =>
             {
                 var rv = builder(x, list).HasHookingDigitNode();
                 var hooker = list.As<HookingDigitNumericDecoration>(false);
@@ -85,12 +85,9 @@ namespace Arith.Domain.Numbers.Decorations
         public static HookingDigitNumericDecoration HasHookingDigits(this object number,
             string decorationName = null)
         {
-            var decoration = number.ApplyDecorationIfNotPresent<HookingDigitNumericDecoration>(x =>
-            {
-                return HookingDigitNumericDecoration.New(number, decorationName);
-            });
 
-            return decoration;
+            return HookingDigitNumericDecoration.New(number, decorationName);
+
         }
     }
 

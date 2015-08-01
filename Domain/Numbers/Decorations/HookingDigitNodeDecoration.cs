@@ -129,13 +129,10 @@ namespace Arith.Domain.Numbers.Decorations
         public static HookingDigitNodeDecoration HasHookingDigitNode(this object obj,
             string decorationName = null)
         {
-            var decoration = obj.ApplyDecorationIfNotPresent<HookingDigitNodeDecoration>(x =>
-            {
+
                 return HookingDigitNodeDecoration.New(obj,
                     decorationName);
-            });
 
-            return decoration;
         }
     }
  }

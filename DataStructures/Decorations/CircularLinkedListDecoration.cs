@@ -64,14 +64,14 @@ namespace Arith.DataStructures.Decorations
             : base(decorated, decorationName)
         {
 
-            this.NodeBuildingList.NodeBuildingStrategy = (x, list) =>
+            this.OuterNodeBuildingList.NodeBuildingStrategy = (x, list) =>
             {
                 ICircularLinkedList<T> clist = list as ICircularLinkedList<T>;
                 return new CircularLinkedListNode<T>(x, clist);
             };
 
             //notice i'm chaining with whatever existing strategy (+= operator instead of =)
-            this.HookingList.PostNodeInsertionStrategy += (x) =>
+            this.OuterHookingList.PostNodeInsertionStrategy += (x) =>
             {
                 //if we have circularity issues (ie. we're on the first or last node) then we work that out
                 if (this.FirstNode != null)
@@ -118,11 +118,11 @@ namespace Arith.DataStructures.Decorations
 
         #region Properties
 
-        public HookedMutableLinkedListDecoration<T> HookingList
+        public HookedMutableLinkedListDecoration<T> OuterHookingList
         {
             get { return this.As<HookedMutableLinkedListDecoration<T>>(false); }
         }
-        public NodeBuildingLinkedListDecoration<T> NodeBuildingList
+        public NodeBuildingLinkedListDecoration<T> OuterNodeBuildingList
         {
             get { return this.As<NodeBuildingLinkedListDecoration<T>>(false); }
         }
@@ -298,7 +298,7 @@ namespace Arith.DataStructures.Decorations
             var listOfInt = new LinkedList<int>().GetCircularityCake();
             for (int i = 0; i < 100; i++)
             {
-                var node = listOfInt.NodeBuildingList.AddLast(i);
+                var node = listOfInt.OuterNodeBuildingList.AddLast(i);
                 Debug.Assert(listOfInt.Contains(i));
                 Debug.Assert(listOfInt.LastNode.NodeValue == i);
                 Debug.Assert(listOfInt.FirstNode.NodeValue == 0);
@@ -337,7 +337,7 @@ namespace Arith.DataStructures.Decorations
 
             for (int i = 0; i > -100; i--)
             {
-                var node = listOfInt.NodeBuildingList.AddFirst(i);
+                var node = listOfInt.OuterNodeBuildingList.AddFirst(i);
                 Debug.Assert(listOfInt.FirstNode.NodeValue == i);
                 Debug.Assert(listOfInt.FirstNode.IsPreceding(node.NextNode));
             }
@@ -347,7 +347,7 @@ namespace Arith.DataStructures.Decorations
                 var first = listOfInt.FirstNode;
 
                 var last = listOfInt.LastNode;
-                listOfInt.HookingList.Remove(last);
+                listOfInt.OuterHookingList.Remove(last);
 
                 if (!listOfInt.InnerList.IsEmpty())
                 {
@@ -363,7 +363,7 @@ namespace Arith.DataStructures.Decorations
             var listOfInt = new LinkedList<int>().GetCircularityCake<int>(); ;
             for (int i = 0; i < 10; i++)
             {
-                listOfInt.NodeBuildingList.AddLast(i);
+                listOfInt.OuterNodeBuildingList.AddLast(i);
             }
             ICircularLinkedListNode<int> node = listOfInt.FirstNode as ICircularLinkedListNode<int>;
             Debug.WriteLine("forward sequence");

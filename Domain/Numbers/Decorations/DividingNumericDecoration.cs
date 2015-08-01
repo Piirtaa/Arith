@@ -15,7 +15,7 @@ namespace Arith.Domain.Numbers.Decorations
     /// note we require a precision decoration to perform division (else we run into endless loops
     /// on repeating numbers)
     /// </summary>
-    public interface IHasDivision : INumericDecoration, IIsA<IHasPrecision>
+    public interface IHasDivision : INumericDecoration, IHasA<IHasPrecision>
     {
         void Divide(string number);
     }
@@ -35,7 +35,7 @@ namespace Arith.Domain.Numbers.Decorations
         #endregion
 
         #region Static
-        public static DividingNumericDecoration New(object decorated, 
+        public static DividingNumericDecoration New(object decorated,
             string decorationName = null)
         {
             return new DividingNumericDecoration(decorated, decorationName);
@@ -74,7 +74,7 @@ namespace Arith.Domain.Numbers.Decorations
             lock (this._stateLock)
             {
                 var rv = DivideWithPrecision(
-                    this.InnerNumeric,
+                    this.InnermostNumeric,
                     this.GetCompatibleNumber(number),
                     this.As<IHasPrecision>(false).DecimalPlaces as Numeric);
 
@@ -109,7 +109,7 @@ namespace Arith.Domain.Numbers.Decorations
 
             //build sum
             var product = dividend.GetCompatibleEmpty().HasAddition();
-            product.InnerNumeric.IsPositive = dividend.IsPositive;
+            product.InnermostNumeric.IsPositive = dividend.IsPositive;
 
             //shift dividend and divisor to zero, to eliminate clarity with decimal shift handling
             //we'll shift back at the end.  this way we're only dividing whole numbers.
@@ -121,9 +121,9 @@ namespace Arith.Domain.Numbers.Decorations
             //and we don't want to change the passed in reference object - treat it as if it were a value type
             recursiveDivideStep(
                 dividend.Clone() as Numeric,
-                divisor.GetInnerNumeric(),
-                product.InnerNumeric,
-                toNumberOfDecimalPlaces.GetInnerNumeric());
+                divisor.GetInnermostNumeric(),
+                product.InnermostNumeric,
+                toNumberOfDecimalPlaces.GetInnermostNumeric());
 
             //shift back
             product.HasShift().ShiftLeft(dividendShifts).ShiftLeft(divisorShifts);
@@ -133,7 +133,7 @@ namespace Arith.Domain.Numbers.Decorations
              toNumberOfDecimalPlaces.SymbolsText,
              product.SymbolsText);
 
-            return product.InnerNumeric;
+            return product.InnermostNumeric;
         }
 
 
@@ -207,7 +207,7 @@ namespace Arith.Domain.Numbers.Decorations
             Numeric orderOfMag = null;
             var dividendSegment = getDividendSegmentLargerThanDivisor(dividend, divisor, out orderOfMag);
 
-            Debug.WriteLine("nearest larger segment={0}  magnitude {1}", 
+            Debug.WriteLine("nearest larger segment={0}  magnitude {1}",
                 dividendSegment.SymbolsText,
     orderOfMag.SymbolsText);
 
@@ -338,9 +338,9 @@ namespace Arith.Domain.Numbers.Decorations
                 total.Add(divisor);
                 count.AddOne();
             }
-            remainder = subtracty.InnerNumeric;
-            subtracted = total.InnerNumeric;
-            return count.InnerNumeric;
+            remainder = subtracty.InnermostNumeric;
+            subtracted = total.InnermostNumeric;
+            return count.InnermostNumeric;
         }
 
         #endregion
@@ -352,16 +352,9 @@ namespace Arith.Domain.Numbers.Decorations
             Numeric decimalPlaces,
             string decorationName = null)
         {
-            var decoration = number.ApplyDecorationIfNotPresent<DividingNumericDecoration>(x =>
-            {
-                //note the precision decoration injection
-                return DividingNumericDecoration.New(number.HasPrecision(decimalPlaces).Outer,
-                    decorationName);
-            });
-            //update the precision to passed arg
-            decoration.AsBelow<PrecisionNumericDecoration>(true).DecimalPlaces = decimalPlaces;
-
-            return decoration;
+            //note the precision decoration injection
+            return DividingNumericDecoration.New(number.HasPrecision(decimalPlaces).Outer,
+                decorationName);
         }
 
         /// <summary>

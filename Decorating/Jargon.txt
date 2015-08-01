@@ -1,0 +1,59 @@
+﻿Since we're dealing with decorations there are some concepts that need explicit
+definitions/jargon.  
+
+Positional / Layering Jargon:
+
+Outer - the outermost thing in the cake
+	corresponds to the decoration.Outer member
+OuterOf - the outermost thing of a given type in the cake
+	corresponds to the this.As(...) method
+Inner - the innermost thing in the cake
+	corresponds to the decoration.Inner member
+InnerOf - the innermost thing of a given type in the cake
+	corresponds to the this.AsInnermost(...) method
+Above - the decoration above 
+	corresponds to the this.Decorated.AsAbove(...) method
+Below - the decoration below
+	corresponds to the this.Decorated.AsBelow(...) method
+
+These terms/"naming conventions" should be used as members of the decoration
+	when referencing other layers from within the decoration.
+	
+IHasA  - a cake MUST have a layer of the specified HasA type.  when the cake is created
+	this is validated.
+HasA - does the cake have the layer
+AsA -  find the layer from the top down
+AsBelow - find the layer below this one
+AsAbove - find the layer above this one
+
+Decorative Extension Method Conventions:
+
+Has{Decoration} - applies the decoration
+DoWhile{Decoration} - applies the decoration to something, does an action on the 
+	newly created decoration, and then undecorates the cake
+Get{Decoration}Cake - builds a cake with Outer of the decoration type, and with
+	all of the requisite IHasA layers
+
+Class Design Conventions:
+	-indicate prerequisite layers by implementing IHasA interface
+	-if overriding the behavior of a layer one will need to implement BOTH
+		IHasA of interface, and interface itself.
+		-also include a Below member of the interface.  this is equivalent
+		to a "base" member of the interface.
+
+Conceptual Model:
+	-use "has a" relationships, rather than inheritance to extend functionality
+	-keep a layer cake of decorations, each layer being a "has a" relationship
+	-implement oo inheritance by having multiple "has a" layers of the same
+		interface, with the outermost layer being equivalent to the "most 
+		derived" type.
+	-be able to declaratively specify the prerequisites for a given layer
+	-be able to decorate and undecorate behaviour so that we can use it
+	when it's required, avoiding large graphs 
+	-have behaviour on each layer that allows the layer to be
+	easily tested in isolation.  this is the most practical benefit of this
+	model - it "normalizes", or teases out the core behaviour for simplified
+	testing.  Integration testing is the equivalent of testing the Cake.
+	-enable a "design it once" idiomatic registry where behaviours can be pulled
+	from, and don't have to be redesigned or customized for new types, which 
+	causes more testable complexity.

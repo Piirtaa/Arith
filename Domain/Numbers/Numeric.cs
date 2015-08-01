@@ -15,8 +15,8 @@ namespace Arith.Domain.Numbers
     /// </summary>
     public class Numeric : LinkedListDecorationBase<IDigit>, 
         INumeric,
-        IIsA<IHasNodeBuilding<IDigit>>,
-        IMutableLinkedList<IDigit>
+        IHasA<IHasNodeBuilding<IDigit>>,
+        IHasA<IHasLinkedListMutability<IDigit>>
     {
         #region Declarations
         private readonly object _stateLock = new object();
@@ -41,7 +41,7 @@ namespace Arith.Domain.Numbers
             this._numberSystem = numberSystem;
 
             //define builder strategy
-            this.NodeBuildingList.NodeBuildingStrategy = (x, list) =>
+            this.OuterNodeBuildingList.NodeBuildingStrategy = (x, list) =>
             {
                 return LinkedListNode<IDigit>.New(x, list).HasDigits();
                 //alternately could do this new DigitNode(x, this);
@@ -64,14 +64,15 @@ namespace Arith.Domain.Numbers
         #endregion
 
         #region Cake stuff
-        public NodeBuildingLinkedListDecoration<IDigit> NodeBuildingList
+        public NodeBuildingLinkedListDecoration<IDigit> OuterNodeBuildingList
         {
             get { return this.As<NodeBuildingLinkedListDecoration<IDigit>>(false); }
         }
-        public IMutableLinkedList<IDigit> MutableDecoratedOf
+        public IHasLinkedListMutability<IDigit> BelowMutableList
         {
-            get { return this.Decorated.AsBelow<IMutableLinkedList<IDigit>>(false); }
+            get { return this.Decorated.AsBelow<IHasLinkedListMutability<IDigit>>(false); }
         }
+
         #endregion
 
         #region Properties
@@ -167,9 +168,9 @@ namespace Arith.Domain.Numbers
 
             if (this.IsPositive == false && number.IsPositive == false)
             {
-                return AbsoluteValueCompare(number.GetInnerNumeric(), this);
+                return AbsoluteValueCompare(number.GetInnermostNumeric(), this);
             }
-            return AbsoluteValueCompare(this, number.GetInnerNumeric());
+            return AbsoluteValueCompare(this, number.GetInnermostNumeric());
         }
         /// <summary>
         /// clones a numeric into an undecorated Numeric
@@ -181,7 +182,7 @@ namespace Arith.Domain.Numbers
             rv._isPositive = this._isPositive;
             rv.NodeBuildingStrategy = this.NodeBuildingStrategy;
 
-            this.Iterate((node) =>
+            this.InnerList.Iterate((node) =>
             {
                 IDigitNode dNode = node as IDigitNode;
                 var newNode = rv.AddLeastSignificantDigit(dNode.NodeValue.Symbol);
@@ -211,7 +212,7 @@ namespace Arith.Domain.Numbers
 
             lock (this._stateLock)
             {
-                rv = this.MutableDecoratedOf.InsertNode(node, before, after);
+                rv = this.BelowMutableList.InsertNode(node, before, after);
 
                 if (this._zerothDigit == null)
                     this._zerothDigit = this.InnerList.FirstNode as IDigitNode;
@@ -233,7 +234,7 @@ namespace Arith.Domain.Numbers
 
                 newZero = node.NextNode as IDigitNode;
             }
-            var rv = this.MutableDecoratedOf.Remove(item);
+            var rv = this.BelowMutableList.Remove(item);
             
             if(newZero != null)
                 this._zerothDigit = newZero;
@@ -277,7 +278,7 @@ namespace Arith.Domain.Numbers
             var digit = this.NumberSystem.GetMatrixDigit(symbol);
             lock (this._stateLock)
             {
-                var rv = this.NodeBuildingList.AddLast(digit) as IDigitNode;
+                var rv = this.OuterNodeBuildingList.AddLast(digit) as IDigitNode;
                 return rv;
             }
         }
@@ -291,7 +292,7 @@ namespace Arith.Domain.Numbers
 
             lock (this._stateLock)
             {
-                var rv = this.NodeBuildingList.AddLast(digit) as IDigitNode;
+                var rv = this.OuterNodeBuildingList.AddLast(digit) as IDigitNode;
                 return rv;
             }
         }
@@ -304,7 +305,7 @@ namespace Arith.Domain.Numbers
             var digit = this.NumberSystem.GetMatrixDigit(this.NumberSystem.ZeroSymbol);
             lock (this._stateLock)
             {
-                var rv = this.NodeBuildingList.AddFirst(digit) as IDigitNode;
+                var rv = this.OuterNodeBuildingList.AddFirst(digit) as IDigitNode;
                 return rv;
             }
         }
@@ -318,7 +319,7 @@ namespace Arith.Domain.Numbers
             var digit = this.NumberSystem.GetMatrixDigit(symbol);
             lock (this._stateLock)
             {
-                var rv = this.NodeBuildingList.AddFirst(digit) as IDigitNode;
+                var rv = this.OuterNodeBuildingList.AddFirst(digit) as IDigitNode;
                 return rv;
             }
         }
@@ -335,7 +336,7 @@ namespace Arith.Domain.Numbers
             if (object.ReferenceEquals(this, number))
                 throw new InvalidOperationException();
 
-            if (object.ReferenceEquals(this, number.GetInnerNumeric()))
+            if (object.ReferenceEquals(this, number.GetInnermostNumeric()))
                 throw new InvalidOperationException(); 
 
             lock (this._stateLock)
@@ -346,7 +347,8 @@ namespace Arith.Domain.Numbers
                 this._numberSystem = number.NumberSystem;
                 this._isPositive = number.IsPositive;
 
-                number.InnerList.Iterate((node) =>
+                var sourceInner = number.GetInnermostNumeric().geti;
+                number.GetInnermostNumeric().Iterate((node) =>
                 {
                     IDigitNode dNode = node as IDigitNode;
                     var newNode = this.AddLeastSignificantDigit(dNode.NodeValue.Symbol);

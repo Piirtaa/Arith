@@ -36,7 +36,7 @@ namespace Arith.Domain.Numbers.Decorations
         public ShiftNumericDecoration(object decorated, string decorationName = null)
             : base(decorated, decorationName)
         {
-           
+
         }
         #endregion
 
@@ -82,7 +82,7 @@ namespace Arith.Domain.Numbers.Decorations
         {
             lock (this._stateLock)
             {
-                var clone = this.GetInnerNumeric().Clone() as Numeric;
+                var clone = this.GetInnermostNumeric().Clone() as Numeric;
 
                 //inject a zero if we are Empty 
                 if (clone.ZerothDigit == null)
@@ -108,7 +108,7 @@ namespace Arith.Domain.Numbers.Decorations
         {
             lock (this._stateLock)
             {
-                var clone = this.GetInnerNumeric().Clone() as Numeric;
+                var clone = this.GetInnermostNumeric().Clone() as Numeric;
 
                 //inject a zero if we are Empty 
                 if (clone.ZerothDigit == null)
@@ -134,13 +134,7 @@ namespace Arith.Domain.Numbers.Decorations
         public static ShiftNumericDecoration HasShift(this object number,
             string decorationName = null)
         {
-            var decoration = number.ApplyDecorationIfNotPresent<ShiftNumericDecoration>(x =>
-            {
-                //note the hooking injection
-                return ShiftNumericDecoration.New(number, decorationName);
-            });
-
-            return decoration;
+            return ShiftNumericDecoration.New(number, decorationName);
         }
 
         /// <summary>
@@ -209,7 +203,7 @@ namespace Arith.Domain.Numbers.Decorations
                     counter.AddOne();
                 }
             }
-            return counter.InnerNumeric;
+            return counter.InnermostNumeric;
         }
 
     }

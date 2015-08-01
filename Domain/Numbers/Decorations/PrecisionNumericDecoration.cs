@@ -16,7 +16,7 @@ namespace Arith.Domain.Numbers.Decorations
         Numeric DecimalPlaces { get; set; }
     }
 
-    public class PrecisionNumericDecoration : NumericDecorationBase, 
+    public class PrecisionNumericDecoration : NumericDecorationBase,
         IHasPrecision
     {
         #region Declarations
@@ -24,15 +24,15 @@ namespace Arith.Domain.Numbers.Decorations
         #endregion
 
         #region Ctor
-        public PrecisionNumericDecoration(object decorated, 
-            INumeric decimalPlaces, 
+        public PrecisionNumericDecoration(object decorated,
+            INumeric decimalPlaces,
             string decorationName = null)
             : base(decorated, decorationName)
         {
             if (decimalPlaces == null)
                 throw new ArgumentNullException("decimalPlaces");
 
-            this.DecimalPlaces = decimalPlaces.GetInnerNumeric();
+            this.DecimalPlaces = decimalPlaces.GetInnermostNumeric();
         }
         #endregion
 
@@ -87,20 +87,11 @@ namespace Arith.Domain.Numbers.Decorations
     public static class PrecisionNumberDecorationExtensions
     {
         public static PrecisionNumericDecoration HasPrecision(this object decorated,
-            INumeric decimalPlaces, 
+            INumeric decimalPlaces,
             string decorationName = null)
         {
-            var decoration = decorated.ApplyDecorationIfNotPresent<PrecisionNumericDecoration>(x =>
-            {
-                //note the hooking injection
-                //When decorating inline, return the outermost
-                return PrecisionNumericDecoration.New(decorated, decimalPlaces, decorationName);
-            });
+            return PrecisionNumericDecoration.New(decorated, decimalPlaces, decorationName);
 
-            //update precision with passed in value
-            decoration.DecimalPlaces = decimalPlaces.GetInnerNumeric();
-
-            return decoration;
         }
 
         public static Numeric GetDecimalPlaces(this INumeric thisNumber)
@@ -114,7 +105,7 @@ namespace Arith.Domain.Numbers.Decorations
             var shifty = thisNumber.Clone().HasShift();
             var places = shifty.ShiftToZero();
 
-            return places.GetInnerNumeric();
+            return places.GetInnermostNumeric();
         }
         public static void TruncateToDecimalPlaces(this INumeric thisNumber,
             Numeric places)
@@ -154,8 +145,8 @@ namespace Arith.Domain.Numbers.Decorations
 
             var precision = new Numeric(set, "5").HasAddition();
             var num = new Numeric(set, "123456789").HasPrecision(precision).HasShift();
-            
-            var counter = precision.Clone() as AddingNumericDecoration ;
+
+            var counter = precision.Clone() as AddingNumericDecoration;
             counter.PerformThisManyTimes(x =>
             {
                 var shifty = num.As<IHasShift>(false);

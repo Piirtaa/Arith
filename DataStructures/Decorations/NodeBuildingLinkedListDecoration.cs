@@ -81,7 +81,7 @@ namespace Arith.DataStructures.Decorations
         /// <summary>
         /// gets the mutable face
         /// </summary>
-        public IHasLinkedListMutability<T> MutableList
+        public IHasLinkedListMutability<T> OuterMutableList
         {
             get { return this.As<IHasLinkedListMutability<T>>(false); }
         }
@@ -130,7 +130,7 @@ namespace Arith.DataStructures.Decorations
         {
             ILinkedListNode<T> node = null;
             node = this.BuildNode(val);
-            return this.MutableList.InsertNode(node, before, after);
+            return this.OuterMutableList.InsertNode(node, before, after);
         }
         #endregion
     }
@@ -199,7 +199,7 @@ namespace Arith.DataStructures.Decorations
             while (listOfInt.InnerList.IsEmpty() == false)
             {
                 var last = listOfInt.LastNode;
-                listOfInt.MutableList.Remove(last);
+                listOfInt.OuterMutableList.Remove(last);
 
                 if (!listOfInt.InnerList.IsEmpty())
                 {
