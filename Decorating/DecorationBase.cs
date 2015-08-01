@@ -113,6 +113,19 @@ namespace Arith.Decorating
 
         #region Methods
         /// <summary>
+        /// removes self from the cake and returns decorated value
+        /// </summary>
+        /// <returns></returns>
+        public object Undecorate()
+        {
+            //set the decorator backreference
+            if (this.Decorated.IsADecoratorAwareDecoration())
+            {
+                (this.Decorated as IDecoratorAwareDecoration).Decorator = null;
+            }
+            return this.Decorated;
+        }
+        /// <summary>
         /// sets the Decorated property.  If null, kacks
         /// </summary>
         /// <param name="decorated"></param>
@@ -161,8 +174,8 @@ namespace Arith.Decorating
                 (decorated as IDecoratorAwareDecoration).Decorator = this;
             }
 
-            //validate IIsA declarations exist
-            this.ValidateIIsAConstraints();
+            //validate IHasA declarations exist
+            this.ValidateIHasAConstraints();
 
 
         }

@@ -5,6 +5,7 @@ using Arith.Domain.Digits;
 using System.Diagnostics;
 using Arith.DataStructures;
 using Arith.Decorating;
+using Arith.DataStructures.Decorations;
 
 namespace Arith.Domain.Numbers
 {
@@ -12,9 +13,13 @@ namespace Arith.Domain.Numbers
     /// concrete INumeric.  in any Numeric Decoration it is assumed the innermost
     /// layer is an instance of this type.
     /// </summary>
-    public class Numeric : LinkedList<IDigit>, INumeric
+    public class Numeric : LinkedListDecorationBase<IDigit>, 
+        INumeric,
+        IIsA<IHasNodeBuilding<IDigit>>,
+        IMutableLinkedList<IDigit>
     {
         #region Declarations
+        private readonly object _stateLock = new object();
         /// <summary>
         /// flag to turn off the entire functionality of this class
         /// </summary>
@@ -26,7 +31,9 @@ namespace Arith.Domain.Numbers
         #endregion
 
         #region Ctor
-        public Numeric(NumeralSet numberSystem, string digits = null)
+        protected Numeric(object decorated, NumeralSet numberSystem,
+            string decorationName = null)
+            : base(decorated, decorationName)
         {
             if (numberSystem == null)
                 throw new ArgumentNullException("numberSystem");
@@ -34,27 +41,43 @@ namespace Arith.Domain.Numbers
             this._numberSystem = numberSystem;
 
             //define builder strategy
-            this.NodeBuildingStrategy = (x, list) =>
+            this.NodeBuildingList.NodeBuildingStrategy = (x, list) =>
             {
                 return LinkedListNode<IDigit>.New(x, list).HasDigits();
                 //alternately could do this new DigitNode(x, this);
             };
 
-            this.SetValue(digits);
         }
         #endregion
 
         #region Fluent Static
         public static Numeric New(NumeralSet numberSystem, string digits = null)
         {
-            return new Numeric(numberSystem, digits);
+            var cake = LinkedList<IDigit>.New()
+            .HasMutability<IDigit>("numeric")
+            .HasNodeBuilding<IDigit>(null);
+
+            var rv = new Numeric(cake, numberSystem);
+            rv.SetValue(digits);
+            return rv;
+        }
+        #endregion
+
+        #region Cake stuff
+        public NodeBuildingLinkedListDecoration<IDigit> NodeBuildingList
+        {
+            get { return this.As<NodeBuildingLinkedListDecoration<IDigit>>(false); }
+        }
+        public IMutableLinkedList<IDigit> MutableDecoratedOf
+        {
+            get { return this.Decorated.AsBelow<IMutableLinkedList<IDigit>>(false); }
         }
         #endregion
 
         #region Properties
         public IDigitNode ZerothDigit { get { return this._zerothDigit; } set { this._zerothDigit = value; } }
-        public IDigitNode LastDigit { get { return this._lastNode as IDigitNode; } }
-        public IDigitNode FirstDigit { get { return this._firstNode as IDigitNode; } }
+        public IDigitNode LastDigit { get { return this.InnerList.LastNode as IDigitNode; } }
+        public IDigitNode FirstDigit { get { return this.InnerList.FirstNode as IDigitNode; } }
         #endregion
 
         #region IIsNumeric
@@ -84,8 +107,8 @@ namespace Arith.Domain.Numbers
 
             lock (this._stateLock)
             {
-                this._firstNode = null;
-                this._lastNode = null;
+                this.InnerList.FirstNode = null;
+                this.InnerList.LastNode = null;
                 this._zerothDigit = null;
                 this._isPositive = true;
 
@@ -116,7 +139,7 @@ namespace Arith.Domain.Numbers
                     }
 
                     if (!isZeroSet)
-                        this._zerothDigit = this._firstNode as IDigitNode;
+                        this._zerothDigit = this.InnerList.FirstNode as IDigitNode;
 
                     this.ScrubLeadingAndTrailingZeroes();
                 }
@@ -172,21 +195,30 @@ namespace Arith.Domain.Numbers
         }
         #endregion
 
+        #region IDecoration Overrides
+        public override IDecoration ApplyThisDecorationTo(object thing)
+        {
+            return new Numeric(thing,
+                this.NumberSystem,
+                this.DecorationName);
+        }
+        #endregion
+
         #region Overrides
-        public override ILinkedListNode<IDigit> InsertNode(ILinkedListNode<IDigit> node, ILinkedListNode<IDigit> before, ILinkedListNode<IDigit> after)
+        public virtual ILinkedListNode<IDigit> InsertNode(ILinkedListNode<IDigit> node, ILinkedListNode<IDigit> before, ILinkedListNode<IDigit> after)
         {
             ILinkedListNode<IDigit> rv = null;
 
             lock (this._stateLock)
             {
-                rv = base.InsertNode(node, before, after);
+                rv = this.MutableDecoratedOf.InsertNode(node, before, after);
 
                 if (this._zerothDigit == null)
-                    this._zerothDigit = this._firstNode as IDigitNode;
+                    this._zerothDigit = this.InnerList.FirstNode as IDigitNode;
             }
             return rv;
         }
-        public override ILinkedList<IDigit> Remove(ILinkedListNode<IDigit> item)
+        public virtual ILinkedList<IDigit> Remove(ILinkedListNode<IDigit> item)
         {
             if (item == null)
                 throw new ArgumentNullException("item");
@@ -201,7 +233,7 @@ namespace Arith.Domain.Numbers
 
                 newZero = node.NextNode as IDigitNode;
             }
-            var rv = base.Remove(item);
+            var rv = this.MutableDecoratedOf.Remove(item);
             
             if(newZero != null)
                 this._zerothDigit = newZero;
@@ -245,7 +277,7 @@ namespace Arith.Domain.Numbers
             var digit = this.NumberSystem.GetMatrixDigit(symbol);
             lock (this._stateLock)
             {
-                var rv = this.AddLast(digit) as IDigitNode;
+                var rv = this.NodeBuildingList.AddLast(digit) as IDigitNode;
                 return rv;
             }
         }
@@ -259,7 +291,7 @@ namespace Arith.Domain.Numbers
 
             lock (this._stateLock)
             {
-                var rv = this.AddLast(digit) as IDigitNode;
+                var rv = this.NodeBuildingList.AddLast(digit) as IDigitNode;
                 return rv;
             }
         }
@@ -272,7 +304,7 @@ namespace Arith.Domain.Numbers
             var digit = this.NumberSystem.GetMatrixDigit(this.NumberSystem.ZeroSymbol);
             lock (this._stateLock)
             {
-                var rv = this.AddFirst(digit) as IDigitNode;
+                var rv = this.NodeBuildingList.AddFirst(digit) as IDigitNode;
                 return rv;
             }
         }
@@ -286,7 +318,7 @@ namespace Arith.Domain.Numbers
             var digit = this.NumberSystem.GetMatrixDigit(symbol);
             lock (this._stateLock)
             {
-                var rv = this.AddFirst(digit) as IDigitNode;
+                var rv = this.NodeBuildingList.AddFirst(digit) as IDigitNode;
                 return rv;
             }
         }
@@ -308,13 +340,13 @@ namespace Arith.Domain.Numbers
 
             lock (this._stateLock)
             {
-                this._firstNode = null;
-                this._lastNode = null;
+                this.InnerList.FirstNode = null;
+                this.InnerList.LastNode = null;
                 this._zerothDigit = null;
                 this._numberSystem = number.NumberSystem;
                 this._isPositive = number.IsPositive;
 
-                number.Iterate((node) =>
+                number.InnerList.Iterate((node) =>
                 {
                     IDigitNode dNode = node as IDigitNode;
                     var newNode = this.AddLeastSignificantDigit(dNode.NodeValue.Symbol);

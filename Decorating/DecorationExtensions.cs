@@ -72,20 +72,24 @@ namespace Arith.Decorating
         /// <param name="obj"></param>
         /// <param name="stopWalkCondition"></param>
         /// <returns></returns>
-        public static object WalkDecorationsToInner(this object obj, Func<object, bool> stopWalkCondition)
+        public static object WalkDecorationsToInner(this object obj,
+            Func<object, bool, bool> stopWalkCondition)
         {
             object currentLayer = obj;
 
             //iterate down
             while (currentLayer != null)
             {
+                var nextLayer = GetDecorated(currentLayer);
+                bool isInner = nextLayer == null;
+
                 //check filter.  break/return
-                if (stopWalkCondition(currentLayer))
+                if (stopWalkCondition(currentLayer, isInner))
                 {
                     return currentLayer;
                 }
 
-                currentLayer = GetDecorated(currentLayer);
+                currentLayer = nextLayer;
             }
 
             return null;
@@ -101,7 +105,7 @@ namespace Arith.Decorating
         {
             List<object> returnValue = new List<object>();
 
-            var match = obj.WalkDecorationsToInner((reg) =>
+            var match = obj.WalkDecorationsToInner((reg, isInner) =>
             {
                 returnValue.Add(reg);
                 return false;
@@ -197,20 +201,24 @@ namespace Arith.Decorating
         /// <param name="obj"></param>
         /// <param name="stopWalkCondition"></param>
         /// <returns></returns>
-        public static object WalkDecoratorsToOuter(this object obj, Func<object, bool> stopWalkCondition)
+        public static object WalkDecoratorsToOuter(this object obj,
+            Func<object, bool, bool> stopWalkCondition)
         {
             object currentLayer = obj;
 
             //iterate down
             while (currentLayer != null)
             {
+                var nextLayer = GetDecorator(currentLayer);
+                bool isOuter = nextLayer == null;
+
                 //check filter.  break/return
-                if (stopWalkCondition(currentLayer))
+                if (stopWalkCondition(currentLayer, isOuter))
                 {
                     return currentLayer;
                 }
 
-                currentLayer = GetDecorator(currentLayer);
+                currentLayer = nextLayer;
             }
 
             return null;
@@ -225,7 +233,7 @@ namespace Arith.Decorating
         {
             List<object> returnValue = new List<object>();
 
-            var match = obj.WalkDecoratorsToOuter((reg) =>
+            var match = obj.WalkDecoratorsToOuter((reg, isOuter) =>
             {
                 returnValue.Add(reg);
                 return false;
@@ -240,16 +248,84 @@ namespace Arith.Decorating
     /// </summary>
     public static class AsExtensions
     {
-        public static object AsBelow(this object obj,
-    Type decorationType,
-    bool exactTypeMatch = true)
+        public static bool HaveSameDecorationName(this object obj, object obj2)
+        {
+            if (obj == null)
+                return false;
+
+            if (obj2 == null)
+                return false;
+
+            if (!obj.IsADecoration())
+                return false;
+
+            if (!obj2.IsADecoration())
+                return false;
+
+            var name1 = (obj as IDecoration).DecorationName;
+            var name2 = (obj2 as IDecoration).DecorationName;
+            return string.Equals(name1, name2);
+        }
+
+        public static bool ValidateDecorationName(string decorationName,
+            object obj2)
+        {
+            if (obj2 == null)
+                return false;
+
+            if (!obj2.IsADecoration())
+                return false;
+
+            var decName = (obj2 as IDecoration).DecorationName;
+            return string.Equals(decName, decorationName);
+        }
+        #region AsInnermost
+        /// <summary>
+        /// gets the inner most matching face
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <param name="decorationType"></param>
+        /// <param name="decorationName"></param>
+        /// <param name="exactTypeMatch"></param>
+        /// <returns></returns>
+        public static object AsInnermost(this object obj,
+           Type decorationType,
+           string decorationName,
+           bool exactTypeMatch = true
+           )
+        {
+            if (obj == null)
+                return null;
+
+            //get the core object
+            object inner = obj.GetInnerDecorated();
+
+            var rv = inner.AsAbove(decorationType, decorationName, false);
+            return rv;
+        }
+        public static object AsInnermost(this object obj,
+Type decorationType,
+bool exactTypeMatch = true)
         {
             string decorationName = null;
             if (obj.IsADecoration())
                 decorationName = (obj as IDecoration).DecorationName;
 
-            return AsBelow(obj, decorationType, decorationName, exactTypeMatch);
+            return AsInnermost(obj, decorationType, decorationName, exactTypeMatch);
         }
+        public static T AsInnermost<T>(this object obj,
+    bool exactTypeMatch = true)
+        {
+            var rv = obj.AsInnermost(typeof(T), exactTypeMatch);
+            if (rv == null)
+                return default(T);
+
+            return (T)rv;
+        }
+        #endregion
+
+        #region AsBelow
+
         /// <summary>
         /// looks for the "As face" by walking down the decorations 
         /// </summary>
@@ -266,17 +342,15 @@ namespace Arith.Decorating
             if (obj == null)
                 return null;
 
-            var match = obj.WalkDecorationsToInner((dec) =>
+            
+            var match = obj.WalkDecorationsToInner((dec, isInner) =>
             {
+                var decObj = dec;
                 var layerType = dec.GetType();
 
-                //check same name
-                string layerDecorationName = null;
-                if (dec.IsADecoration())
-                    layerDecorationName = (dec as IDecoration).DecorationName;
-
-                if (!string.Equals(decorationName, layerDecorationName))
-                    return false;
+                if (!isInner)
+                    if (!ValidateDecorationName(decorationName, decObj))
+                        return false;
 
                 //if we're exact matching, the decoration has to be the same type
                 if (exactTypeMatch && decorationType.Equals(layerType) == false)
@@ -293,6 +367,16 @@ namespace Arith.Decorating
 
             return match;
         }
+        public static object AsBelow(this object obj,
+Type decorationType,
+bool exactTypeMatch = true)
+        {
+            string decorationName = null;
+            if (obj.IsADecoration())
+                decorationName = (obj as IDecoration).DecorationName;
+
+            return AsBelow(obj, decorationType, decorationName, exactTypeMatch);
+        }
         /// <summary>
         /// looks for the "As face" by walking down the decorations 
         /// </summary>
@@ -305,16 +389,9 @@ namespace Arith.Decorating
 
             return (T)rv;
         }
-        public static object AsAbove(this object obj,
-      Type decorationType,
-      bool exactTypeMatch = true)
-        {
-            string decorationName = null;
-            if (obj.IsADecoration())
-                decorationName = (obj as IDecoration).DecorationName;
+        #endregion
 
-            return AsAbove(obj, decorationType, decorationName, exactTypeMatch);
-        }
+        #region AsAbove
         /// <summary>
         /// looks for the "As face" by walking up the decorators
         /// </summary>
@@ -330,14 +407,10 @@ namespace Arith.Decorating
             if (obj == null)
                 return null;
 
-            var match = obj.WalkDecoratorsToOuter((dec) =>
+            var match = obj.WalkDecoratorsToOuter((dec, isOuter) =>
             {
-                //check same name
-                string layerDecorationName = null;
-                if (dec.IsADecoration())
-                    layerDecorationName = (dec as IDecoration).DecorationName;
-
-                if (!string.Equals(decorationName, layerDecorationName))
+                var decObj = dec;
+                if (ValidateDecorationName(decorationName, decObj))
                     return false;
 
                 //if we're exact matching, the decoration has to be the same type
@@ -354,6 +427,16 @@ namespace Arith.Decorating
 
             return match;
         }
+        public static object AsAbove(this object obj,
+Type decorationType,
+bool exactTypeMatch = true)
+        {
+            string decorationName = null;
+            if (obj.IsADecoration())
+                decorationName = (obj as IDecoration).DecorationName;
+
+            return AsAbove(obj, decorationType, decorationName, exactTypeMatch);
+        }
         /// <summary>
         /// looks for the "As face" by walking up the decorators
         /// </summary>
@@ -366,16 +449,10 @@ namespace Arith.Decorating
 
             return (T)rv;
         }
-        public static object As(this object obj,
-    Type decorationType,
-    bool exactTypeMatch)
-        {
-            string decorationName = null;
-            if (obj.IsADecoration())
-                decorationName = (obj as IDecoration).DecorationName;
 
-            return As(obj, decorationType, decorationName, exactTypeMatch);
-        }
+        #endregion
+
+        #region As
         /// <summary>
         /// looks for the "As face" by walking ALL the decorations.  If DecoratorAware, walks down from Outer.  If not
         /// DecoratorAware, walks down from Self 
@@ -402,6 +479,16 @@ namespace Arith.Decorating
 
             return topMost.AsBelow(decorationType, decorationName, exactTypeMatch);
         }
+        public static object As(this object obj,
+Type decorationType,
+bool exactTypeMatch)
+        {
+            string decorationName = null;
+            if (obj.IsADecoration())
+                decorationName = (obj as IDecoration).DecorationName;
+
+            return As(obj, decorationType, decorationName, exactTypeMatch);
+        }
         /// <summary>
         /// looks for the "As face" by walking ALL the decorations.  If DecoratorAware, walks down from Outer.  If not
         /// DecoratorAware, walks down from Self 
@@ -416,6 +503,9 @@ namespace Arith.Decorating
             return (T)rv;
         }
 
+        #endregion
+
+        #region Decoration Lists
         /// <summary>
         /// If DecoratorAware, walks down from Outer.  If not DecoratorAware, walks down from Self 
         /// </summary>
@@ -429,12 +519,12 @@ namespace Arith.Decorating
             //if decorator aware get the outer
             object topMost = obj;
 
-            if (IDecoratorAwareDecorationExtensions.IsADecoratorAwareDecoration(obj))
+            if (obj.IsADecoratorAwareDecoration())
             {
-                topMost = IDecoratorAwareDecorationExtensions.GetOuterDecorator(obj);
+                topMost = obj.GetOuterDecorator();
             }
 
-            rv = IDecorationExtensions.GetSelfAndAllDecorationsBelow(topMost);
+            rv = topMost.GetSelfAndAllDecorationsBelow();
             return rv;
         }
 
@@ -471,17 +561,18 @@ namespace Arith.Decorating
             var castList = list.ConvertListTo<T, object>();
             return castList;
         }
+        #endregion
     }
 
-    public static class IsExtensions
+    public static class HasExtensions
     {
         /// <summary>
-        /// if an object is a decoration, determines if a decoration exists in its cake
+        /// if an object has a decoration, determines if a decoration exists in its cake
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="obj"></param>
         /// <returns></returns>
-        public static bool Is(this object obj, Type decType, bool exactTypeMatch = true)
+        public static bool Has(this object obj, Type decType, bool exactTypeMatch = true)
         {
             if (obj == null)
                 return false;
@@ -489,9 +580,9 @@ namespace Arith.Decorating
             var dec = obj.As(decType, exactTypeMatch);
             return dec != null;
         }
-        public static bool Is<T>(this object obj, bool exactTypeMatch = true)
+        public static bool Has<T>(this object obj, bool exactTypeMatch = true)
         {
-            return obj.Is(typeof(T), exactTypeMatch);
+            return obj.Has(typeof(T), exactTypeMatch);
         }
         /// <summary>
         /// does a non-exact type match on all decorations
@@ -499,7 +590,7 @@ namespace Arith.Decorating
         /// <param name="obj"></param>
         /// <param name="decTypes"></param>
         /// <returns></returns>
-        public static bool Is(this object obj, params Type[] decTypes)
+        public static bool Has(this object obj, params Type[] decTypes)
         {
             if (obj == null)
                 return false;
@@ -536,29 +627,29 @@ namespace Arith.Decorating
             return rv;
         }
 
-        public static bool Is<T1, T2>(this object obj)
+        public static bool Has<T1, T2>(this object obj)
         {
-            return obj.Is(typeof(T1), typeof(T2));
+            return obj.Has(typeof(T1), typeof(T2));
         }
-        public static bool Is<T1, T2, T3>(this object obj)
+        public static bool Has<T1, T2, T3>(this object obj)
         {
-            return obj.Is(typeof(T1), typeof(T2), typeof(T3));
+            return obj.Has(typeof(T1), typeof(T2), typeof(T3));
         }
-        public static bool Is<T1, T2, T3, T4>(this object obj)
+        public static bool Has<T1, T2, T3, T4>(this object obj)
         {
-            return obj.Is(typeof(T1), typeof(T2), typeof(T3), typeof(T4));
+            return obj.Has(typeof(T1), typeof(T2), typeof(T3), typeof(T4));
         }
-        public static bool Is<T1, T2, T3, T4, T5>(this object obj)
+        public static bool Has<T1, T2, T3, T4, T5>(this object obj)
         {
-            return obj.Is(typeof(T1), typeof(T2), typeof(T3), typeof(T4), typeof(T5));
+            return obj.Has(typeof(T1), typeof(T2), typeof(T3), typeof(T4), typeof(T5));
         }
-        public static bool Is<T1, T2, T3, T4, T5, T6>(this object obj)
+        public static bool Has<T1, T2, T3, T4, T5, T6>(this object obj)
         {
-            return obj.Is(typeof(T1), typeof(T2), typeof(T3), typeof(T4), typeof(T5), typeof(T6));
+            return obj.Has(typeof(T1), typeof(T2), typeof(T3), typeof(T4), typeof(T5), typeof(T6));
         }
-        public static bool Is<T1, T2, T3, T4, T5, T6, T7>(this object obj)
+        public static bool Has<T1, T2, T3, T4, T5, T6, T7>(this object obj)
         {
-            return obj.Is(typeof(T1), typeof(T2), typeof(T3), typeof(T4), typeof(T5), typeof(T6), typeof(T7));
+            return obj.Has(typeof(T1), typeof(T2), typeof(T3), typeof(T4), typeof(T5), typeof(T6), typeof(T7));
         }
     }
 
@@ -594,17 +685,17 @@ namespace Arith.Decorating
         }
     }
 
-    public static class IIsADecorationExtensions
+    public static class IHasADecorationExtensions
     {
         /// <summary>
         /// decorates as a T if the decoration is not present, using the supplied factory.
-        /// does an exact type decoration search as the test.  returns the T decoration
+        /// does an exact type decoration search as the test.  returns the outermost
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="obj"></param>
         /// <param name="factory"></param>
         /// <returns></returns>
-        public static T ApplyDecorationIfNotPresent<T>(this object obj,
+        public static object ApplyDecorationIfNotPresent<T>(this object obj,
             Func<object, T> factory,
             string decorationName = null)
         {
@@ -612,25 +703,25 @@ namespace Arith.Decorating
                 throw new ArgumentNullException("obj");
 
             //note we use an exact type search
-            var rv = obj.As<T>(true);
-            if (rv != null)
-                return rv;
+            var face = obj.As<T>(true);
+            if (face != null)
+                return obj;
 
-            rv = factory(obj);
-            return rv;
+            face = factory(obj);
+            return face;
         }
         /// <summary>
-        /// if a cake constraint (aka IIsA) is declared anywhere in the stack
+        /// if a cake constraint (aka IHasA) is declared anywhere in the stack
         /// we validate the current cake supports the constraint.  this is a topdown walk
         /// </summary>
         /// <param name="obj"></param>
-        public static void ValidateIIsAConstraints(this object obj)
+        public static void ValidateIHasAConstraints(this object obj)
         {
 
             var cake = obj.GetAllDecorations();
             cake.WithEach(layer =>
             {
-                if (layer is IIsA)
+                if (layer is IHasA)
                 {
                     //get all the interfaces it has, that derive from IHasDecoration
                     var layerType = layer.GetType();
@@ -638,14 +729,14 @@ namespace Arith.Decorating
                     var interfaces = layerType.GetInterfaces();
                     foreach (var interfaceType in interfaces)
                     {
-                        if (!interfaceType.Name.Contains("IIsA`"))
+                        if (!interfaceType.Name.Contains("IHasA`"))
                             continue;
 
                         var requiredDecorations = interfaceType.GetGenericArguments();
 
                         foreach (Type each in requiredDecorations)
                         {
-                            if (obj.As(each, false) == null)
+                            if (!obj.Has(each, false))
                                 throw new InvalidOperationException(string.Format("required decoration {0} not found in cake", each.Name));
                         }
                     }

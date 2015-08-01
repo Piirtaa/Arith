@@ -22,6 +22,8 @@ namespace Arith.DataStructures.Decorations
         public LinkedListNodeDecorationBase(object decorated, string decorationName = null)
             : base(decorated, decorationName)
         {
+            if (this.InnerNode == null)
+                throw new InvalidOperationException("inner node must be LinkedListNode");
         }
         #endregion
 
@@ -36,13 +38,17 @@ namespace Arith.DataStructures.Decorations
         }
         #endregion
 
-        #region Methods
+        #region Properties
         /// <summary>
         /// gets the first linked list below this
         /// </summary>
         public ILinkedListNode<T> DecoratedOf
         {
             get { return this.Decorated.AsBelow<ILinkedListNode<T>>(false); }
+        }
+        public LinkedListNode<T> InnerNode
+        {
+            get { return this.AsInnermost<LinkedListNode<T>>(false); }
         }
         #endregion
 

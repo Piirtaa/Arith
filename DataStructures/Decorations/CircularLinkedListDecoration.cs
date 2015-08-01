@@ -44,11 +44,12 @@ namespace Arith.DataStructures.Decorations
     /// </summary>
     /// <typeparam name="T"></typeparam>
     public interface ICircularLinkedList<T> : ILinkedListDecoration<T>,
-                IIsA<IHasHooks<T>>
+        IHasA<IHasLinkedListHooking<T>>,
+        IHasA<IHasNodeBuilding<T>>
     {
     }
 
-    public class CircularLinkedListDecoration<T> : LinkedListDecorationBase<T>, 
+    public class CircularLinkedListDecoration<T> : LinkedListDecorationBase<T>,
         ICircularLinkedList<T>
     {
         #region Declarations
@@ -62,15 +63,15 @@ namespace Arith.DataStructures.Decorations
         public CircularLinkedListDecoration(object decorated, string decorationName = null)
             : base(decorated, decorationName)
         {
-             //define the default node building strategy
-            this.NodeBuildingStrategy = (x, list) =>
+
+            this.NodeBuildingList.NodeBuildingStrategy = (x, list) =>
             {
                 ICircularLinkedList<T> clist = list as ICircularLinkedList<T>;
                 return new CircularLinkedListNode<T>(x, clist);
             };
 
             //notice i'm chaining with whatever existing strategy (+= operator instead of =)
-            this.PostNodeInsertionStrategy += (x) =>
+            this.HookingList.PostNodeInsertionStrategy += (x) =>
             {
                 //if we have circularity issues (ie. we're on the first or last node) then we work that out
                 if (this.FirstNode != null)
@@ -116,52 +117,41 @@ namespace Arith.DataStructures.Decorations
         #endregion
 
         #region Properties
-        /// <summary>
-        /// set if we have any post insert action/scrubs to perform
-        /// </summary>
-        public Action<ILinkedListNode<T>> PostNodeInsertionStrategy
+
+        public HookedMutableLinkedListDecoration<T> HookingList
         {
-            get { return this.As<HookedLinkedListDecoration<T>>().PostNodeInsertionStrategy; }
-            set { this.As<HookedLinkedListDecoration<T>>().PostNodeInsertionStrategy = value; }
+            get { return this.As<HookedMutableLinkedListDecoration<T>>(false); }
         }
-        /// <summary>
-        /// if the list changes in any way (inserts or removal) this strategy is run.  happens after postnodeinsert hook
-        /// </summary>
-        public Action<ILinkedList<T>> PostMutateStrategy
+        public NodeBuildingLinkedListDecoration<T> NodeBuildingList
         {
-            get { return this.As<HookedLinkedListDecoration<T>>().PostMutateStrategy; }
-            set { this.As<HookedLinkedListDecoration<T>>().PostMutateStrategy = value; }
+            get { return this.As<NodeBuildingLinkedListDecoration<T>>(false); }
         }
+
         #endregion
 
-        #region Overrides
-        public override ILinkedList<T> Remove(ILinkedListNode<T> item)
-        {
-            var rv = base.Remove(item);
-
-            return rv;
-        }
-        public override ILinkedListNode<T> InsertNode(ILinkedListNode<T> node, ILinkedListNode<T> before, ILinkedListNode<T> after)
-        {
-            var rv = base.InsertNode(node, before, after);
-            return rv;
-        }
-        #endregion
     }
 
     public static class CircularLinkedListDecorationExtensions
     {
-        public static CircularLinkedListDecoration<T> HasCircularity<T>(this object thing,
+        public static void DoWhileCircular<T>(this ILinkedList<T> thing,
+    Action<CircularLinkedListDecoration<T>> action)
+        {
+            var decorated = CircularLinkedListDecoration<T>.New(thing);
+            action(decorated);
+            decorated.Undecorate();
+        }
+        public static CircularLinkedListDecoration<T> HasCircularity<T>(this ILinkedList<T> thing,
             string decorationName = null)
         {
-            var decoration = thing.ApplyDecorationIfNotPresent<CircularLinkedListDecoration<T>>(x =>
-            {
-                //note injection of hooks
-                return CircularLinkedListDecoration<T>.New(thing.HasHooks<T>().Outer,
-                    decorationName);
-            });
-
-            return decoration;
+            return CircularLinkedListDecoration<T>.New(thing,
+                decorationName);
+        }
+        public static CircularLinkedListDecoration<T> GetCircularityCake<T>(this ILinkedList<T> thing,
+    string decorationName = null)
+        {
+            var rv = thing.GetMutabilityCake(decorationName).HasNodeBuilding().
+                HasHooks().HasCircularity(decorationName);
+            return rv;
         }
     }
 
@@ -305,10 +295,10 @@ namespace Arith.DataStructures.Decorations
     {
         public static void Test()
         {
-            var listOfInt = new LinkedList<int>().HasCircularity<int>();
+            var listOfInt = new LinkedList<int>().GetCircularityCake();
             for (int i = 0; i < 100; i++)
             {
-                var node = listOfInt.AddLast(i);
+                var node = listOfInt.NodeBuildingList.AddLast(i);
                 Debug.Assert(listOfInt.Contains(i));
                 Debug.Assert(listOfInt.LastNode.NodeValue == i);
                 Debug.Assert(listOfInt.FirstNode.NodeValue == 0);
@@ -347,19 +337,19 @@ namespace Arith.DataStructures.Decorations
 
             for (int i = 0; i > -100; i--)
             {
-                var node = listOfInt.AddFirst(i);
+                var node = listOfInt.NodeBuildingList.AddFirst(i);
                 Debug.Assert(listOfInt.FirstNode.NodeValue == i);
                 Debug.Assert(listOfInt.FirstNode.IsPreceding(node.NextNode));
             }
 
-            while (listOfInt.IsEmpty() == false)
+            while (listOfInt.InnerList.IsEmpty() == false)
             {
                 var first = listOfInt.FirstNode;
 
                 var last = listOfInt.LastNode;
-                listOfInt.Remove(last);
+                listOfInt.HookingList.Remove(last);
 
-                if (!listOfInt.IsEmpty())
+                if (!listOfInt.InnerList.IsEmpty())
                 {
                     Debug.Assert(listOfInt.LastNode.NextNode == listOfInt.FirstNode);
                     Debug.Assert(object.ReferenceEquals(last.PreviousNode, listOfInt.LastNode));
@@ -370,10 +360,10 @@ namespace Arith.DataStructures.Decorations
 
         public static void SequenceTest()
         {
-            var listOfInt = new LinkedList<int>().HasCircularity<int>();;
+            var listOfInt = new LinkedList<int>().GetCircularityCake<int>(); ;
             for (int i = 0; i < 10; i++)
             {
-                listOfInt.AddLast(i);
+                listOfInt.NodeBuildingList.AddLast(i);
             }
             ICircularLinkedListNode<int> node = listOfInt.FirstNode as ICircularLinkedListNode<int>;
             Debug.WriteLine("forward sequence");

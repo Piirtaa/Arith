@@ -22,6 +22,8 @@ namespace Arith.DataStructures.Decorations
         public LinkedListDecorationBase(object decorated, string decorationName = null)
             : base(decorated, decorationName)
         {
+            if (this.InnerList == null)
+                throw new InvalidOperationException("inner list must be LinkedList");
         }
         #endregion
 
@@ -36,7 +38,7 @@ namespace Arith.DataStructures.Decorations
         }
         #endregion
 
-        #region Methods
+        #region Properties
         /// <summary>
         /// gets the first linked list below this
         /// </summary>
@@ -44,20 +46,20 @@ namespace Arith.DataStructures.Decorations
         {
             get { return this.Decorated.AsBelow<ILinkedList<T>>(false); }
         }
+        /// <summary>
+        /// the core object in an ILinkedList decoration is always LinkedList
+        /// </summary>
+        public LinkedList<T> InnerList
+        {
+            get { return this.AsInnermost<LinkedList<T>>(false); }
+        }
         #endregion
 
         #region Decorated Methods
-        public Func<T,ILinkedList<T>, ILinkedListNode<T>> NodeBuildingStrategy
-        {
-            get { return DecoratedOf.NodeBuildingStrategy; }
-            set { DecoratedOf.NodeBuildingStrategy = value; }
-        }
         public virtual ILinkedListNode<T> FirstNode { get { return this.DecoratedOf.FirstNode; } }
         public virtual ILinkedListNode<T> LastNode { get { return this.DecoratedOf.LastNode; } }
         public virtual bool Contains(T val) { return this.DecoratedOf.Contains(val); }
         public virtual bool Contains(ILinkedListNode<T> item) { return this.DecoratedOf.Contains(item); }
-        public virtual ILinkedListNode<T> InsertNode(ILinkedListNode<T> node, ILinkedListNode<T> before, ILinkedListNode<T> after) { return this.DecoratedOf.InsertNode(node, before, after); }
-        public virtual ILinkedList<T> Remove(ILinkedListNode<T> item) { return this.DecoratedOf.Remove(item); }
         #endregion
     }
 }

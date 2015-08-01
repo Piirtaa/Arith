@@ -14,8 +14,6 @@ namespace Arith.DataStructures
     public class LinkedList<T> : ILinkedList<T>, IHasDebuggerText
     {
         #region Declarations
-        protected enum InsertSlotEnum { First, Middle, Last, FirstAndLast }
-
         protected readonly object _stateLock = new object();
         protected internal ILinkedListNode<T> _firstNode = null;
 
@@ -24,26 +22,16 @@ namespace Arith.DataStructures
         #endregion
 
         #region Ctor
-        public LinkedList(params T[] items)
+        public LinkedList()
         {
-            if (items == null)
-                return;
 
-            //define the default node building strategy
-            this.NodeBuildingStrategy = (x, list) =>
-            {
-                return new LinkedListNode<T>(x, list);
-            };
-
-            foreach (var each in items)
-                this.AddLast(each);
         }
         #endregion
 
         #region Static Builders
-        public static LinkedList<T> New(params T[] items)
+        public static LinkedList<T> New()
         {
-            return new LinkedList<T>(items);
+            return new LinkedList<T>();
         }
         #endregion
 
@@ -113,12 +101,9 @@ namespace Arith.DataStructures
         #endregion
 
         #region ILinkedList
-        /// <summary>
-        /// override/replace this strategy if we want anything other than a new LinkedListNode 
-        /// </summary>
-        public Func<T, ILinkedList<T>, ILinkedListNode<T>> NodeBuildingStrategy { get; set; }
-        public ILinkedListNode<T> FirstNode { get { return _firstNode; } }
-        public ILinkedListNode<T> LastNode { get { return _lastNode; } }
+        public ILinkedListNode<T> FirstNode { get { return _firstNode; } set { this._firstNode = value; } }
+        public ILinkedListNode<T> LastNode { get { return _lastNode; } set { this._lastNode = value; } }
+       
         /// <summary>
         /// does any node on the linked list have the provided value
         /// </summary>
@@ -142,161 +127,161 @@ namespace Arith.DataStructures
 
             return match != null;
         }
-
-
-        /// <summary>
-        /// this is the "gateway" method to appending the list.  To insert first, before should be null,
-        /// to insert last, after should be null.  
-        /// </summary>
-        /// <param name="node"></param>
-        /// <param name="before"></param>
-        /// <param name="after"></param>
-        /// <returns></returns>
-        public virtual ILinkedListNode<T> InsertNode(ILinkedListNode<T> node, ILinkedListNode<T> before, ILinkedListNode<T> after)
-        {
-            if (node == null)
-                return null;
-
-            lock (this._stateLock)
-            {
-                var slotType = this.ValidateInsertSlot(before, after);
-
-                switch (slotType)
-                {
-                    case InsertSlotEnum.First:
-                        var oldFirst = this._firstNode;
-                        this._firstNode = node;
-                        this._firstNode.NextNode = oldFirst;
-                        this._firstNode.PreviousNode = null;
-                        oldFirst.PreviousNode = node;
-                        break;
-                    case InsertSlotEnum.FirstAndLast:
-                        this._firstNode = node;
-                        this._lastNode = node;
-                        this._firstNode.PreviousNode = null;
-                        this._firstNode.NextNode = null;
-                        break;
-                    case InsertSlotEnum.Last:
-                        var oldLast = this._lastNode;
-                        this._lastNode = node;
-                        this._lastNode.PreviousNode = oldLast;
-                        this._lastNode.NextNode = null;
-                        oldLast.NextNode = node;
-                        break;
-                    case InsertSlotEnum.Middle:
-                        node.PreviousNode = before;
-                        if (before != null)
-                        {
-                            before.NextNode = node;
-                        }
-                        node.NextNode = after;
-                        if (after != null)
-                        {
-                            after.PreviousNode = node;
-                        }
-                        break;
-                }
-            }
-
-            return node;
-        }
-
-        public virtual ILinkedList<T> Remove(ILinkedListNode<T> item)
-        {
-            lock (this._stateLock)
-            {
-                //validate it's contained
-                if (item != null && !this.Contains(item))
-                    throw new ArgumentOutOfRangeException("item");
-
-                //grab the window nodes
-                var before = item.PreviousNode;
-                var after = item.NextNode;
-
-                //wire them to each other
-                if (before != null)
-                {
-                    before.NextNode = after;
-                }
-                if (after != null)
-                {
-                    after.PreviousNode = before;
-                }
-
-                //reset first and last pointers
-                if (item.IsFirst() && item.IsLast())
-                {
-                    this._firstNode = null;
-                    this._lastNode = null;
-                }
-                else if (item.IsFirst())
-                {
-                    this._firstNode = after;
-                }
-                else if (item.IsLast())
-                {
-                    this._lastNode = before;
-                }
-            }
-            return this;
-        }
         #endregion
 
-        #region Helpers
+        #region Extension-y / Calculated methods
+
+ 
         /// <summary>
-        /// validates the nodes are adjacent and returns the position we're inserting at as InsertSlot enum
+        /// a method to iterate thru the list either forwards or backwards
         /// </summary>
-        /// <param name="before"></param>
-        /// <param name="after"></param>
-        /// <returns></returns>
-        protected InsertSlotEnum ValidateInsertSlot(ILinkedListNode<T> before, ILinkedListNode<T> after)
+        /// <param name="action"></param>
+        /// <param name="fromFirstToLast"></param>
+        public void Iterate(
+            Action<ILinkedListNode<T>> action,
+            bool fromFirstToLast)
         {
-            //validate before node
-            if (before != null && !this.Contains(before))
-                throw new ArgumentOutOfRangeException("before");
+            if (action == null)
+                throw new ArgumentNullException("action");
 
-            //validate after node
-            if (after != null && !this.Contains(after))
-                throw new ArgumentOutOfRangeException("after");
-
-            InsertSlotEnum rv = InsertSlotEnum.Middle;
-
-            if (before == null)
+            if (fromFirstToLast)
             {
-                rv = InsertSlotEnum.First;
+                ILinkedListNode<T> node = this.FirstNode;
 
-                //it's a first item insert
-                if (after == null)
+                while (node != null)
                 {
-                    rv = InsertSlotEnum.FirstAndLast;
-                    return rv;
+                    action(node);
+
+                    if (node.IsLast())
+                        break;
+
+                    node = node.NextNode;
                 }
-
-                //validate the after is the current first
-                if (!after.IsFirst())
-                    throw new ArgumentOutOfRangeException("invalid slot");
-
-                return rv;
-            }
-            else if (after == null)
-            {
-                rv = InsertSlotEnum.Last;
-
-                //validate the after is the current first
-                if (!before.IsLast())
-                    throw new ArgumentOutOfRangeException("invalid slot");
-
-                return rv;
             }
             else
             {
-                if (!before.IsPreceding(after))
-                    throw new ArgumentOutOfRangeException("invalid slot");
+                ILinkedListNode<T> node = this.LastNode;
+
+                while (node != null)
+                {
+                    action(node);
+
+                    if (node.IsFirst())
+                        break;
+
+                    node = node.PreviousNode;
+                }
             }
-            return rv;
         }
 
+        /// <summary>
+        /// performs Iterate, but on 2 lists, such that each are traversed in the same
+        /// steps, in parallel
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="obj"></param>
+        /// <param name="action"></param>
+        /// <param name="fromFirstToLast"></param>
+        public void ParallelIterate(
+            ILinkedList<T> list2,
+            Action<ILinkedListNode<T>, ILinkedListNode<T>> action,
+            bool fromFirstToLast)
+        {
+            if (action == null)
+                throw new ArgumentNullException("action");
+
+            if (fromFirstToLast)
+            {
+                ILinkedListNode<T> node = this.FirstNode;
+                ILinkedListNode<T> node2 = list2.FirstNode;
+
+                while (node != null)
+                {
+                    action(node, node2);
+
+                    if (node.IsLast())
+                        break;
+
+                    node = node.NextNode;
+
+                    if (node2 != null)
+                        node2 = node2.NextNode;
+                }
+            }
+            else
+            {
+                ILinkedListNode<T> node = this.LastNode;
+                ILinkedListNode<T> node2 = list2.LastNode;
+
+                while (node != null)
+                {
+                    action(node, node2);
+
+                    if (node.IsFirst())
+                        break;
+
+                    node = node.PreviousNode;
+
+                    if (node2 != null)
+                        node2 = node2.PreviousNode;
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// iterates from first to last and returns item from a positive filter.
+        /// demonstrates good practice for iterating the list
+        /// </summary>
+        /// <param name="filter"></param>
+        /// <returns></returns>
+        public ILinkedListNode<T> Filter(
+            Func<ILinkedListNode<T>, bool> filter,
+            bool fromFirstToLast)
+        {
+            if (filter == null)
+                throw new ArgumentNullException("filter");
+
+            if (fromFirstToLast)
+            {
+                ILinkedListNode<T> node = this.FirstNode;
+
+                while (node != null)
+                {
+                    if (filter(node))
+                        break;
+
+                    if (node.IsLast())
+                    {
+                        node = null;
+                        break;
+                    }
+                    node = node.NextNode;
+                }
+                return node;
+            }
+            else
+            {
+                ILinkedListNode<T> node = this.LastNode;
+
+                while (node != null)
+                {
+                    if (filter(node))
+                        break;
+
+                    if (node.IsFirst())
+                    {
+                        node = null;
+                        break;
+                    }
+                    node = node.PreviousNode;
+                }
+                return node;
+            }
+        }
         #endregion
+
+
     }
 
 
@@ -345,47 +330,5 @@ namespace Arith.DataStructures
 
     }
 
-    public class LinkedListTests
-    {
-        public static void Test()
-        {
-            LinkedList<int> listOfInt = new LinkedList<int>();
-            for (int i = 0; i < 100; i++)
-            {
-                listOfInt.AddLast(i);
-                Debug.Assert(listOfInt.Contains(i));
-                Debug.Assert(listOfInt.LastNode.NodeValue == i);
-                Debug.Assert(listOfInt.FirstNode.NodeValue == 0);
-                var vals = listOfInt.Values;
-                if (vals != null && vals.Length > 1)
-                {
-                    Debug.Assert(listOfInt.LastNode.PreviousNode.NodeValue == i - 1);
-                    Debug.Assert(listOfInt.LastNode.PreviousNode.IsPreceding(listOfInt.LastNode));
-                    Debug.Assert(listOfInt.LastNode.NextNode == null);
-                }
-            }
 
-            for (int i = 0; i > -100; i--)
-            {
-                var node = listOfInt.AddFirst(i);
-                Debug.Assert(listOfInt.FirstNode.NodeValue == i);
-                Debug.Assert(listOfInt.FirstNode.IsPreceding(node.NextNode));
-            }
-
-
-            while (listOfInt.IsEmpty() == false)
-            {
-                var last = listOfInt.LastNode;
-                listOfInt.Remove(last);
-
-                if (!listOfInt.IsEmpty())
-                {
-                    Debug.Assert(listOfInt.LastNode.NextNode == null);
-                    Debug.Assert(object.ReferenceEquals(last.PreviousNode, listOfInt.LastNode));
-                }
-            }
-
-
-        }
-    }
 }

@@ -10,10 +10,13 @@ using System.Diagnostics;
 namespace Arith.DataStructures.Decorations
 {
     /// <summary>
-    /// decorates the list with hooks on mutation events
+    /// decorates the list with hooks on mutation events.  
+    /// requires mutability.  overrides mutability.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public interface IHasHooks<T> : ILinkedListDecoration<T>
+    public interface IHasLinkedListHooking<T> : ILinkedListDecoration<T>,
+        IHasLinkedListMutability<T>, 
+        IHasA<IHasLinkedListMutability<T>>
     {
         /// <summary>
         /// set if we have any post insert action/scrubs to perform
@@ -25,7 +28,8 @@ namespace Arith.DataStructures.Decorations
         Action<ILinkedList<T>> PostMutateStrategy { get; set; }
     }
 
-    public class HookedLinkedListDecoration<T> : LinkedListDecorationBase<T>, IHasHooks<T>
+    public class HookedMutableLinkedListDecoration<T> : LinkedListDecorationBase<T>,
+        IHasLinkedListHooking<T>
     {
         #region Declarations
         private readonly object _stateLock = new object();
@@ -35,7 +39,7 @@ namespace Arith.DataStructures.Decorations
         #endregion
 
         #region Ctor
-        public HookedLinkedListDecoration(object decorated,
+        public HookedMutableLinkedListDecoration(object decorated,
             Action<ILinkedListNode<T>> postNodeInsertionStrategy = null,
             Action<ILinkedList<T>> postMutateStrategy = null, 
             string decorationName = null)
@@ -47,12 +51,12 @@ namespace Arith.DataStructures.Decorations
         #endregion
 
         #region Static
-        public static HookedLinkedListDecoration<T> New(object decorated,
+        public static HookedMutableLinkedListDecoration<T> New(object decorated,
             Action<ILinkedListNode<T>> postNodeInsertionStrategy = null,
             Action<ILinkedList<T>> postMutateStrategy = null, 
             string decorationName = null)
         {
-            return new HookedLinkedListDecoration<T>(decorated, 
+            return new HookedMutableLinkedListDecoration<T>(decorated, 
                 postNodeInsertionStrategy, 
                 postMutateStrategy,
                 decorationName);
@@ -60,7 +64,7 @@ namespace Arith.DataStructures.Decorations
         #endregion
 
         #region ISerializable
-        protected HookedLinkedListDecoration(SerializationInfo info, StreamingContext context)
+        protected HookedMutableLinkedListDecoration(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
         }
@@ -81,7 +85,7 @@ namespace Arith.DataStructures.Decorations
         #region Overrides
         public override IDecoration ApplyThisDecorationTo(object thing)
         {
-            return new HookedLinkedListDecoration<T>(thing,
+            return new HookedMutableLinkedListDecoration<T>(thing,
                 this.PostNodeInsertionStrategy,
                 this.PostMutateStrategy,
                 this.DecorationName);
@@ -89,6 +93,11 @@ namespace Arith.DataStructures.Decorations
         #endregion
 
         #region Properties
+        public IHasLinkedListMutability<T> MutableDecoratedOf
+        {
+            get { return this.Decorated.AsBelow<IHasLinkedListMutability<T>>(false); }
+        }
+
         /// <summary>
         /// set if we have any post insert action/scrubs to perform
         /// </summary>
@@ -174,17 +183,19 @@ namespace Arith.DataStructures.Decorations
 
         #region Overrides
 
-        public override ILinkedList<T> Remove(ILinkedListNode<T> item)
+        public virtual ILinkedList<T> Remove(ILinkedListNode<T> item)
         {
-            var rv = base.Remove(item);
+            var rv = this.MutableDecoratedOf.Remove(item);
 
             this.RunPostMutateHook();
 
             return rv;
         }
-        public override ILinkedListNode<T> InsertNode(ILinkedListNode<T> node, ILinkedListNode<T> before, ILinkedListNode<T> after)
+        public virtual ILinkedListNode<T> InsertNode(ILinkedListNode<T> node,
+            ILinkedListNode<T> before, 
+            ILinkedListNode<T> after)
         {
-            var rv = base.InsertNode(node, before, after);
+            var rv = this.MutableDecoratedOf.InsertNode(node, before, after);
 
             this.RunPostInsertHook(rv);
 
@@ -197,25 +208,27 @@ namespace Arith.DataStructures.Decorations
 
     public static class HookedLinkedListDecorationExtensions
     {
-        public static HookedLinkedListDecoration<T> HasHooks<T>(this object thing,
+        public static HookedMutableLinkedListDecoration<T> HasHooks<T>(this ILinkedList<T> thing,
             Action<ILinkedListNode<T>> postNodeInsertionStrategy = null,
             Action<ILinkedList<T>> postMutateStrategy = null, 
             string decorationName = null)
         {
-            var decoration = thing.ApplyDecorationIfNotPresent
-                <HookedLinkedListDecoration<T>>
-                (x =>
-            {
-                return HookedLinkedListDecoration<T>.New(thing, 
-                    postNodeInsertionStrategy,
-                    postMutateStrategy,
-                    decorationName);
-            });
-
-            return decoration;
+            return HookedMutableLinkedListDecoration<T>.New(
+                 thing,
+                 postNodeInsertionStrategy,
+                 postMutateStrategy,
+                 decorationName);
         }
-
-        public static void AppendNodeInsertionStrategy<T>(this HookedLinkedListDecoration<T> thing,
+        public static HookedMutableLinkedListDecoration<T> GetHookingCake<T>(this ILinkedList<T> thing,
+    Action<ILinkedListNode<T>> postNodeInsertionStrategy = null,
+    Action<ILinkedList<T>> postMutateStrategy = null,
+    string decorationName = null)
+        {
+            var rv = thing.HasMutability<T>(decorationName).HasHooks<T>(postNodeInsertionStrategy,
+                postMutateStrategy, decorationName);
+            return rv;
+        }
+        public static void AppendNodeInsertionStrategy<T>(this HookedMutableLinkedListDecoration<T> thing,
             Action<ILinkedListNode<T>> postNodeInsertionStrategy = null)
         {
             var oldStrategy = thing.PostNodeInsertionStrategy;
@@ -227,7 +240,7 @@ namespace Arith.DataStructures.Decorations
                 postNodeInsertionStrategy(node);
             };
         }
-        public static void AppendPostMutateStrategy<T>(this HookedLinkedListDecoration<T> thing,
+        public static void AppendPostMutateStrategy<T>(this HookedMutableLinkedListDecoration<T> thing,
             Action<ILinkedList<T>> postMutateStrategy = null)
         {
             var oldStrategy = thing.PostMutateStrategy;
@@ -247,7 +260,10 @@ namespace Arith.DataStructures.Decorations
     {
         public static void Test()
         {
-            var list = LinkedList<int>.New().HasHooks<int>();
+
+
+            var list = LinkedList<int>.New().GetHookingCake<int>();
+
             int counter = 0;
 
             list.PostMutateStrategy = (l) =>
@@ -266,7 +282,10 @@ namespace Arith.DataStructures.Decorations
             int topLimit = 1000;
             for (int x = 1; x < topLimit; x++)
             {
-                list.AddLast(x);
+                list.DoWhileNodeBuilding<int>(null, o =>
+                {
+                    o.AddLast(x);
+                });
             }
 
             list.PostMutateStrategy = (l) =>

@@ -68,39 +68,39 @@ namespace Arith.Decorating
     /// and provides strongly typed property to pull this from the cake
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public interface IDecorationOf<T> : IDecoration, IIsA<T>
+    public interface IDecorationOf<T> : IDecoration, IHasA<T>
     {
         T DecoratedOf { get; }
     }
 
     //a bunch of marker interfaces to use as placeholders, type constraints 
     //indicating that the decoration cake contains the specified type,
-    //ie. that an Is<T> operation will succeed
+    //ie. that an Has<T> operation will succeed
 
-    public interface IIsA { }
-    public interface IIsA<T1> : IIsA { }
-    public interface IIsA<T1, T2> : IIsA { }
-    public interface IIsA<T1, T2, T3> : IIsA { }
-    public interface IIsA<T1, T2, T3, T4> : IIsA { }
-    public interface IIsA<T1, T2, T3, T4, T5> : IIsA { }
-    public interface IIsA<T1, T2, T3, T4, T5, T6> : IIsA { }
-    public interface IIsA<T1, T2, T3, T4, T5, T6, T7> : IIsA { }
-    public interface IIsA<T1, T2, T3, T4, T5, T6, T7, T8> : IIsA { }
-    public interface IIsA<T1, T2, T3, T4, T5, T6, T7, T8, T9> : IIsA { }
-    public interface IIsA<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> : IIsA { }
-    public interface IIsA<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> : IIsA { }
-    public interface IIsA<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> : IIsA { }
-    public interface IIsA<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> : IIsA { }
-    public interface IIsA<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> : IIsA { }
-    public interface IIsA<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> : IIsA { }
-    public interface IIsA<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> : IIsA { }
-    public interface IIsA<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17> : IIsA { }
-    public interface IIsA<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18> : IIsA { }
-    public interface IIsA<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19> : IIsA { }
-    public interface IIsA<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20> : IIsA { }
-    public interface IIsA<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21> : IIsA { }
-    public interface IIsA<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21, T22> : IIsA { }
-    public interface IIsA<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21, T22, T23> : IIsA { }
+    public interface IHasA { }
+    public interface IHasA<T1> : IHasA { }
+    public interface IHasA<T1, T2> : IHasA { }
+    public interface IHasA<T1, T2, T3> : IHasA { }
+    public interface IHasA<T1, T2, T3, T4> : IHasA { }
+    public interface IHasA<T1, T2, T3, T4, T5> : IHasA { }
+    public interface IHasA<T1, T2, T3, T4, T5, T6> : IHasA { }
+    public interface IHasA<T1, T2, T3, T4, T5, T6, T7> : IHasA { }
+    public interface IHasA<T1, T2, T3, T4, T5, T6, T7, T8> : IHasA { }
+    public interface IHasA<T1, T2, T3, T4, T5, T6, T7, T8, T9> : IHasA { }
+    public interface IHasA<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> : IHasA { }
+    public interface IHasA<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> : IHasA { }
+    public interface IHasA<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> : IHasA { }
+    public interface IHasA<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> : IHasA { }
+    public interface IHasA<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> : IHasA { }
+    public interface IHasA<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> : IHasA { }
+    public interface IHasA<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> : IHasA { }
+    public interface IHasA<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17> : IHasA { }
+    public interface IHasA<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18> : IHasA { }
+    public interface IHasA<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19> : IHasA { }
+    public interface IHasA<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20> : IHasA { }
+    public interface IHasA<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21> : IHasA { }
+    public interface IHasA<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21, T22> : IHasA { }
+    public interface IHasA<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21, T22, T23> : IHasA { }
 
     
 }

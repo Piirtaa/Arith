@@ -47,39 +47,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DataStructures\Decorations\MutableLinkedListDecoration.cs" />
+    <Compile Include="DataStructures\Decorations\NodeBuildingLinkedListDecoration.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="DataStructures\Decorations\CircularLinkedListDecoration.cs" />
     <Compile Include="DataStructures\Decorations\LinkedListNodeDecorationBase.cs" />
-    <Compile Include="DataStructures\Decorations\TweakableLinkedListDecoration.cs" />
-    <Compile Include="DataStructures\Decorations\HookedLinkedListDecoration.cs" />
+    <Compile Include="DataStructures\Decorations\HookingMutableLinkedListDecoration.cs" />
     <Compile Include="DataStructures\Interfaces.cs" />
     <Compile Include="DataStructures\Decorations\LinkedListDecorationBase.cs" />
-    <Compile Include="Domain\Digits\Interfaces.cs" />
-    <Compile Include="Domain\Numbers\Decorations\DigitNodeDecorationBase.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Domain\Numbers\Decorations\HookingDigitNodeDecoration.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Domain\Numbers\Decorations\HookingDigitNumericDecoration.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Domain\Numbers\DigitNodeDecoration.cs" />
-    <Compile Include="Domain\Numbers\Decorations\AddingNumericDecoration.cs" />
-    <Compile Include="Domain\Numbers\Decorations\DividingNumericDecoration.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Domain\Numbers\Decorations\MultiplyingNumericDecoration.cs" />
-    <Compile Include="Domain\Numbers\Decorations\ShiftingNumericDecoration.cs" />
-    <Compile Include="Domain\Numbers\Decorations\NumericDecorationBase.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Domain\Numbers\Decorations\PrecisionNumericDecoration.cs" />
-    <Compile Include="Domain\Numbers\Formatter.cs" />
-    <Compile Include="Domain\Numbers\IDigitNodeExtensions.cs" />
-    <Compile Include="Domain\Numbers\Interfaces.cs" />
-    <Compile Include="Domain\Numbers\INumericExtensions.cs" />
-    <Compile Include="Domain\Numbers\Numeric.cs" />
-    <Compile Include="Domain\Digits\ArithmeticMatrix.cs" />
     <Compile Include="Decorating\DisposableBase.cs" />
     <Compile Include="Decorating\DecorationBase.cs" />
     <Compile Include="Decorating\DecorationExtensions.cs" />
@@ -90,15 +66,12 @@
     <Compile Include="Extensions\GenericExtensions.cs" />
     <Compile Include="Extensions\MaybeMonadExtensions.cs" />
     <Compile Include="DataStructures\SquareLookup.cs" />
-    <Compile Include="Domain\Digits\MatrixDigit.cs" />
-    <Compile Include="Domain\Digits\SymbolicDigit.cs" />
     <Compile Include="DataStructures\LinkedList.cs" />
     <Compile Include="DataStructures\CircularLinkedList.cs" />
     <Compile Include="Interfaces.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Domain\Digits\NumeralSet.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
