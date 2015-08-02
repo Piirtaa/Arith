@@ -32,13 +32,19 @@ namespace Arith.Decorating
         /// the base ctor for a decoration.  it MUST decorate something!!  
         /// </summary>
         /// <param name="decorated">kacks on null</param>
-        public DecorationBase(object decorated, string decorationName = null)
+        public DecorationBase(object decorated, string cakeName = null)
         {
             this.IsDecorationEnabled = true;
 
+            //set cake name first, as SetDecorated will validate the cake
+            //and cake validation ensures dependencies have same cake name
+            if (cakeName != null)
+                this.CakeName = cakeName;
+
+            //set decorated
             this.SetDecorated(decorated);
-            if (decorationName != null)
-                this.DecorationName = decorationName;
+
+
         }
         #endregion
 
@@ -47,7 +53,7 @@ namespace Arith.Decorating
         {
             Type type = info.GetValue("_type", typeof(Type)) as Type;
             this._Decorated = info.GetValue("_Decorated", type);
-            this.DecorationName = info.GetString("DecorationName");
+            this.CakeName = info.GetString("cakeName");
         }
         void ISerializable.GetObjectData(SerializationInfo info, StreamingContext context)
         {
@@ -63,7 +69,7 @@ namespace Arith.Decorating
         /// <param name="context"></param>
         protected virtual void ISerializable_GetObjectData(SerializationInfo info, StreamingContext context)
         {
-            info.AddValue("DecorationName", this.DecorationName);
+            info.AddValue("cakeName", this.CakeName);
             info.AddValue("_Decorated", this._Decorated);
             info.AddValue("_type", this.Decorated.GetType());
         }
@@ -73,7 +79,7 @@ namespace Arith.Decorating
         /// <summary>
         /// provides discriminator to group layers together
         /// </summary>
-        public string DecorationName { get; protected set; }
+        public string CakeName { get; protected set; }
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public object Decorated { get { return this._Decorated; } }
@@ -161,7 +167,9 @@ namespace Arith.Decorating
                 IDecoration dec = decorated as IDecoration;
                 this._Inner = dec.Inner;
 
-                this.DecorationName = dec.DecorationName;
+                //take the cakename from the decorated thing if we don't have one
+                if (this.CakeName == null)
+                    this.CakeName = dec.CakeName;
             }
             else
             {

@@ -12,9 +12,10 @@ namespace Arith.Decorating
     public interface IDecoration
     {
         /// <summary>
-        /// provides discriminator to group layers together
+        /// The name of the "cake" this layer belongs to.  
+        /// Defaults to null aka the Root Cake
         /// </summary>
-        string DecorationName { get; }
+        string CakeName { get; }
 
         /// <summary>
         /// the immediate thing we are decorating

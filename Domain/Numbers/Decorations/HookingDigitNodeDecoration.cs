@@ -33,17 +33,17 @@ namespace Arith.Domain.Numbers.Decorations
 
         #region Ctor
         public HookingDigitNodeDecoration(object decorated, 
-            string decorationName = null)
-            : base(decorated, decorationName)
+            string cakeName = null)
+            : base(decorated, cakeName)
         {
         }
         #endregion
 
         #region Static
         public static HookingDigitNodeDecoration New(object decorated,
-            string decorationName = null)
+            string cakeName = null)
         {
-            return new HookingDigitNodeDecoration(decorated, decorationName);
+            return new HookingDigitNodeDecoration(decorated, cakeName);
         }
         #endregion
 
@@ -69,7 +69,7 @@ namespace Arith.Domain.Numbers.Decorations
         #region Overrides
         public override IDecoration ApplyThisDecorationTo(object thing)
         {
-            return new HookingDigitNodeDecoration(thing, this.DecorationName);
+            return new HookingDigitNodeDecoration(thing, this.CakeName);
         }
         #endregion
 
@@ -127,11 +127,11 @@ namespace Arith.Domain.Numbers.Decorations
     public static class HookingDigitNodeDecorationBaseExtensions
     {
         public static HookingDigitNodeDecoration HasHookingDigitNode(this object obj,
-            string decorationName = null)
+            string cakeName = null)
         {
 
                 return HookingDigitNodeDecoration.New(obj,
-                    decorationName);
+                    cakeName);
 
         }
     }

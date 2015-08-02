@@ -30,8 +30,8 @@ namespace Arith.Domain.Numbers.Decorations
         #region Ctor
         public PrecisionNumericDecoration(object decorated,
             INumeric decimalPlaces,
-            string decorationName = null)
-            : base(decorated, decorationName)
+            string cakeName = null)
+            : base(decorated, cakeName)
         {
             if (decimalPlaces == null)
                 throw new ArgumentNullException("decimalPlaces");
@@ -43,9 +43,9 @@ namespace Arith.Domain.Numbers.Decorations
         #region Static
         public static PrecisionNumericDecoration New(object decorated,
             INumeric decimalPlaces,
-            string decorationName = null)
+            string cakeName = null)
         {
-            return new PrecisionNumericDecoration(decorated, decimalPlaces, decorationName);
+            return new PrecisionNumericDecoration(decorated, decimalPlaces, cakeName);
         }
         #endregion
 
@@ -71,7 +71,7 @@ namespace Arith.Domain.Numbers.Decorations
         #region Overrides
         public override IDecoration ApplyThisDecorationTo(object thing)
         {
-            return new PrecisionNumericDecoration(thing, this.DecimalPlaces, this.DecorationName);
+            return new PrecisionNumericDecoration(thing, this.DecimalPlaces, this.CakeName);
         }
         #endregion
 
@@ -92,9 +92,9 @@ namespace Arith.Domain.Numbers.Decorations
     {
         public static PrecisionNumericDecoration HasPrecision(this object decorated,
             INumeric decimalPlaces,
-            string decorationName = null)
+            string cakeName = null)
         {
-            return PrecisionNumericDecoration.New(decorated, decimalPlaces, decorationName);
+            return PrecisionNumericDecoration.New(decorated, decimalPlaces, cakeName);
         }
 
         public static Numeric GetDecimalPlaces(this INumeric thisNumber)

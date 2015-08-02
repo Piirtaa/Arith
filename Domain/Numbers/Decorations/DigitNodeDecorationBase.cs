@@ -19,8 +19,8 @@ namespace Arith.Domain.Numbers.Decorations
     {
         #region Ctor
         public DigitNodeDecorationBase(object decorated,
-            string decorationName = null)
-            : base(decorated, decorationName)
+            string cakeName = null)
+            : base(decorated, cakeName)
         {
 
         }

@@ -55,7 +55,8 @@ namespace Arith.Domain.Numbers
             if (digitNode == null)
                 throw new ArgumentNullException("digitNode");
 
-            return object.ReferenceEquals(digitNode, digitNode.ParentNumeric().ZerothDigit);
+            var numeric = digitNode.ParentNumeric();
+            return object.ReferenceEquals(digitNode, numeric.ZerothDigit);
         }
         /// <summary>
         /// reference compares Parent's MSD Digit to this instance 

@@ -34,17 +34,17 @@ namespace Arith.Domain.Numbers.Decorations
         #endregion
 
         #region Ctor
-        public ShiftNumericDecoration(object decorated, string decorationName = null)
-            : base(decorated, decorationName)
+        public ShiftNumericDecoration(object decorated, string cakeName = null)
+            : base(decorated, cakeName)
         {
 
         }
         #endregion
 
         #region Static
-        public static ShiftNumericDecoration New(object decorated, string decorationName = null)
+        public static ShiftNumericDecoration New(object decorated, string cakeName = null)
         {
-            return new ShiftNumericDecoration(decorated, decorationName);
+            return new ShiftNumericDecoration(decorated, cakeName);
         }
         #endregion
 
@@ -70,7 +70,7 @@ namespace Arith.Domain.Numbers.Decorations
         #region Overrides
         public override IDecoration ApplyThisDecorationTo(object thing)
         {
-            return new ShiftNumericDecoration(thing, this.DecorationName);
+            return new ShiftNumericDecoration(thing, this.CakeName);
         }
         #endregion
 
@@ -133,9 +133,9 @@ namespace Arith.Domain.Numbers.Decorations
     public static class ShiftNumberDecorationExtensions
     {
         public static ShiftNumericDecoration HasShift(this object number,
-            string decorationName = null)
+            string cakeName = null)
         {
-            return ShiftNumericDecoration.New(number, decorationName);
+            return ShiftNumericDecoration.New(number, cakeName);
         }
 
         /// <summary>

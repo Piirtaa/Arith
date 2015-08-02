@@ -35,17 +35,17 @@ namespace Arith.Domain.Numbers.Decorations
 
         #region Ctor
         public AddingNumericDecoration(object decorated,
-            string decorationName = null)
-            : base(decorated, decorationName)
+            string cakeName = null)
+            : base(decorated, cakeName)
         {
         }
         #endregion
 
         #region Static
         public static AddingNumericDecoration New(object decorated,
-            string decorationName = null)
+            string cakeName = null)
         {
-            return new AddingNumericDecoration(decorated, decorationName);
+            return new AddingNumericDecoration(decorated, cakeName);
         }
         #endregion
 
@@ -71,7 +71,7 @@ namespace Arith.Domain.Numbers.Decorations
         #region Overrides
         public override IDecoration ApplyThisDecorationTo(object thing)
         {
-            return new AddingNumericDecoration(thing, this.DecorationName);
+            return new AddingNumericDecoration(thing, this.CakeName);
         }
         #endregion
 
@@ -284,9 +284,9 @@ namespace Arith.Domain.Numbers.Decorations
     public static class AddingNumericDecorationExtensions
     {
         public static AddingNumericDecoration HasAddition(this object number,
-            string decorationName = null)
+            string cakeName = null)
         {
-            return AddingNumericDecoration.New(number, decorationName);
+            return AddingNumericDecoration.New(number, cakeName);
         }
 
         public static void AddOne(this INumeric thisNumber)

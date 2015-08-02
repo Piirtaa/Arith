@@ -30,8 +30,8 @@ namespace Arith.DataStructures.Decorations
 
         #region Ctor
         public MutableLinkedListDecoration(object decorated,
-            string decorationName = null)
-            : base(decorated, decorationName)
+            string cakeName = null)
+            : base(decorated, cakeName)
         {
 
         }
@@ -39,10 +39,10 @@ namespace Arith.DataStructures.Decorations
 
         #region Static
         public static MutableLinkedListDecoration<T> New(object decorated,
-            string decorationName = null)
+            string cakeName = null)
         {
             return new MutableLinkedListDecoration<T>(decorated,
-                decorationName);
+                cakeName);
         }
         #endregion
 
@@ -69,7 +69,7 @@ namespace Arith.DataStructures.Decorations
         public override IDecoration ApplyThisDecorationTo(object thing)
         {
             return new MutableLinkedListDecoration<T>(thing, 
-                this.DecorationName);
+                this.CakeName);
         }
         #endregion
 
@@ -251,17 +251,17 @@ namespace Arith.DataStructures.Decorations
             decorated.Undecorate();
         }
         public static MutableLinkedListDecoration<T> HasMutability<T>(this ILinkedList<T> thing,
-            string decorationName = null)
+            string cakeName = null)
         {
                 return MutableLinkedListDecoration<T>.New(thing, 
-                    decorationName);
+                    cakeName);
         }
 
         public static MutableLinkedListDecoration<T> GetMutabilityCake<T>(
             this ILinkedList<T> thing,
-    string decorationName = null)
+    string cakeName = null)
         {
-            var rv = thing.HasMutability<T>(decorationName);
+            var rv = thing.HasMutability<T>(cakeName);
             return rv;
         }
     }

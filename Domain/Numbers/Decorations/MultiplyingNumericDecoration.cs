@@ -24,8 +24,8 @@ namespace Arith.Domain.Numbers.Decorations
 
         #region Ctor
         public MultiplyingNumericDecoration(object decorated,
-            string decorationName = null)
-            : base(decorated, decorationName)
+            string cakeName = null)
+            : base(decorated, cakeName)
         {
             this.InitMap();
         }
@@ -33,9 +33,9 @@ namespace Arith.Domain.Numbers.Decorations
 
         #region Static
         public static MultiplyingNumericDecoration New(object decorated,
-            string decorationName = null)
+            string cakeName = null)
         {
-            return new MultiplyingNumericDecoration(decorated, decorationName);
+            return new MultiplyingNumericDecoration(decorated, cakeName);
         }
         #endregion
 
@@ -61,7 +61,7 @@ namespace Arith.Domain.Numbers.Decorations
         #region Overrides
         public override IDecoration ApplyThisDecorationTo(object thing)
         {
-            return new MultiplyingNumericDecoration(thing, this.DecorationName);
+            return new MultiplyingNumericDecoration(thing, this.CakeName);
         }
         #endregion
 
@@ -193,9 +193,9 @@ namespace Arith.Domain.Numbers.Decorations
     public static class MultiplyingNumberDecorationExtensions
     {
         public static MultiplyingNumericDecoration HasMultiplication(this object number,
-            string decorationName = null)
+            string cakeName = null)
         {
-            return MultiplyingNumericDecoration.New(number, decorationName);
+            return MultiplyingNumericDecoration.New(number, cakeName);
         }
     }
 

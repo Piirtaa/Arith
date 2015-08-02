@@ -25,8 +25,8 @@ namespace Arith.Domain.Numbers.Decorations
     {
         #region Ctor
         public NumericDecorationBase(object decorated, 
-            string decorationName = null)
-            : base(decorated, decorationName)
+            string cakeName = null)
+            : base(decorated, cakeName)
         {
             var inner = decorated.AsInnermost<Numeric>();
             if (!(inner is Numeric))

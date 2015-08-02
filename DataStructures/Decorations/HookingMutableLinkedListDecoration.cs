@@ -42,8 +42,8 @@ namespace Arith.DataStructures.Decorations
         public HookedMutableLinkedListDecoration(object decorated,
             Action<ILinkedListNode<T>> postNodeInsertionStrategy = null,
             Action<ILinkedList<T>> postMutateStrategy = null, 
-            string decorationName = null)
-            : base(decorated, decorationName)
+            string cakeName = null)
+            : base(decorated, cakeName)
         {
             this.PostMutateStrategy = postMutateStrategy;
             this.PostNodeInsertionStrategy = postNodeInsertionStrategy;
@@ -54,12 +54,12 @@ namespace Arith.DataStructures.Decorations
         public static HookedMutableLinkedListDecoration<T> New(object decorated,
             Action<ILinkedListNode<T>> postNodeInsertionStrategy = null,
             Action<ILinkedList<T>> postMutateStrategy = null, 
-            string decorationName = null)
+            string cakeName = null)
         {
             return new HookedMutableLinkedListDecoration<T>(decorated, 
                 postNodeInsertionStrategy, 
                 postMutateStrategy,
-                decorationName);
+                cakeName);
         }
         #endregion
 
@@ -88,7 +88,7 @@ namespace Arith.DataStructures.Decorations
             return new HookedMutableLinkedListDecoration<T>(thing,
                 this.PostNodeInsertionStrategy,
                 this.PostMutateStrategy,
-                this.DecorationName);
+                this.CakeName);
         }
         #endregion
 
@@ -211,21 +211,21 @@ namespace Arith.DataStructures.Decorations
         public static HookedMutableLinkedListDecoration<T> HasHooks<T>(this ILinkedList<T> thing,
             Action<ILinkedListNode<T>> postNodeInsertionStrategy = null,
             Action<ILinkedList<T>> postMutateStrategy = null, 
-            string decorationName = null)
+            string cakeName = null)
         {
             return HookedMutableLinkedListDecoration<T>.New(
                  thing,
                  postNodeInsertionStrategy,
                  postMutateStrategy,
-                 decorationName);
+                 cakeName);
         }
         public static HookedMutableLinkedListDecoration<T> GetHookingCake<T>(this ILinkedList<T> thing,
     Action<ILinkedListNode<T>> postNodeInsertionStrategy = null,
     Action<ILinkedList<T>> postMutateStrategy = null,
-    string decorationName = null)
+    string cakeName = null)
         {
-            var rv = thing.HasMutability<T>(decorationName).HasHooks<T>(postNodeInsertionStrategy,
-                postMutateStrategy, decorationName);
+            var rv = thing.HasMutability<T>(cakeName).HasHooks<T>(postNodeInsertionStrategy,
+                postMutateStrategy, cakeName);
             return rv;
         }
         public static void AppendNodeInsertionStrategy<T>(this HookedMutableLinkedListDecoration<T> thing,

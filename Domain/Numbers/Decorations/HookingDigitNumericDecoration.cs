@@ -30,8 +30,8 @@ namespace Arith.Domain.Numbers.Decorations
 
         #region Ctor
         public HookingDigitNumericDecoration(object decorated,
-            string decorationName = null)
-            : base(decorated, decorationName)
+            string cakeName = null)
+            : base(decorated, cakeName)
         {
             //inject node decoration with this strategy
             var builder = this.OuterNodeBuildingList.NodeBuildingStrategy;
@@ -46,9 +46,9 @@ namespace Arith.Domain.Numbers.Decorations
         #endregion
 
         #region Static
-        public static HookingDigitNumericDecoration New(object decorated, string decorationName = null)
+        public static HookingDigitNumericDecoration New(object decorated, string cakeName = null)
         {
-            return new HookingDigitNumericDecoration(decorated, decorationName);
+            return new HookingDigitNumericDecoration(decorated, cakeName);
         }
         #endregion
 
@@ -82,7 +82,7 @@ namespace Arith.Domain.Numbers.Decorations
         #region Overrides
         public override IDecoration ApplyThisDecorationTo(object thing)
         {
-            return new HookingDigitNumericDecoration(thing, this.DecorationName);
+            return new HookingDigitNumericDecoration(thing, this.CakeName);
         }
         #endregion
 
@@ -94,10 +94,10 @@ namespace Arith.Domain.Numbers.Decorations
     public static class HookingDigitNumericDecorationExtensions
     {
         public static HookingDigitNumericDecoration HasHookingDigits(this object number,
-            string decorationName = null)
+            string cakeName = null)
         {
 
-            return HookingDigitNumericDecoration.New(number, decorationName);
+            return HookingDigitNumericDecoration.New(number, cakeName);
 
         }
     }

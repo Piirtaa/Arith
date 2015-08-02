@@ -275,7 +275,7 @@ namespace Arith.Decorating
     /// </summary>
     public static class AsExtensions
     {
-        public static bool HaveSameDecorationName(this object obj, object obj2)
+        public static bool HaveSamecakeName(this object obj, object obj2)
         {
             if (obj == null)
                 return false;
@@ -289,12 +289,12 @@ namespace Arith.Decorating
             if (!obj2.IsADecoration())
                 return false;
 
-            var name1 = (obj as IDecoration).DecorationName;
-            var name2 = (obj2 as IDecoration).DecorationName;
+            var name1 = (obj as IDecoration).CakeName;
+            var name2 = (obj2 as IDecoration).CakeName;
             return string.Equals(name1, name2);
         }
 
-        public static bool ValidateDecorationName(string decorationName,
+        public static bool ValidatecakeName(string cakeName,
             object obj2)
         {
             if (obj2 == null)
@@ -303,8 +303,8 @@ namespace Arith.Decorating
             if (!obj2.IsADecoration())
                 return false;
 
-            var decName = (obj2 as IDecoration).DecorationName;
-            return string.Equals(decName, decorationName);
+            var decName = (obj2 as IDecoration).CakeName;
+            return string.Equals(decName, cakeName);
         }
         #region AsInnermost
         /// <summary>
@@ -312,12 +312,12 @@ namespace Arith.Decorating
         /// </summary>
         /// <param name="obj"></param>
         /// <param name="decorationType"></param>
-        /// <param name="decorationName"></param>
+        /// <param name="cakeName"></param>
         /// <param name="exactTypeMatch"></param>
         /// <returns></returns>
         public static object AsInnermost(this object obj,
            Type decorationType,
-           string decorationName,
+           string cakeName,
            bool exactTypeMatch = true
            )
         {
@@ -328,22 +328,22 @@ namespace Arith.Decorating
             object inner = obj.GetInnerDecoration();
 
             //check Inner for compliance
-            var rv = inner.AsBelow(decorationType, decorationName, false);
+            var rv = inner.AsBelow(decorationType, cakeName, false);
 
             //can't find it? look above now
             if(rv == null)
-                rv = inner.AsAbove(decorationType, decorationName, false);
+                rv = inner.AsAbove(decorationType, cakeName, false);
             return rv;
         }
         public static object AsInnermost(this object obj,
 Type decorationType,
 bool exactTypeMatch = true)
         {
-            string decorationName = null;
+            string cakeName = null;
             if (obj.IsADecoration())
-                decorationName = (obj as IDecoration).DecorationName;
+                cakeName = (obj as IDecoration).CakeName;
 
-            return AsInnermost(obj, decorationType, decorationName, exactTypeMatch);
+            return AsInnermost(obj, decorationType, cakeName, exactTypeMatch);
         }
         public static T AsInnermost<T>(this object obj,
     bool exactTypeMatch = true)
@@ -367,7 +367,7 @@ bool exactTypeMatch = true)
         /// <returns></returns>
         public static object AsBelow(this object obj,
             Type decorationType,
-            string decorationName,
+            string cakeName,
             bool exactTypeMatch = true
             )
         {
@@ -381,7 +381,7 @@ bool exactTypeMatch = true)
                 var layerType = dec.GetType();
 
                 if (!isInner)
-                    if (!ValidateDecorationName(decorationName, decObj))
+                    if (!ValidatecakeName(cakeName, decObj))
                         return false;
 
                 //if we're exact matching, the decoration has to be the same type
@@ -403,11 +403,11 @@ bool exactTypeMatch = true)
 Type decorationType,
 bool exactTypeMatch = true)
         {
-            string decorationName = null;
+            string cakeName = null;
             if (obj.IsADecoration())
-                decorationName = (obj as IDecoration).DecorationName;
+                cakeName = (obj as IDecoration).CakeName;
 
-            return AsBelow(obj, decorationType, decorationName, exactTypeMatch);
+            return AsBelow(obj, decorationType, cakeName, exactTypeMatch);
         }
         /// <summary>
         /// looks for the "As face" by walking down the decorations 
@@ -433,7 +433,7 @@ bool exactTypeMatch = true)
         /// <returns></returns>
         public static object AsAbove(this object obj,
             Type decorationType,
-            string decorationName,
+            string cakeName,
             bool exactTypeMatch = true)
         {
             if (obj == null)
@@ -443,7 +443,7 @@ bool exactTypeMatch = true)
             {
                 var decObj = dec;
 
-                if (!ValidateDecorationName(decorationName, decObj))
+                if (!ValidatecakeName(cakeName, decObj))
                     return false;
 
                 //if we're exact matching, the decoration has to be the same type
@@ -464,11 +464,11 @@ bool exactTypeMatch = true)
 Type decorationType,
 bool exactTypeMatch = true)
         {
-            string decorationName = null;
+            string cakeName = null;
             if (obj.IsADecoration())
-                decorationName = (obj as IDecoration).DecorationName;
+                cakeName = (obj as IDecoration).CakeName;
 
-            return AsAbove(obj, decorationType, decorationName, exactTypeMatch);
+            return AsAbove(obj, decorationType, cakeName, exactTypeMatch);
         }
         /// <summary>
         /// looks for the "As face" by walking up the decorators
@@ -496,7 +496,7 @@ bool exactTypeMatch = true)
         /// <returns></returns>
         public static object As(this object obj,
             Type decorationType,
-            string decorationName,
+            string cakeName,
             bool exactTypeMatch)
         {
             if (obj == null)
@@ -510,17 +510,17 @@ bool exactTypeMatch = true)
                 topMost = obj.GetOuterDecorator();
             }
 
-            return topMost.AsBelow(decorationType, decorationName, exactTypeMatch);
+            return topMost.AsBelow(decorationType, cakeName, exactTypeMatch);
         }
         public static object As(this object obj,
 Type decorationType,
 bool exactTypeMatch)
         {
-            string decorationName = null;
+            string cakeName = null;
             if (obj.IsADecoration())
-                decorationName = (obj as IDecoration).DecorationName;
+                cakeName = (obj as IDecoration).CakeName;
 
-            return As(obj, decorationType, decorationName, exactTypeMatch);
+            return As(obj, decorationType, cakeName, exactTypeMatch);
         }
         /// <summary>
         /// looks for the "As face" by walking ALL the decorations.  If DecoratorAware, walks down from Outer.  If not
@@ -569,7 +569,7 @@ bool exactTypeMatch)
         /// <returns></returns>
         public static List<object> GetAllImplementingDecorations(this object obj,
             Type typeToImplement,
-            string decorationName = null)
+            string cakeName = null)
         {
             List<object> rv = new List<object>();
 
@@ -587,7 +587,7 @@ bool exactTypeMatch)
         /// find all decorations of a given type
         /// </summary>
         public static List<T> GetAllImplementingDecorations<T>(this object obj,
-            string decorationName = null)
+            string cakeName = null)
         {
             Type type = typeof(T);
             var list = obj.GetAllImplementingDecorations(type);
@@ -605,85 +605,85 @@ bool exactTypeMatch)
         /// <typeparam name="T"></typeparam>
         /// <param name="obj"></param>
         /// <returns></returns>
-        public static bool Has(this object obj, Type decType, bool exactTypeMatch = true)
+        public static bool Has(this object obj, Type decType, string cakeName = null, bool exactTypeMatch = true)
         {
             if (obj == null)
                 return false;
 
-            var dec = obj.As(decType, exactTypeMatch);
+            var dec = obj.As(decType,cakeName, exactTypeMatch);
             return dec != null;
         }
-        public static bool Has<T>(this object obj, bool exactTypeMatch = true)
+        public static bool Has<T>(this object obj, string cakeName = null, bool exactTypeMatch = true)
         {
-            return obj.Has(typeof(T), exactTypeMatch);
+            return obj.Has(typeof(T),cakeName, exactTypeMatch);
         }
-        /// <summary>
-        /// does a non-exact type match on all decorations
-        /// </summary>
-        /// <param name="obj"></param>
-        /// <param name="decTypes"></param>
-        /// <returns></returns>
-        public static bool Has(this object obj, params Type[] decTypes)
-        {
-            if (obj == null)
-                return false;
+        ///// <summary>
+        ///// does a non-exact type match on all decorations
+        ///// </summary>
+        ///// <param name="obj"></param>
+        ///// <param name="decTypes"></param>
+        ///// <returns></returns>
+        //public static bool Has(this object obj, params Type[] decTypes)
+        //{
+        //    if (obj == null)
+        //        return false;
 
-            var decs = obj.GetAllDecorations();
-            List<Type> allDecTypes = new List<Type>();
-            foreach (var dec in decs)
-            {
-                allDecTypes.Add(dec.GetType());
-            }
+        //    var decs = obj.GetAllDecorations();
+        //    List<Type> allDecTypes = new List<Type>();
+        //    foreach (var dec in decs)
+        //    {
+        //        allDecTypes.Add(dec.GetType());
+        //    }
 
-            bool rv = true;
+        //    bool rv = true;
 
-            //iterate thru all the decorations to look for
-            foreach (var decType in decTypes)
-            {
-                bool isFound = false;
-                foreach (var actualDecType in allDecTypes)
-                {
-                    if (decType.IsAssignableFrom(actualDecType))
-                    {
-                        isFound = true;
-                        break;
-                    }
-                }
+        //    //iterate thru all the decorations to look for
+        //    foreach (var decType in decTypes)
+        //    {
+        //        bool isFound = false;
+        //        foreach (var actualDecType in allDecTypes)
+        //        {
+        //            if (decType.IsAssignableFrom(actualDecType))
+        //            {
+        //                isFound = true;
+        //                break;
+        //            }
+        //        }
 
-                if (!isFound)
-                {
-                    rv = false;
-                    break;
-                }
-            }
+        //        if (!isFound)
+        //        {
+        //            rv = false;
+        //            break;
+        //        }
+        //    }
 
-            return rv;
-        }
+        //    return rv;
+        //}
 
-        public static bool Has<T1, T2>(this object obj)
-        {
-            return obj.Has(typeof(T1), typeof(T2));
-        }
-        public static bool Has<T1, T2, T3>(this object obj)
-        {
-            return obj.Has(typeof(T1), typeof(T2), typeof(T3));
-        }
-        public static bool Has<T1, T2, T3, T4>(this object obj)
-        {
-            return obj.Has(typeof(T1), typeof(T2), typeof(T3), typeof(T4));
-        }
-        public static bool Has<T1, T2, T3, T4, T5>(this object obj)
-        {
-            return obj.Has(typeof(T1), typeof(T2), typeof(T3), typeof(T4), typeof(T5));
-        }
-        public static bool Has<T1, T2, T3, T4, T5, T6>(this object obj)
-        {
-            return obj.Has(typeof(T1), typeof(T2), typeof(T3), typeof(T4), typeof(T5), typeof(T6));
-        }
-        public static bool Has<T1, T2, T3, T4, T5, T6, T7>(this object obj)
-        {
-            return obj.Has(typeof(T1), typeof(T2), typeof(T3), typeof(T4), typeof(T5), typeof(T6), typeof(T7));
-        }
+        //public static bool Has<T1, T2>(this object obj)
+        //{
+        //    return obj.Has(typeof(T1), typeof(T2));
+        //}
+        //public static bool Has<T1, T2, T3>(this object obj)
+        //{
+        //    return obj.Has(typeof(T1), typeof(T2), typeof(T3));
+        //}
+        //public static bool Has<T1, T2, T3, T4>(this object obj)
+        //{
+        //    return obj.Has(typeof(T1), typeof(T2), typeof(T3), typeof(T4));
+        //}
+        //public static bool Has<T1, T2, T3, T4, T5>(this object obj)
+        //{
+        //    return obj.Has(typeof(T1), typeof(T2), typeof(T3), typeof(T4), typeof(T5));
+        //}
+        //public static bool Has<T1, T2, T3, T4, T5, T6>(this object obj)
+        //{
+        //    return obj.Has(typeof(T1), typeof(T2), typeof(T3), typeof(T4), typeof(T5), typeof(T6));
+        //}
+        //public static bool Has<T1, T2, T3, T4, T5, T6, T7>(this object obj)
+        //{
+        //    return obj.Has(typeof(T1), typeof(T2), typeof(T3), typeof(T4), typeof(T5), typeof(T6), typeof(T7));
+        //}
     }
 
     public static class DecorationExtensions
@@ -692,7 +692,7 @@ bool exactTypeMatch)
             bool isEnabled,
             Type decType,
             bool exactTypeMatch = true,
-            string decorationName = null)
+            string cakeName = null)
         {
             if (obj == null)
                 return false;
@@ -712,7 +712,7 @@ bool exactTypeMatch)
         public static bool ToggleDecoration<T>(this object obj,
             bool isEnabled,
             bool exactTypeMatch = true,
-            string decorationName = null)
+            string cakeName = null)
         {
             return obj.ToggleDecoration(isEnabled, typeof(T), exactTypeMatch);
         }
@@ -730,7 +730,7 @@ bool exactTypeMatch)
         /// <returns></returns>
         public static object ApplyDecorationIfNotPresent<T>(this object obj,
             Func<object, T> factory,
-            string decorationName = null)
+            string cakeName = null)
         {
             if (obj == null)
                 throw new ArgumentNullException("obj");
@@ -752,6 +752,11 @@ bool exactTypeMatch)
         {
 
             var cake = obj.GetAllDecorations();
+            string cakeName = null;
+            if (obj.IsADecoration())
+            {
+                cakeName = (obj as IDecoration).CakeName;
+            }
             cake.WithEach(layer =>
             {
                 if (layer is IHasA)
@@ -769,7 +774,7 @@ bool exactTypeMatch)
 
                         foreach (Type each in requiredDecorations)
                         {
-                            if (!obj.Has(each, false))
+                            if (!obj.Has(each, cakeName, false))
                                 throw new InvalidOperationException(string.Format("required decoration {0} not found in cake", each.Name));
                         }
                     }

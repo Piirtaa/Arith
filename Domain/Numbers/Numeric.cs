@@ -33,8 +33,8 @@ namespace Arith.Domain.Numbers
 
         #region Ctor
         protected Numeric(object decorated, NumeralSet numberSystem,
-            string decorationName = null)
-            : base(decorated, decorationName)
+            string cakeName = null)
+            : base(decorated, cakeName)
         {
             if (numberSystem == null)
                 throw new ArgumentNullException("numberSystem");
@@ -201,7 +201,7 @@ namespace Arith.Domain.Numbers
         {
             return new Numeric(thing,
                 this.NumberSystem,
-                this.DecorationName);
+                this.CakeName);
         }
         #endregion
 

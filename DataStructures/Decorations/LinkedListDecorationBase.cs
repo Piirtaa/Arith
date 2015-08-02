@@ -19,8 +19,8 @@ namespace Arith.DataStructures.Decorations
         IDecorationOf<ILinkedList<T>>
     {
         #region Ctor
-        public LinkedListDecorationBase(object decorated, string decorationName = null)
-            : base(decorated, decorationName)
+        public LinkedListDecorationBase(object decorated, string cakeName = null)
+            : base(decorated, cakeName)
         {
             if (this.InnerList == null)
                 throw new InvalidOperationException("inner list must be LinkedList");

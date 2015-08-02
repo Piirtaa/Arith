@@ -60,8 +60,8 @@ namespace Arith.DataStructures.Decorations
         #endregion
 
         #region Ctor
-        public CircularLinkedListDecoration(object decorated, string decorationName = null)
-            : base(decorated, decorationName)
+        public CircularLinkedListDecoration(object decorated, string cakeName = null)
+            : base(decorated, cakeName)
         {
 
             this.OuterNodeBuildingList.NodeBuildingStrategy = (x, list) =>
@@ -84,9 +84,9 @@ namespace Arith.DataStructures.Decorations
         #endregion
 
         #region Static
-        public static CircularLinkedListDecoration<T> New(object decorated, string decorationName = null)
+        public static CircularLinkedListDecoration<T> New(object decorated, string cakeName = null)
         {
-            return new CircularLinkedListDecoration<T>(decorated, decorationName);
+            return new CircularLinkedListDecoration<T>(decorated, cakeName);
         }
         #endregion
 
@@ -112,7 +112,7 @@ namespace Arith.DataStructures.Decorations
         #region Overrides
         public override IDecoration ApplyThisDecorationTo(object thing)
         {
-            return new CircularLinkedListDecoration<T>(thing, this.DecorationName);
+            return new CircularLinkedListDecoration<T>(thing, this.CakeName);
         }
         #endregion
 
@@ -141,16 +141,16 @@ namespace Arith.DataStructures.Decorations
             decorated.Undecorate();
         }
         public static CircularLinkedListDecoration<T> HasCircularity<T>(this ILinkedList<T> thing,
-            string decorationName = null)
+            string cakeName = null)
         {
             return CircularLinkedListDecoration<T>.New(thing,
-                decorationName);
+                cakeName);
         }
         public static CircularLinkedListDecoration<T> GetCircularityCake<T>(this ILinkedList<T> thing,
-    string decorationName = null)
+    string cakeName = null)
         {
-            var rv = thing.GetMutabilityCake(decorationName).HasNodeBuilding().
-                HasHooks().HasCircularity(decorationName);
+            var rv = thing.GetMutabilityCake(cakeName).HasNodeBuilding().
+                HasHooks().HasCircularity(cakeName);
             return rv;
         }
     }

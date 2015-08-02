@@ -19,17 +19,17 @@ namespace Arith.Domain.Numbers
     {
         #region Ctor
         public DigitNodeDecoration(object decorated,
-            string decorationName = null)
-            : base(decorated, decorationName)
+            string cakeName = null)
+            : base(decorated, cakeName)
         {
         }
         #endregion
 
         #region Static Builders
         public static DigitNodeDecoration New(object decorated,
-            string decorationName = null)
+            string cakeName = null)
         {
-            return new DigitNodeDecoration(decorated, decorationName);
+            return new DigitNodeDecoration(decorated, cakeName);
         }
         #endregion
 
@@ -123,7 +123,7 @@ namespace Arith.Domain.Numbers
         #region Overrides
         public override IDecoration ApplyThisDecorationTo(object thing)
         {
-            return new DigitNodeDecoration(thing, this.DecorationName);
+            return new DigitNodeDecoration(thing, this.CakeName);
         }
         #endregion
     }
@@ -131,9 +131,9 @@ namespace Arith.Domain.Numbers
     public static class DigitNodeDecorationExtensions
     {
         public static DigitNodeDecoration HasDigits(this object number,
-            string decorationName = null)
+            string cakeName = null)
         {
-            return DigitNodeDecoration.New(number, decorationName);
+            return DigitNodeDecoration.New(number, cakeName);
         }
     }
 }

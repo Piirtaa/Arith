@@ -31,8 +31,8 @@ namespace Arith.DataStructures.Decorations
         #region Ctor
         public NodeBuildingLinkedListDecoration(object decorated,
             Func<T, ILinkedList<T>, ILinkedListNode<T>> nodeBuildingStrategy = null,
-            string decorationName = null)
-            : base(decorated, decorationName)
+            string cakeName = null)
+            : base(decorated, cakeName)
         {
             this.NodeBuildingStrategy = nodeBuildingStrategy;
         }
@@ -41,11 +41,11 @@ namespace Arith.DataStructures.Decorations
         #region Static
         public static NodeBuildingLinkedListDecoration<T> New(object decorated,
             Func<T, ILinkedList<T>, ILinkedListNode<T>> nodeBuildingStrategy = null,
-            string decorationName = null)
+            string cakeName = null)
         {
             return new NodeBuildingLinkedListDecoration<T>(decorated,
                 nodeBuildingStrategy,
-                decorationName);
+                cakeName);
         }
         #endregion
 
@@ -73,7 +73,7 @@ namespace Arith.DataStructures.Decorations
         {
             return new NodeBuildingLinkedListDecoration<T>(thing,
                 this.NodeBuildingStrategy,
-                this.DecorationName);
+                this.CakeName);
         }
         #endregion
 
@@ -148,21 +148,24 @@ namespace Arith.DataStructures.Decorations
 
         public static NodeBuildingLinkedListDecoration<T> HasNodeBuilding<T>(this ILinkedList<T> thing,
             Func<T, ILinkedList<T>, ILinkedListNode<T>> nodeBuildingStrategy = null,
-            string decorationName = null)
+            string cakeName = null)
         {
+            if (thing.Has<NodeBuildingLinkedListDecoration<T>>(cakeName, false))
+                throw new InvalidOperationException("decoration already exists");
+
                 return NodeBuildingLinkedListDecoration<T>.New(
                     thing,
                     nodeBuildingStrategy,
-                    decorationName);
+                    cakeName);
         }
 
         public static NodeBuildingLinkedListDecoration<T> GetNodeBuildingCake<T>(
             this ILinkedList<T> thing,
     Func<T, ILinkedList<T>, ILinkedListNode<T>> nodeBuildingStrategy = null,
-    string decorationName = null)
+    string cakeName = null)
         {
-            var rv = thing.GetMutabilityCake<T>(decorationName).
-                HasNodeBuilding<T>(nodeBuildingStrategy, decorationName);
+            var rv = thing.GetMutabilityCake<T>(cakeName).
+                HasNodeBuilding<T>(nodeBuildingStrategy, cakeName);
             return rv;
         }
     }

@@ -28,17 +28,17 @@ namespace Arith.Domain.Numbers.Decorations
 
         #region Ctor
         public DividingNumericDecoration(object decorated,
-            string decorationName = null)
-            : base(decorated, decorationName)
+            string cakeName = null)
+            : base(decorated, cakeName)
         {
         }
         #endregion
 
         #region Static
         public static DividingNumericDecoration New(object decorated,
-            string decorationName = null)
+            string cakeName = null)
         {
-            return new DividingNumericDecoration(decorated, decorationName);
+            return new DividingNumericDecoration(decorated, cakeName);
         }
         #endregion
 
@@ -64,7 +64,7 @@ namespace Arith.Domain.Numbers.Decorations
         #region Overrides
         public override IDecoration ApplyThisDecorationTo(object thing)
         {
-            return new DividingNumericDecoration(thing, this.DecorationName);
+            return new DividingNumericDecoration(thing, this.CakeName);
         }
         #endregion
 
@@ -350,11 +350,11 @@ namespace Arith.Domain.Numbers.Decorations
     {
         public static DividingNumericDecoration HasDivision(this object number,
             Numeric decimalPlaces,
-            string decorationName = null)
+            string cakeName = null)
         {
             //note the precision decoration injection
             return DividingNumericDecoration.New(number.HasPrecision(decimalPlaces).Outer,
-                decorationName);
+                cakeName);
         }
 
         /// <summary>

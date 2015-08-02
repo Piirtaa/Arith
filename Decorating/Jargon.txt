@@ -2,7 +2,10 @@
 definitions/jargon.  
 
 Positional / Layering Jargon:
-
+Cake - a set of layers that share the same name.  grouping construct.
+	the default cake name is null
+RootCake - the cake whose name is null
+AllCake - the complete decoration graph
 Outer - the outermost thing in the cake
 	corresponds to the decoration.Outer member
 OuterOf - the outermost thing of a given type in the cake
@@ -49,7 +52,7 @@ Naturalness of Design:
 
 Conceptual Model:
 	-use "has a" relationships, rather than inheritance to extend functionality
-	-keep a layer cake of decorations, each layer being a "has a" relationship
+	-keep a layer cake of decorations, each layer being a "has a" relationship to the AllCake
 	-implement oo inheritance by having multiple "has a" layers of the same
 		interface, with the outermost layer being equivalent to the "most 
 		derived" type.
@@ -68,3 +71,29 @@ Conceptual Model:
 	
 Other interesting points:
 	-follows a fibonacci type of design - ie. prior + current = next
+
+Cakes:
+
+a constructed graph aka the AllCake can be represented diagrammatically as a set of layers.
+Below we see an example of an AllCake with 2 cakes, the numeric and the linked list.
+The AllCake always has an inner item.
+
+Numeric Cake
+				A 
+				B
+				C
+				D
+				E
+Linked List Cake
+				F
+				G
+				H
+Inner
+				Inner
+
+
+When adding a new cake to the AllCake, one has to specify a cake name.
+As decorations are added, they themselves will validate their own cake
+using the IHasA runtime check.  Thus it is important to have cake 
+building methods which correctly construct cakes with all their 
+dependencies, for a given cake name.
