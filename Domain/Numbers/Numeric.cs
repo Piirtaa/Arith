@@ -178,7 +178,7 @@ namespace Arith.Domain.Numbers
         /// <returns></returns>
         public INumeric Clone()
         {
-            Numeric rv = new Numeric(this.NumberSystem, null);
+            Numeric rv = Numeric.New(this.NumberSystem, null);
             rv._isPositive = this._isPositive;
             rv.OuterNodeBuildingList.NodeBuildingStrategy = this.OuterNodeBuildingList.NodeBuildingStrategy;
             

@@ -28,7 +28,7 @@ namespace Arith.Domain.Numbers.Decorations
             string decorationName = null)
             : base(decorated, decorationName)
         {
-            var inner = decorated.GetInnerDecorated();
+            var inner = decorated.AsInnermost<Numeric>();
             if (!(inner is Numeric))
                 throw new InvalidOperationException("decorated does not have inner Numeric");
 

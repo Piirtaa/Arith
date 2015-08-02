@@ -45,7 +45,34 @@ namespace Arith.Decorating
 
             return (obj as IDecoration).Decorated;
         }
+        /// <summary>
+        /// gets the decoration immediately above the inner decorated instance
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        public static object GetInnerDecoration(this object obj)
+        {
+            object rv = obj;
+            object currentLayer = obj;
 
+            //iterate down
+            while (currentLayer != null)
+            {
+                var next = currentLayer.GetDecorated();
+                if (!next.IsADecoration())
+                {
+                    rv = currentLayer;
+                    //break out of the loop
+                    currentLayer = null;
+                }
+                else
+                {
+                    currentLayer = next;
+                }
+            }
+
+            return rv;
+        }
         /// <summary>
         /// walking Decorated chain, gets the inner most decoration's core 
         /// </summary>
@@ -281,7 +308,7 @@ namespace Arith.Decorating
         }
         #region AsInnermost
         /// <summary>
-        /// gets the inner most matching face
+        /// gets the inner most matching face, including Inner if it does
         /// </summary>
         /// <param name="obj"></param>
         /// <param name="decorationType"></param>
@@ -297,10 +324,15 @@ namespace Arith.Decorating
             if (obj == null)
                 return null;
 
-            //get the core object
-            object inner = obj.GetInnerDecorated();
+            //get the object above Inner
+            object inner = obj.GetInnerDecoration();
 
-            var rv = inner.AsAbove(decorationType, decorationName, false);
+            //check Inner for compliance
+            var rv = inner.AsBelow(decorationType, decorationName, false);
+
+            //can't find it? look above now
+            if(rv == null)
+                rv = inner.AsAbove(decorationType, decorationName, false);
             return rv;
         }
         public static object AsInnermost(this object obj,
@@ -410,7 +442,8 @@ bool exactTypeMatch = true)
             var match = obj.WalkDecoratorsToOuter((dec, isOuter) =>
             {
                 var decObj = dec;
-                if (ValidateDecorationName(decorationName, decObj))
+
+                if (!ValidateDecorationName(decorationName, decObj))
                     return false;
 
                 //if we're exact matching, the decoration has to be the same type

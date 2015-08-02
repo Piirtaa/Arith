@@ -26,7 +26,8 @@ namespace Arith.Domain.Numbers.Decorations
         void ShiftRight();
     }
 
-    public class ShiftNumericDecoration : NumericDecorationBase, IHasShift
+    public class ShiftNumericDecoration : NumericDecorationBase, 
+        IHasShift
     {
         #region Declarations
         private readonly object _stateLock = new object();

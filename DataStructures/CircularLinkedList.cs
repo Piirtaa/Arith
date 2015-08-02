@@ -11,11 +11,12 @@ namespace Arith.DataStructures
     /// a linked list that links the last and first items in a loop
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class CircularLinkedList<T> : CircularLinkedListDecoration<T>, ICircularLinkedList<T>
+    public class CircularLinkedList<T> : CircularLinkedListDecoration<T>,
+        ICircularLinkedList<T>
     {
         #region Ctor
         public CircularLinkedList(params T[] items)
-            : base(LinkedList<T>.New().HasHooks<T>())
+            : base(LinkedList<T>.New().GetCircularityCake<T>())
         {
             //^^note that hooks are a required layer for the circular decoration
             //which implements IHasDecoration<IHasHooks<T>>, or it will 

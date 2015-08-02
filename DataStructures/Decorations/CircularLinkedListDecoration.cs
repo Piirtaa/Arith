@@ -43,14 +43,14 @@ namespace Arith.DataStructures.Decorations
     /// provides circularity
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public interface ICircularLinkedList<T> : ILinkedListDecoration<T>,
-        IHasA<IHasLinkedListHooking<T>>,
-        IHasA<IHasNodeBuilding<T>>
+    public interface ICircularLinkedList<T> : ILinkedListDecoration<T>
     {
     }
 
     public class CircularLinkedListDecoration<T> : LinkedListDecorationBase<T>,
-        ICircularLinkedList<T>
+        ICircularLinkedList<T>,
+        IHasA<IHasLinkedListHooking<T>>,
+        IHasA<IHasNodeBuilding<T>>
     {
         #region Declarations
         private readonly object _stateLock = new object();
