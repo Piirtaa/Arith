@@ -118,7 +118,7 @@ namespace Arith.Domain.Digits
         }
         public SymbolicDigit GetSymbolicDigit(string symbol)
         {
-            var node = this.SymbolSet.Filter((i) => { return i.NodeValue.Equals(symbol); }, true) as ICircularLinkedListNode<string>;
+            var node = this.SymbolSet.InnerList.Filter((i) => { return i.NodeValue.Equals(symbol); }, true) as ICircularLinkedListNode<string>;
             return new SymbolicDigit(node);
         }
         public MatrixDigit GetMatrixDigit(string symbol)
@@ -132,7 +132,7 @@ namespace Arith.Domain.Digits
         public NumeralSet AddSymbolToSet(string symbol)
         {
             this.ValidateNewSymbol(symbol);
-            this._symbols.AddLast(symbol);
+            this._symbols.OuterNodeBuildingList.AddLast(symbol);
 
             //rebuild the matrix
             this.Matrix = new ArithmeticMatrix(this);
@@ -158,7 +158,7 @@ namespace Arith.Domain.Digits
                 throw new InvalidOperationException("symbol taken");
             }
             //validate other reservations
-            var match = this._symbols.Filter((x) =>
+            var match = this._symbols.InnerList.Filter((x) =>
             {
                 if (symbol.Contains(x.NodeValue) ||
                 x.NodeValue.Contains(symbol))

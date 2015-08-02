@@ -195,9 +195,7 @@ namespace Arith.Domain.Numbers.Decorations
         public static MultiplyingNumericDecoration HasMultiplication(this object number,
             string decorationName = null)
         {
-
             return MultiplyingNumericDecoration.New(number, decorationName);
-
         }
     }
 

@@ -14,10 +14,11 @@ namespace Arith.Domain.Numbers
     /// towards a parent numeric
     /// </summary>
     [DebuggerDisplay("{Symbol}")]
-    public class DigitNodeDecoration : LinkedListNodeDecorationBase<IDigit>, IDigitNode
+    public class DigitNodeDecoration : LinkedListNodeDecorationBase<IDigit>,
+        IDigitNode
     {
         #region Ctor
-        public DigitNodeDecoration(object decorated, 
+        public DigitNodeDecoration(object decorated,
             string decorationName = null)
             : base(decorated, decorationName)
         {
@@ -129,15 +130,10 @@ namespace Arith.Domain.Numbers
 
     public static class DigitNodeDecorationExtensions
     {
-        public static DigitNodeDecoration HasDigits(this object number, 
+        public static DigitNodeDecoration HasDigits(this object number,
             string decorationName = null)
         {
-            var decoration = number.ApplyDecorationIfNotPresent<DigitNodeDecoration>(x =>
-            {
-                return DigitNodeDecoration.New(number, decorationName);
-            });
-
-            return decoration;
+            return DigitNodeDecoration.New(number, decorationName);
         }
     }
 }

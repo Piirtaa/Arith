@@ -41,6 +41,12 @@ Class Design Conventions:
 		-also include a Below member of the interface.  this is equivalent
 		to a "base" member of the interface.
 
+Naturalness of Design:
+	-by "natural" I mean "thing whose nature is clarified by its declared design"
+	-anti-corruption of a cake is facilitated by validating that Inner 
+		MUST BE of a given type.  In this way we can fully see/validate the nature
+		of a design.
+
 Conceptual Model:
 	-use "has a" relationships, rather than inheritance to extend functionality
 	-keep a layer cake of decorations, each layer being a "has a" relationship
@@ -48,12 +54,17 @@ Conceptual Model:
 		interface, with the outermost layer being equivalent to the "most 
 		derived" type.
 	-be able to declaratively specify the prerequisites for a given layer
-	-be able to decorate and undecorate behaviour so that we can use it
+	-be able to fluently decorate and undecorate behaviour so that we can use it
 	when it's required, avoiding large graphs 
 	-have behaviour on each layer that allows the layer to be
-	easily tested in isolation.  this is the most practical benefit of this
-	model - it "normalizes", or teases out the core behaviour for simplified
-	testing.  Integration testing is the equivalent of testing the Cake.
+		easily tested in isolation.  this is the most practical benefit of this
+		model - it "normalizes", or teases out the core behaviour for simplified
+		testing.  Integration testing is the equivalent of testing the Cake.
 	-enable a "design it once" idiomatic registry where behaviours can be pulled
-	from, and don't have to be redesigned or customized for new types, which 
-	causes more testable complexity.
+		from, and don't have to be redesigned or customized for new types, which 
+		causes more testable complexity.
+	-provide a "declarative design language" where the nature of something can be
+		revealed, in part, by its cake and sequence of layers.
+	
+Other interesting points:
+	-follows a fibonacci type of design - ie. prior + current = next

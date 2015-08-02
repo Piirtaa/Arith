@@ -11,6 +11,10 @@ using Arith.Domain.Digits;
 
 namespace Arith.Domain.Numbers.Decorations
 {
+    /// <summary>
+    /// has precision, doesn't allow a number to grow larger than precision allows.
+    /// 
+    /// </summary>
     public interface IHasPrecision : INumericDecoration
     {
         Numeric DecimalPlaces { get; set; }
@@ -91,7 +95,6 @@ namespace Arith.Domain.Numbers.Decorations
             string decorationName = null)
         {
             return PrecisionNumericDecoration.New(decorated, decimalPlaces, decorationName);
-
         }
 
         public static Numeric GetDecimalPlaces(this INumeric thisNumber)
@@ -124,11 +127,13 @@ namespace Arith.Domain.Numbers.Decorations
 
                 addy.PerformThisManyTimes(x =>
                 {
-                    thisNumber.Remove(thisNumber.FirstNode);
+                    thisNumber.DoWhileMutable(y =>
+                    {
+                        y.RemoveFirst();
+                    });
                 });
             }
         }
-
     }
 
 
@@ -143,8 +148,8 @@ namespace Arith.Domain.Numbers.Decorations
                 set.AddSymbolToSet(i.ToString());
             }
 
-            var precision = new Numeric(set, "5").HasAddition();
-            var num = new Numeric(set, "123456789").HasPrecision(precision).HasShift();
+            var precision = Numeric.New(set, "5").HasAddition();
+            var num = Numeric.New(set, "123456789").HasPrecision(precision).HasShift();
 
             var counter = precision.Clone() as AddingNumericDecoration;
             counter.PerformThisManyTimes(x =>

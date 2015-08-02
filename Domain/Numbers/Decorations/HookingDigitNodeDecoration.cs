@@ -79,8 +79,8 @@ namespace Arith.Domain.Numbers.Decorations
         {
             if (this.PostMutateStrategy != null)
             {
-                var node = this.As<IDigitNode>(false);
-                this.PostMutateStrategy(node, oldValue, mode);
+                var outer = this.As<IDigitNode>(false);
+                this.PostMutateStrategy(outer, oldValue, mode);
             }
         }
 

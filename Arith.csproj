@@ -74,7 +74,6 @@
     <Compile Include="Domain\Numbers\Decorations\NumericDecorationBase.cs" />
     <Compile Include="Domain\Numbers\Decorations\PrecisionNumericDecoration.cs" />
     <Compile Include="Domain\Numbers\Decorations\ShiftingNumericDecoration.cs" />
-    <Compile Include="Domain\Numbers\DigitNode.cs" />
     <Compile Include="Domain\Numbers\DigitNodeDecoration.cs" />
     <Compile Include="Domain\Numbers\Formatter.cs" />
     <Compile Include="Domain\Numbers\IDigitNodeExtensions.cs" />

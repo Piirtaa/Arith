@@ -16,7 +16,8 @@ namespace Arith.Domain.Numbers
     public class Numeric : LinkedListDecorationBase<IDigit>, 
         INumeric,
         IHasA<IHasNodeBuilding<IDigit>>,
-        IHasA<IHasLinkedListMutability<IDigit>>
+        IHasA<IHasLinkedListMutability<IDigit>>,
+        IHasLinkedListMutability<IDigit>
     {
         #region Declarations
         private readonly object _stateLock = new object();
@@ -72,7 +73,6 @@ namespace Arith.Domain.Numbers
         {
             get { return this.Decorated.AsBelow<IHasLinkedListMutability<IDigit>>(false); }
         }
-
         #endregion
 
         #region Properties
@@ -180,8 +180,8 @@ namespace Arith.Domain.Numbers
         {
             Numeric rv = new Numeric(this.NumberSystem, null);
             rv._isPositive = this._isPositive;
-            rv.NodeBuildingStrategy = this.NodeBuildingStrategy;
-
+            rv.OuterNodeBuildingList.NodeBuildingStrategy = this.OuterNodeBuildingList.NodeBuildingStrategy;
+            
             this.InnerList.Iterate((node) =>
             {
                 IDigitNode dNode = node as IDigitNode;
@@ -205,7 +205,7 @@ namespace Arith.Domain.Numbers
         }
         #endregion
 
-        #region Overrides
+        #region Mutability Overrides
         public virtual ILinkedListNode<IDigit> InsertNode(ILinkedListNode<IDigit> node, ILinkedListNode<IDigit> before, ILinkedListNode<IDigit> after)
         {
             ILinkedListNode<IDigit> rv = null;
@@ -347,8 +347,8 @@ namespace Arith.Domain.Numbers
                 this._numberSystem = number.NumberSystem;
                 this._isPositive = number.IsPositive;
 
-                var sourceInner = number.GetInnermostNumeric().geti;
-                number.GetInnermostNumeric().Iterate((node) =>
+                var sourceInner = number.GetInnermostNumeric().InnerList;
+                sourceInner.Iterate((node) =>
                 {
                     IDigitNode dNode = node as IDigitNode;
                     var newNode = this.AddLeastSignificantDigit(dNode.NodeValue.Symbol);
@@ -522,11 +522,11 @@ namespace Arith.Domain.Numbers
             ZoneIterateTest(numC);
 
             //test parallel iteration
-            numA.ParallelIterate(numB, (diga, digb) =>
+            numA.InnerList.ParallelIterate(numB, (diga, digb) =>
             {
                 Debug.Assert(diga.NodeValue.Symbol.Equals(digb.NodeValue.Symbol));
             }, true);
-            numA.ParallelIterate(numB, (diga, digb) =>
+            numA.InnerList.ParallelIterate(numB, (diga, digb) =>
             {
                 Debug.Assert(diga.NodeValue.Symbol.Equals(digb.NodeValue.Symbol));
             }, false);

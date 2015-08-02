@@ -371,7 +371,8 @@ namespace Arith.Domain.Numbers.Decorations
         public static void IterateMSDs(this INumeric numeric,
             Func<Numeric, Numeric, bool> filter)
         {
-            numeric.Filter(node =>
+            var list = numeric.GetInnermostNumeric().InnerList;
+            list.Filter(node =>
             {
                 //first get the number portion
                 IDigitNode dNode = node as IDigitNode;

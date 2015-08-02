@@ -370,7 +370,7 @@ namespace Arith.Domain.Numbers.Decorations
             var thisNumber = digit.ParentNumeric();
             var pos = thisNumber.GetCompatibleZero().HasAddition();
 
-            thisNumber.Filter((node) =>
+            thisNumber.InnerList.Filter((node) =>
             {
                 if (object.ReferenceEquals(digit, node))
                     return true;

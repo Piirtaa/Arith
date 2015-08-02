@@ -46,7 +46,7 @@ namespace Arith.Domain.Numbers.Decorations
         }
         #endregion
 
-        #region IDecoratedOf
+        #region Properties
         public INumeric DecoratedOf
         {
             get
@@ -55,9 +55,6 @@ namespace Arith.Domain.Numbers.Decorations
                 return rv;
             }
         }
-        #endregion
-
-        #region INumeric
         /// <summary>
         /// Returns the lower numeric
         /// </summary>
@@ -65,7 +62,9 @@ namespace Arith.Domain.Numbers.Decorations
         {
             get { return this.AsInnermost<Numeric>(false); }
         }
+        #endregion
 
+        #region INumeric
         /*Note: the INumeric members that are "immutable of implementation" are those
          * that reflect the underlying Numeric structure, and are NOT marked as 
          * virtual, nor do they operate on the DecoratedOf (next INumeric down the
@@ -112,18 +111,6 @@ namespace Arith.Domain.Numbers.Decorations
         #endregion
 
         #region ILinkedList
-        //public Func<IDigit,ILinkedList<IDigit>, ILinkedListNode<IDigit>> NodeBuildingStrategy
-        //{
-        //    get
-        //    {
-        //        return this.InnermostNumeric.NodeBuildingStrategy;
-        //    }
-        //    set
-        //    {
-        //        this.InnermostNumeric.NodeBuildingStrategy = value;
-        //    }
-        //}
-
         public ILinkedListNode<IDigit> FirstNode
         {
             get { return this.InnermostNumeric.FirstNode; }
@@ -144,30 +131,30 @@ namespace Arith.Domain.Numbers.Decorations
             return this.InnermostNumeric.Contains(item);
         }
 
-        public ILinkedListNode<IDigit> AddFirst(IDigit val)
-        {
-            return this.InnermostNumeric.AddFirst(val);
-        }
+        //public ILinkedListNode<IDigit> AddFirst(IDigit val)
+        //{
+        //    return this.InnermostNumeric.AddFirst(val);
+        //}
 
-        public ILinkedListNode<IDigit> AddLast(IDigit val)
-        {
-            return this.InnermostNumeric.AddLast(val);
-        }
+        //public ILinkedListNode<IDigit> AddLast(IDigit val)
+        //{
+        //    return this.InnermostNumeric.AddLast(val);
+        //}
 
-        public ILinkedListNode<IDigit> Insert(IDigit val, ILinkedListNode<IDigit> before, ILinkedListNode<IDigit> after)
-        {
-            return this.InnermostNumeric.Insert(val, before, after);
-        }
+        //public ILinkedListNode<IDigit> Insert(IDigit val, ILinkedListNode<IDigit> before, ILinkedListNode<IDigit> after)
+        //{
+        //    return this.InnermostNumeric.Insert(val, before, after);
+        //}
 
-        public ILinkedListNode<IDigit> InsertNode(ILinkedListNode<IDigit> node, ILinkedListNode<IDigit> before, ILinkedListNode<IDigit> after)
-        {
-            return this.InnermostNumeric.InsertNode(node, before, after);
-        }
+        //public ILinkedListNode<IDigit> InsertNode(ILinkedListNode<IDigit> node, ILinkedListNode<IDigit> before, ILinkedListNode<IDigit> after)
+        //{
+        //    return this.InnermostNumeric.InsertNode(node, before, after);
+        //}
 
-        public ILinkedList<IDigit> Remove(ILinkedListNode<IDigit> item)
-        {
-            return this.InnermostNumeric.Remove(item);
-        }
+        //public ILinkedList<IDigit> Remove(ILinkedListNode<IDigit> item)
+        //{
+        //    return this.InnermostNumeric.Remove(item);
+        //}
         #endregion
     }
 }

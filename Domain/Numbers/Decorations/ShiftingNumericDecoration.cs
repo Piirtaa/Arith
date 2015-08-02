@@ -220,7 +220,7 @@ namespace Arith.Domain.Numbers.Decorations
                 set.AddSymbolToSet(i.ToString());
             }
 
-            Numeric num = new Numeric(set, "123456789");
+            Numeric num = Numeric.New(set, "123456789");
             var shiftNum = num.HasShift();
 
             shiftNum.ShiftToZero();

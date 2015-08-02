@@ -8,10 +8,12 @@ using Arith.DataStructures;
 using Arith.Decorating;
 using Arith.Domain.Digits;
 using Arith.Extensions;
+using Arith.DataStructures.Decorations;
 
 namespace Arith.Domain.Numbers.Decorations
 {
-    public interface IHasDigitHooks : INumericDecoration
+    public interface IHasDigitHooks : INumericDecoration,
+        IHasA<IHasNodeBuilding<IDigit>>
     {
         /// <summary>
         /// when a digit mutates on a number with this decoration, the mutate strategy runs
@@ -19,7 +21,8 @@ namespace Arith.Domain.Numbers.Decorations
         Action<IDigitNode, string, MutationMode> PostMutateStrategy { get; set; }
     }
 
-    public class HookingDigitNumericDecoration : NumericDecorationBase, IHasDigitHooks
+    public class HookingDigitNumericDecoration : NumericDecorationBase,
+        IHasDigitHooks
     {
         #region Declarations
         private readonly object _stateLock = new object();
@@ -31,8 +34,8 @@ namespace Arith.Domain.Numbers.Decorations
             : base(decorated, decorationName)
         {
             //inject node decoration with this strategy
-            var builder = this.InnermostNumeric.NodeBuildingStrategy;
-            this.InnermostNumeric.NodeBuildingStrategy = (x, list) =>
+            var builder = this.OuterNodeBuildingList.NodeBuildingStrategy;
+            this.OuterNodeBuildingList.NodeBuildingStrategy = (x, list) =>
             {
                 var rv = builder(x, list).HasHookingDigitNode();
                 var hooker = list.As<HookingDigitNumericDecoration>(false);
@@ -65,6 +68,14 @@ namespace Arith.Domain.Numbers.Decorations
         protected override void ISerializable_GetObjectData(SerializationInfo info, StreamingContext context)
         {
             base.ISerializable_GetObjectData(info, context);
+        }
+        #endregion
+
+
+        #region Cake stuff
+        public NodeBuildingLinkedListDecoration<IDigit> OuterNodeBuildingList
+        {
+            get { return this.As<NodeBuildingLinkedListDecoration<IDigit>>(false); }
         }
         #endregion
 

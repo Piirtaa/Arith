@@ -19,7 +19,7 @@ namespace Arith.Domain.Numbers
             if (thisNumber == null)
                 throw new ArgumentNullException("thisNumber");
 
-            return new Numeric(thisNumber.NumberSystem, null);
+            return Numeric.New(thisNumber.NumberSystem, null);
         }
         /// <summary>
         /// returns a symbolic number with a value of 0 in thisNumber's number system
@@ -31,7 +31,7 @@ namespace Arith.Domain.Numbers
             if (thisNumber == null)
                 throw new ArgumentNullException("thisNumber");
 
-            return new Numeric(thisNumber.NumberSystem, thisNumber.NumberSystem.ZeroSymbol);
+            return Numeric.New(thisNumber.NumberSystem, thisNumber.NumberSystem.ZeroSymbol);
         }
         /// <summary>
         /// returns a symbolic number with a value of 1 in thisNumber's number system
@@ -43,7 +43,7 @@ namespace Arith.Domain.Numbers
             if (thisNumber == null)
                 throw new ArgumentNullException("thisNumber");
 
-            return new Numeric(thisNumber.NumberSystem, thisNumber.NumberSystem.OneSymbol);
+            return Numeric.New(thisNumber.NumberSystem, thisNumber.NumberSystem.OneSymbol);
         }
         /// <summary>
         /// returns a symbolic number with the supplied value in thisNumber's number system
@@ -56,7 +56,7 @@ namespace Arith.Domain.Numbers
             if (thisNumber == null)
                 throw new ArgumentNullException("thisNumber");
 
-            return new Numeric(thisNumber.NumberSystem, number);
+            return Numeric.New(thisNumber.NumberSystem, number);
         }
         /// <summary>
         /// returns whether the numerics have the same number system
@@ -252,7 +252,8 @@ namespace Arith.Domain.Numbers
             var rv = Numeric.New(numeric.NumberSystem, null);
             bool nodeFound = false;
 
-            numeric.Iterate((node) =>
+            var innerNumericList = numeric.GetInnermostNumeric().InnerList;
+            innerNumericList.Iterate((node) =>
             {
                 if (object.ReferenceEquals(node, digit))
                 {
